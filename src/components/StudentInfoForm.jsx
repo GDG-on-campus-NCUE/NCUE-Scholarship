@@ -24,6 +24,11 @@ const familyOptions = [
   '無以上資料但家境清寒'
 ]
 
+// 台灣縣市選項
+const countyOptions = [
+  '基隆市','台北市','新北市','桃園市','新竹市','新竹縣','苗栗縣','台中市','彰化縣','南投縣','雲林縣','嘉義市','嘉義縣','台南市','高雄市','屏東縣','宜蘭縣','花蓮縣','台東縣','澎湖縣','金門縣','連江縣'
+]
+
 export default function StudentInfoForm({ onSubmit, initialData }) {
   const [form, setForm] = useState({
     educationLevel: '',
@@ -121,7 +126,17 @@ export default function StudentInfoForm({ onSubmit, initialData }) {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">戶籍地縣市</label>
-          <input name="county" value={form.county} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          <select
+            name="county"
+            value={form.county}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          >
+            <option value="">請選擇</option>
+            {countyOptions.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">進修學院學生</label>

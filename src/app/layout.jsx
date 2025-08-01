@@ -4,6 +4,7 @@ import { Noto_Sans_TC } from 'next/font/google'
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ChatDialog from "@/components/ChatDialog";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useState, useLayoutEffect, useRef } from 'react';
 import logo from "@/app/assets/logo.ico";
@@ -54,9 +55,10 @@ export default function RootLayout({ children }) {
 					<main style={{ paddingTop: `${headerHeight}px` }}>
 						{children}
 					</main>
-					<Footer />
-				</AuthProvider>
-			</body>
-		</html>
+                                        <Footer />
+                                        <ChatDialog />
+                                </AuthProvider>
+                        </body>
+                </html>
 	);
 }
