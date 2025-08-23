@@ -233,7 +233,7 @@ export default function Register() {
 									)}
 									<InputField id="username" name="username" type="text" placeholder="姓名" value={formData.username} onChange={handleChange} error={errors.username} icon={User} />
 									<InputField id="student_id" name="student_id" type="text" placeholder="學號" value={formData.student_id} onChange={handleChange} error={errors.student_id} icon={GraduationCap} />
-									<InputField id="email" name="email" type="email" placeholder="電子郵件 (請勿使用 gm 帳號)" value={formData.email} onChange={handleChange} error={errors.email} icon={Mail} />
+									<InputField id="email" name="email" type="email" placeholder="電子郵件" value={formData.email} onChange={handleChange} error={errors.email} icon={Mail} />
 									<PasswordField id="password" name="password" placeholder="設定密碼" value={formData.password} onChange={handleChange} error={errors.password} passwordStrength={calculatePasswordStrength} />
 									<PasswordField id="confirmPassword" name="confirmPassword" placeholder="再次輸入密碼" value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} isConfirmField={true} />
 
