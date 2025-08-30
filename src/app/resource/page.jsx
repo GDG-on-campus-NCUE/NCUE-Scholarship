@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { School, Globe, ChevronDown, HelpCircle, BookOpen } from 'lucide-react';
 
@@ -105,6 +105,16 @@ const FaqItem = ({ question, children, isOpen, onToggle }) => (
 // --- 主要頁面元件 ---
 export default function RelatedLinksPage() {
     const [openFaq, setOpenFaq] = useState(null);
+
+    // 監聽網址是否帶有 #section2 並自動捲動至 FAQ 區塊
+    useEffect(() => {
+        if (window.location.hash === '#section2') {
+            const faqSection = document.getElementById('section2');
+            if (faqSection) {
+                faqSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, []);
 
     const cardData = [
         { icon: <School className="h-7 w-7 text-indigo-600" />, title: "彰師大獎助學金專區", description: "提供全校各單位之校內外獎助學金、揚鷹獎勵金之公告訊息，並有校園餐券及校內外急難扶助金等申請資訊！", href: "https://www.ncue.edu.tw/p/412-1000-1513.php?Lang=zh-tw", linkText: "前往瞭解" },
@@ -320,7 +330,8 @@ export default function RelatedLinksPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                 >
-                    <div className="max-w-4xl mx-auto">
+                    {/* FAQ 區塊定位點 */}
+                    <div id="section2" className="max-w-4xl mx-auto">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="p-3 rounded-xl bg-sky-100">
                                 <HelpCircle className="h-8 w-8 text-sky-600" />
