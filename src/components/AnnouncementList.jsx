@@ -225,7 +225,7 @@ function AnnouncementListContent() {
                     <p><strong class="font-semibold text-orange-500">B：</strong>縣市政府以外之各級公家機關及公營單位獎助學金</p>
                     <p><strong class="font-semibold text-yellow-500">C：</strong>宗教及民間各項指定身分獎助學金</p>
                     <p><strong class="font-semibold text-green-600">D：</strong>非公家機關或其他無法歸類的獎助學金</p>
-                    <p><strong class="font-semibold text-blue-600">E：</strong>本校獲配推薦名額的獎助學金</p>
+                    <p><strong class="font-semibold text-blue-600">E：</strong>本校獲配推薦名額獎助學金</p>
                     <p><strong class="font-semibold text-indigo-600">F：</strong>校外獎助學金得獎公告</p>
                     <p><strong class="font-semibold text-purple-600">G：</strong>校內獎助學金</p>
                 </div>
