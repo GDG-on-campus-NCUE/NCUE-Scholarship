@@ -238,18 +238,41 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
             }
 
             const newFiles = selectedFiles.filter(file => !file.isExisting);
-            for (const file of newFiles) {
+            if (newFiles.length > 0) {
                 const uploadFormData = new FormData();
-                uploadFormData.append('file', file);
-                const uploadResponse = await authFetch('/api/upload-files', { method: 'POST', body: uploadFormData });
-                if (!uploadResponse.ok) throw new Error(`檔案 "${file.name}" 上傳失敗`);
-                const uploadResult = await uploadResponse.json();
-                const { data: uploadedFileData } = uploadResult;
-                const { error: insErr } = await supabase.from('attachments').insert({
-                    announcement_id: updated.id, file_name: uploadedFileData.originalName, stored_file_path: uploadedFileData.path,
-                    file_size: uploadedFileData.size, mime_type: uploadedFileData.mimeType,
+                newFiles.forEach(file => {
+                    uploadFormData.append('files', file);
                 });
-                if (insErr) throw insErr;
+
+                const uploadResponse = await authFetch('/api/upload-files', { method: 'POST', body: uploadFormData });
+                if (!uploadResponse.ok) {
+                    const errorResult = await uploadResponse.json().catch(() => null);
+                    const errorMessage = errorResult?.error || '檔案上傳請求失敗';
+                    throw new Error(errorMessage);
+                }
+
+                const uploadResult = await uploadResponse.json();
+
+                if (uploadResult.data.errors && uploadResult.data.errors.length > 0) {
+                    const errorMessages = uploadResult.data.errors.map(e => `${e.fileName}: ${e.error}`).join(', ');
+                    throw new Error(`部分檔案上傳失敗: ${errorMessages}`);
+                }
+
+                const uploadedFilesData = uploadResult.data.uploaded;
+                if (uploadedFilesData && uploadedFilesData.length > 0) {
+                    const attachmentsToInsert = uploadedFilesData.map(uploadedFile => ({
+                        announcement_id: updated.id,
+                        file_name: uploadedFile.originalName,
+                        stored_file_path: uploadedFile.path,
+                        file_size: uploadedFile.size,
+                        mime_type: uploadedFile.mimeType,
+                    }));
+
+                    const { error: insErr } = await supabase.from('attachments').insert(attachmentsToInsert);
+                    if (insErr) throw insErr;
+                } else if (newFiles.length > 0 && (!uploadResult.data.errors || uploadResult.data.errors.length === 0)) {
+                    throw new Error('上傳成功，但伺服器未回傳任何檔案資料');
+                }
             }
 
             if (refreshAnnouncements) refreshAnnouncements();
