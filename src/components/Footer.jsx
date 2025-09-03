@@ -96,7 +96,7 @@ export default function Footer() {
                                 <p className="text-gray-300">
                                     Developed & Maintained by
                                 </p>
-                                <a href="https://gdg.community.dev/gdg-on-campus-national-changhua-university-of-education-changhua-city-taiwan/" className="group flex items-center justify-center sm:justify-start gap-3 text-gray-300 hover:text-white transition-all duration-300 hover:-translate-y-0.5" target="_blank" rel="noopener noreferrer">
+                                <a href="https://gdg.ncuesa.org.tw" className="group flex items-center justify-center sm:justify-start gap-3 text-gray-300 hover:text-white transition-all duration-300 hover:-translate-y-0.5" target="_blank" rel="noopener noreferrer">
                                     <img src="/GDG.gif" alt="GDG On Campus NCUE Logo" className="h-8 w-auto flex-shrink-0" />
                                     <span className="font-semibold text-white text-sm">
                                         <span className="google-word-container">

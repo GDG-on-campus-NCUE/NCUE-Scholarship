@@ -8,10 +8,11 @@ import DownloadPDFButton from '@/components/admin/DownloadPDFButton';
 const categoryStyles = {
     A: { bg: 'bg-red-100', text: 'text-red-800' },
     B: { bg: 'bg-orange-100', text: 'text-orange-800' },
-    C: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
-    D: { bg: 'bg-blue-100', text: 'text-blue-800' },
-    E: { bg: 'bg-violet-100', text: 'text-violet-800' },
-    F: { bg: 'bg-teal-100', text: 'text-teal-800'},
+    C: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+    D: { bg: 'bg-green-100', text: 'text-green-800' },
+    E: { bg: 'bg-blue-100', text: 'text-blue-800' },
+    F: { bg: 'bg-indigo-100', text: 'text-indigo-800' },
+    G: { bg: 'bg-violet-100', text: 'text-violet-800' },
     default: { bg: 'bg-gray-100', text: 'text-gray-800' },
 };
 const getCategoryStyle = (cat) => categoryStyles[cat] || categoryStyles.default;
@@ -52,26 +53,35 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
     }, [announcement]);
 
     const dateInfo = useMemo(() => {
-        if (!announcement) return { displayString: '未指定', isOpen: false };
+        if (!announcement) return { displayString: '未指定', colorClass: 'text-gray-600' };
 
-        const now = new Date();
-        const startDate = announcement.application_start_date ? new Date(announcement.application_start_date) : null;
+        // Logic from AnnouncementList.jsx for consistent date status coloring
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const endDate = announcement.application_end_date ? new Date(announcement.application_end_date) : null;
+        const startDate = announcement.application_start_date ? new Date(announcement.application_start_date) : null;
 
-        if (endDate) {
-            endDate.setHours(23, 59, 59, 999);
+        let colorClass = 'text-green-600';
+        if (endDate === null) {
+            colorClass = 'text-green-600';
+        } else if (endDate < today) {
+            colorClass = 'text-red-600';
+        } else if (startDate && startDate > today) {
+            colorClass = 'text-red-600';
         }
 
-        const isOpen = startDate && endDate ? (now >= startDate && now <= endDate) : false;
-
-        const formattedStartDate = startDate ? startDate.toLocaleDateString('en-CA') : null;
-        const formattedEndDate = endDate ? new Date(announcement.application_end_date).toLocaleDateString('en-CA') : '無期限';
+        const formattedStartDate = announcement.application_start_date 
+            ? new Date(announcement.application_start_date).toLocaleDateString('en-CA') 
+            : null;
+        const formattedEndDate = announcement.application_end_date 
+            ? new Date(announcement.application_end_date).toLocaleDateString('en-CA') 
+            : '無期限';
 
         const displayString = formattedStartDate
             ? `${formattedStartDate} ~ ${formattedEndDate}`
             : formattedEndDate || '未指定';
 
-        return { displayString, isOpen };
+        return { displayString, colorClass };
     }, [announcement]);
 
     const finalContent = useMemo(() => {
@@ -153,7 +163,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                         <Calendar className="h-5 w-5 text-indigo-500 mt-0.5 flex-shrink-0" />
                                         <div>
                                             <p className="font-semibold text-gray-500">申請期間</p>
-                                            <p className={`font-bold text-sm ${dateInfo.isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                                            <p className={`font-bold text-sm ${dateInfo.colorClass}`}>
                                                 {dateInfo.displayString}
                                             </p>
                                         </div>

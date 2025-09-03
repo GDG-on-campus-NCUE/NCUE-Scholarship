@@ -12,10 +12,11 @@ import AnnouncementDetailModal from './AnnouncementDetailModal';
 const categoryStyles = {
     A: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300' },
     B: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300' },
-    C: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' },
-    D: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },
-    E: { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-300' },
-    F: { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300' },
+    C: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300' },
+    D: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' },
+    E: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },
+    F: { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300' },
+    G: { bg: 'bg-violet-100', text: 'text-violet-800', border: 'border-violet-300' },
     default: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300' },
 };
 const getCategoryStyle = (cat) => categoryStyles[cat] || categoryStyles.default;
@@ -219,13 +220,14 @@ function AnnouncementListContent() {
                 <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Award size={22} className="text-indigo-500" />獎助學金分類代碼定義
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-slate-600">
-                    <p><strong className="font-semibold text-red-600">A：</strong>各縣市政府獎助學金</p>
-                    <p><strong className="font-semibold text-orange-600">B：</strong>縣市政府以外之各級公家機關及公營單位獎助學金</p>
-                    <p><strong className="font-semibold text-green-600">C：</strong>宗教及民間各項指定身分獎助學金</p>
-                    <p><strong className="font-semibold text-blue-600">D：</strong>非公家機關或其他無法歸類的獎助學金</p>
-                    <p><strong className="font-semibold text-violet-600">E：</strong>校外獎助學金得獎公告</p>
-                    <p><strong className="font-semibold text-teal-600">F：</strong>校內獎助學金</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-slate-600">
+                    <p><strong class="font-semibold text-red-600">A：</strong>各縣市政府獎助學金</p>
+                    <p><strong class="font-semibold text-orange-500">B：</strong>縣市政府以外之各級公家機關及公營單位獎助學金</p>
+                    <p><strong class="font-semibold text-yellow-500">C：</strong>宗教及民間各項指定身分獎助學金</p>
+                    <p><strong class="font-semibold text-green-600">D：</strong>非公家機關或其他無法歸類的獎助學金</p>
+                    <p><strong class="font-semibold text-blue-600">E：</strong>本校獲配推薦名額的獎助學金</p>
+                    <p><strong class="font-semibold text-indigo-600">F：</strong>校外獎助學金得獎公告</p>
+                    <p><strong class="font-semibold text-purple-600">G：</strong>校內獎助學金</p>
                 </div>
             </div>
 
@@ -247,7 +249,7 @@ function AnnouncementListContent() {
                             className="appearance-none w-full bg-slate-100 border border-transparent rounded-lg py-2 pl-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/30"
                         >
                             <option value="all">全部分類</option>
-                            {['A', 'B', 'C', 'D', 'E', 'F'].map(cat => (
+                            {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(cat => (
                                 <option key={cat} value={cat}>分類 {cat}</option>
                             ))}
                         </select>
