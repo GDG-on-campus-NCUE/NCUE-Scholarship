@@ -1,0 +1,1 @@
+self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/Users/hune1228/NCUE-Scholarship/NCUE-Scholarship/src/app/layout":["static/media/493c3cff6f1bd7f1-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';
