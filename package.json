@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "pm2:start": "pm2 start npm --name 'ncue-scholarship' -- run start",
     "pm2:stop": "pm2 stop ncue-scholarship",
     "pm2:restart": "pm2 restart ncue-scholarship",
@@ -17,6 +20,7 @@
     "@fontsource/noto-sans-tc": "^5.2.6",
     "@google/genai": "^1.11.0",
     "@google/generative-ai": "^0.24.1",
+    "@opennextjs/cloudflare": "^1.7.1",
     "@react-pdf/renderer": "^4.3.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.53.0",
@@ -43,6 +47,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "wrangler": "^4.33.2"
   }
 }
