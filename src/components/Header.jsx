@@ -87,7 +87,7 @@ const Header = forwardRef((props, ref) => {
 	const navLinks = [
 		{ href: '/', label: '首頁' },
 		{ href: '/ai-assistant', label: 'AI 獎學金助理'},
-		{ href: '/resource', label: '相關資源' },
+		{ href: '/resource', label: 'FAQ 及相關資源' },
 		{ href: '/terms-and-privacy', label: '服務條款', auth: true },
 		{ href: '/manage', label: '管理後台', auth: true, admin: true },
 	];
