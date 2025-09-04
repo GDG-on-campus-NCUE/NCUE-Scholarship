@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彰師生輔組校外獎助學金資訊平台</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { margin: 0; padding: 0; background-color: #f4f4f7; font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif; -webkit-font-smoothing: antialiased; width: 100% !important; }
+        table { border-collapse: collapse; width: 100%; }
+        a { color: #4f46e5; text-decoration: underline; }
+        .wrapper { background-color: #f4f4f7; width: 100%; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px; text-align: center; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+        .content { padding: 32px 40px; color: #374151; }
+        .content h2 { color: #1f2937; margin-top: 0; margin-bottom: 24px; font-size: 22px; font-weight: 700; text-align: left; }
+        .content p { margin: 0 0 16px; font-size: 16px; line-height: 1.7; }
+        .cta-button { display: inline-block; background-color: #7c3aed; color: #ffffff !important; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 500; }
+        .otp-container { background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 24px auto; max-width: 380px; text-align: center; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #4338ca; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: 20px; padding-left: 20px; }
+        .divider { border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+        .footer { padding: 24px 40px; font-size: 12px; text-align: center; color: #9ca3af; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
+        .footer a { color: #6b7280; text-decoration: none; }
+        .subtle-text { font-size: 14px; color: #64748b; text-align: center; }
+    </style>
+</head>
+<body>
+    <table class="wrapper" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center" style="padding: 24px 0;">
+                <table class="container" border="0" cellpadding="0" cellspacing="0">
+                    <!-- HEADER -->
+                    <tr>
+                        <td class="header">
+                            <h1>生輔組校外獎助學金資訊平台</h1>
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td class="content">
+                            <h2>歡迎加入！</h2>
+                            <p>親愛的使用者，您好：</p>
+                            <p>感謝您的註冊。請點擊下方按鈕以啟用您的帳號，完成最後的驗證步驟。</p>
+                            
+                            <!-- VERIFICATION BUTTON -->
+                            <table border="0" cellspacing="0" cellpadding="0" width="100%" style="margin: 24px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{ .ConfirmationURL }}" target="_blank" class="cta-button">驗證電子信箱</a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- DIVIDER -->
+                            <hr class="divider" />
+
+                            <!-- OTP SECTION -->
+                            <div style="text-align: center;">
+                                <h3 style="font-size: 20px; font-weight: 600; color: #1e293b; margin: 0 0 10px;">或者，使用驗證碼</h3>
+                                <p style="color: #475569; font-size: 15px; margin: 0 0 20px;">您也可以在網站的驗證頁面輸入以下 6 位數驗證碼：</p>
+                                <div class="otp-container">
+                                    <div class="otp-code">{{ .Token }}</div>
+                                </div>
+                            </div>
+
+                            <!-- DISCLAIMER -->
+                            <div style="margin-top: 32px;">
+                                <p class="subtle-text">如果您並未在本平台註冊帳號，請直接忽略此電子郵件，您的帳號將不會被建立。</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td class="footer">
+                            <p style="margin: 0 0 12px;">
+                                <a href="https://scholarship.ncuesa.org.tw/" target="_blank">生輔組獎助學金資訊平台</a> &nbsp;&bull;&nbsp; 
+                                <a href="https://stuaffweb.ncue.edu.tw/" target="_blank">生輔組首頁</a>
+                            </p>
+                            <p style="margin: 0 0 5px;">© <script>document.write(new Date().getFullYear())</script> 彰師生輔組校外獎助學金資訊平台. All Rights Reserved.</p>
+                            <p style="margin: 0;">此為系統自動發送之信件，請勿直接回覆。</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
