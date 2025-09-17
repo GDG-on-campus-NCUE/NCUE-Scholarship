@@ -249,22 +249,28 @@ export default function RelatedLinksPage() {
             q: "如何申請「全戶所得及財產清單」？",
             a: () => (
                 <>
-                    <p>「全戶」的定義與戶籍謄本相同。<strong>最重要的一點是：</strong><Highlight>每一位家庭成員都必須提供</Highlight>「各類所得資料清單」與「財產歸屬資料清單」，無論其年齡、有無收入或財產。</p>
-                    <p><strong>線上申請（推薦）：</strong></p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>政府「MyData」平台：</strong>需備妥健保卡或自然人憑證，透過「<a href="https://mydata.nat.gov.tw/" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">MyData 平台</a>」申請。</li>
-                        <li><strong>財政部「電子稅務文件入口網」：</strong>
-                            <ol className="list-decimal pl-5 mt-1 space-y-1">
-                                <li>進入「<a href="https://www.etax.nat.gov.tw/etwmain/" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">財政部稅務入口網</a>」，點選線上服務→電子稅務文件。</li>
-                                <li>點選線上申請，使用健保卡或自然人憑證登入。</li>
-                                <li>搜尋並點選要申請的項目：「財產資料」及「個人所得資料」。</li>
-                                <li>依照指示輸入驗證資訊並確認申請。</li>
-                                <li>約1小時內會收到E-mail通知，即可憑卡登入下載PDF文件。</li>
-                            </ol>
-                        </li>
+                    <p>全國各地的國稅局皆可跨區連線申請，可選<Highlight>線上</Highlight>或<Highlight>臨櫃</Highlight>申請。如果只申請你自己的財產、所得清單，建議用線上<Highlight>『MyData平台』</Highlight>實用又方便，如果要幫家人申請，建議選以紙本臨櫃免費申請（可代理多位家人或朋友的委託申請喔）。</p>
+                    
+                    <p className="font-bold mt-4">（一）線上申請：</p>
+                    <p>推薦 用政府<a href="https://mydata.nat.gov.tw/" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">「MyData」</a>平台：</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li>備妥<Highlight>健保卡</Highlight>、<Highlight>戶口名簿</Highlight>或<Highlight>戶籍謄本</Highlight>（填戶號用），用自己任一張金融卡，或者<Highlight>自然人憑證</Highlight>（後續還可申請 行動自然人 憑證，直接滑手機，便利又實用）。</li>
+                        <li>「MyData」24小時為你服務，連戶籍謄本、低收、中低收跟特境證明還有勞健保這些資料，也都能在「MyData」申請。</li>
+                        <li><strong>PS：</strong>學生會備有讀卡機跟下載安裝「MyData」的電腦，有繳學生活動費的同學（繳費會員）還享有可<Highlight>免費彩色列印100張</Highlight>的福利喔。</li>
                     </ul>
-                    <p><strong>臨櫃申請：</strong></p>
-                    <p>請攜帶申請人身分證正本至全國任一國稅局或稅捐稽徵處辦理。若需代為申請家人資料，需額外準備家長的身分證影本、印章及委託書。</p>
+
+                    <p className="font-bold mt-4">（二）紙本申請：</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li>請攜帶申請人的<Highlight>身分證正本</Highlight>至國稅局免費申請。</li>
+                        <li>如果還要幫忙家人申請，建議臨櫃申請（全國各地皆可連線申請）。</li>
+                    </ul>
+
+                    <p className="font-bold mt-4">（三）如需代為申請家人資料：</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li>需  加附  <Highlight>委託人的身分證正反面影本</Highlight>、<Highlight>委託人任何一顆印章</Highlight>跟<Highlight>委託書</Highlight>，現場臨櫃免費申請（委託書可於國稅局任一分局下載或現場索取）。</li>
+                        <li>一次有<Highlight>3個月效期</Highlight>，可以用到明年4月底，建議開學這段時間，多申請幾份備用。</li>
+                        <li>國稅局 彰化分局 （中午不休息），地址：<a href="https://maps.google.com/?q=彰化縣彰化市中山路二段187號" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">彰化縣彰化市中山路二段187號</a></li>
+                    </ul>
                 </>
             )
         },
