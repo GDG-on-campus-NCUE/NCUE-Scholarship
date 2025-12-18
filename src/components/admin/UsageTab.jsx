@@ -74,7 +74,7 @@ const Card = ({
                     <h3 className="text-lg font-bold text-gray-900">{title}</h3>
                 </div>
 
-                <p className="mt-4 flex-grow text-sm text-gray-500">{children}</p>
+                <div className="mt-4 flex-grow text-sm text-gray-500">{children}</div>
 
                 {type === 'link' && (
                     <div className={`mt-6 flex items-center justify-end text-sm font-semibold ${theme.linkText}`}>

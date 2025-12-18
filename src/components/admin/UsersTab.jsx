@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from '@/components/ui/Toast';
 import { authFetch } from '@/lib/authFetch';
-import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2 } from 'lucide-react';
+import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail } from 'lucide-react';
 import SendNotificationModal from './SendNotificationModal';
 
 const NotifyIcon = () => (
@@ -87,20 +87,34 @@ export default function UsersTab() {
             showToast('標題和內文為必填欄位', 'error');
             return;
         }
-        if (!notificationUser) {
-            showToast('未指定收件人', 'error');
-            return;
-        }
 
         setIsSending(true);
         try {
-            const apiPayload = {
-                email: notificationUser.emailFull,
-                subject: subject,
-                body: htmlContent
-            };
+            const isBulkSend = !notificationUser;
+            const apiEndpoint = isBulkSend ? '/api/send-bulk-email' : '/api/send-custom-email';
+            
+            let apiPayload;
+            if (isBulkSend) {
+                const allUserEmails = allUsers.map(u => u.emailFull);
+                apiPayload = {
+                    bcc: allUserEmails,
+                    subject: subject,
+                    body: htmlContent
+                };
+            } else {
+                 if (!notificationUser) {
+                    showToast('未指定收件人', 'error');
+                    setIsSending(false);
+                    return;
+                }
+                apiPayload = {
+                    email: notificationUser.emailFull,
+                    subject: subject,
+                    body: htmlContent
+                };
+            }
 
-            const response = await authFetch('/api/send-custom-email', {
+            const response = await authFetch(apiEndpoint, {
                 method: 'POST',
                 body: JSON.stringify(apiPayload),
             });
@@ -114,7 +128,7 @@ export default function UsersTab() {
                 showToast(data.error || '寄送失敗，請稍後再試', 'error');
             }
         } catch (error) {
-            console.error("Error sending custom email:", error);
+            console.error("Error sending email:", error);
             showToast('寄送時發生網路或未知錯誤', 'error');
         } finally {
             setIsSending(false);
@@ -148,21 +162,28 @@ export default function UsersTab() {
     }), [allUsers]);
 
     // --- 按鈕樣式 ---
-    const ghostButtonBase = "flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all duration-300 ease-in-out transform disabled:transform-none disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed";
+    const ghostButtonBase = "flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg border transition-all duration-300 ease-in-out transform disabled:transform-none disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed";
     const buttonStyles = {
         demote: `${ghostButtonBase} border-indigo-200 bg-transparent text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/20 whitespace-nowrap`,
         promote: `${ghostButtonBase} border-rose-200 bg-transparent text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-rose-500/20 whitespace-nowrap`,
         notify: `${ghostButtonBase} p-2 border-sky-200 bg-transparent text-sky-600 hover:bg-sky-100 hover:text-sky-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-sky-500/20`,
+        notifyAll: `${ghostButtonBase} py-3 px-4 rounded-lg bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800 hover:shadow-green-500/20 whitespace-nowrap`,
     };
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:items-center">
-                <div className="lg:col-span-3 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input type="text" placeholder="搜尋姓名、學號、信箱..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                        className="w-full pl-11 pr-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
-                            focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30" />
+                <div className="lg:col-span-3 flex items-center gap-2">
+                    <div className="relative flex-grow">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input type="text" placeholder="搜尋姓名、學號、信箱..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
+                                focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30" />
+                    </div>
+                     <button onClick={() => openNotificationModal(null)} className={buttonStyles.notifyAll} title="寄送群體通知">
+                        <Mail size={16} />
+                        <span className="hidden sm:inline whitespace-nowrap">群發信件</span>
+                    </button>
                 </div>
                 <div className="lg:col-span-2 grid grid-cols-3 gap-4 text-center bg-white p-3 rounded-xl border border-gray-200/80">
                     <div><h3 className="text-sm font-medium text-gray-500 flex items-center justify-center gap-1.5"><Users size={14} />總用戶數</h3><p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p></div>
@@ -241,6 +262,7 @@ export default function UsersTab() {
                 user={notificationUser}
                 onConfirm={handleSendNotification}
                 isSending={isSending}
+                allUsersCount={allUsers.length}
             />
             <Toast show={toast.show} message={toast.message} type={toast.type} onClose={hideToast} />
         </div>

@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request) {
+	if (request.nextUrl.pathname.startsWith('/_next')) {
+		return NextResponse.next();
+	}
+
 	// CORS 處理
 	const origin = request.headers.get('origin');
 	const allowedOrigins = [

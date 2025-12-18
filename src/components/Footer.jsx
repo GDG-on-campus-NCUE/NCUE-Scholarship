@@ -53,7 +53,7 @@ export default function Footer() {
                                 An intelligent scholarship platform cored by a Multimodal LLM, dynamically analyzing user-provided sources (PDFs, URLs) to achieve automated parsing, data extraction, and summarization.
                             </p>
                             <p className="text-gray-400 text-sm mt-4">
-                                LLM powered by <span className="font-medium text-gray-300">Gemini 2.5 Flash</span>
+                                LLM powered by <span className="font-medium text-gray-300">Gemini 3 Flash</span>
                             </p>
                         </div>
 

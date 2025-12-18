@@ -162,7 +162,7 @@ const ChatInterface = () => {
                 彰師 AI 獎學金助理
             </h2>
             <p className="text-gray-500 mt-2 text-sm">
-                Powered by Gemini 2.5 Flash
+                Powered by Gemini 3 Flash
             </p>
 
             <div className="text-left space-y-8 mt-8 text-gray-700">

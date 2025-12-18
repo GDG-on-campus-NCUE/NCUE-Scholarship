@@ -30,7 +30,7 @@ This project is built with a modern, robust, and scalable technology stack.
 | **Tailwind CSS** | 4.0 | A utility-first CSS framework. Chosen for rapid UI development, consistent design, and high customizability without writing custom CSS. |
 | **Custom UI** | - | The project uses a set of custom-built React components with Tailwind CSS, ensuring a unique and consistent look and feel. It is **not** using a pre-built library like Shadcn/UI. |
 | **Vercel** | - | The deployment platform. Chosen for its seamless integration with Next.js, automatic CI/CD, global CDN, and serverless functions, providing an optimal hosting solution. |
-| **Google Gemini** | `gemini-2.5-flash` | The AI service from Google. Used for its advanced reasoning, summarization, and Retrieval-Augmented Generation (RAG) capabilities. |
+| **Google Gemini** | `gemini-3-flash` | The AI service from Google. Used for its advanced reasoning, summarization, and Retrieval-Augmented Generation (RAG) capabilities. |
 | **SerpApi** | - | An external API used for performing real-time Google searches to augment the AI's knowledge base with external information. |
 
 ## Key Features
