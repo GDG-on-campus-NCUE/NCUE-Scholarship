@@ -45,3 +45,6 @@ public/storage/attachments/*
 
 # But DO NOT ignore the .gitkeep file, so the empty directory structure is maintained
 !public/storage/attachments/.gitkeep
+
+*.local
+ecosystem.config.js
