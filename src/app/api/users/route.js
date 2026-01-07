@@ -42,19 +42,42 @@ export async function GET(request) {
 
     // 獲取對應的電子信箱資料
     const userIds = profiles.map(p => p.id);
-    const { data: authUsers, error: emailFetchError } = await supabase.auth.admin.listUsers();
     
-    if (emailFetchError) {
-      console.error('Error fetching auth users:', emailFetchError);
+    // 修正：分頁獲取所有 Auth Users (預設一次只會回傳 50 筆)
+    let allAuthUsers = [];
+    let page = 1;
+    const perPage = 1000; // 盡量一次抓多一點
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data: authData, error: emailFetchError } = await supabase.auth.admin.listUsers({
+        page: page,
+        perPage: perPage
+      });
+
+      if (emailFetchError) {
+        console.error(`Error fetching auth users page ${page}:`, emailFetchError);
+        break; // 發生錯誤就停止，避免死迴圈，至少回傳已抓到的
+      }
+
+      if (authData?.users && authData.users.length > 0) {
+        allAuthUsers = [...allAuthUsers, ...authData.users];
+        
+        if (authData.users.length < perPage) {
+          hasMore = false; // 取回的數量小於每頁上限，表示沒有下一頁了
+        } else {
+          page++;
+        }
+      } else {
+        hasMore = false;
+      }
     }
 
     // 建立 email 對應表
     const emailMap = {};
-    if (authUsers?.users) {
-      authUsers.users.forEach(user => {
-        emailMap[user.id] = user.email;
-      });
-    }
+    allAuthUsers.forEach(user => {
+      emailMap[user.id] = user.email;
+    });
 
     // 5. 格式化資料並進行脫敏處理
     const formattedUsers = profiles.map(profile => {

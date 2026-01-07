@@ -4,10 +4,11 @@ import { useState, useEffect, useRef, useContext, useCallback, Suspense } from "
 import { HeaderContext } from '@/components/Header';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import SettingsTab from '@/components/admin/SettingsTab';
 import AnnouncementsTab from '@/components/admin/AnnouncementsTab';
 import UsersTab from '@/components/admin/UsersTab';
 import UsageTab from '@/components/admin/UsageTab';
-import { Users, FileText, Settings, Loader2 } from 'lucide-react';
+import { Users, FileText, Settings, Loader2, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
@@ -15,6 +16,7 @@ const tabs = [
     { id: 'announcements', label: '公告管理', icon: FileText, component: <AnnouncementsTab /> },
     { id: 'users', label: '使用者管理', icon: Users, component: <UsersTab /> },
     { id: 'usage', label: '相關連結', icon: Settings, component: <UsageTab /> },
+    { id: 'settings', label: '系統設定', icon: Shield, component: <SettingsTab /> },
 ];
 
 const TabComponent = ({ activeTab, onTabClick, isOverDark = false }) => {
@@ -22,7 +24,7 @@ const TabComponent = ({ activeTab, onTabClick, isOverDark = false }) => {
     const activeTabRef = tabsRef.current[tabs.findIndex(tab => tab.id === activeTab)];
 
     return (
-        <nav className={`relative grid grid-cols-3 items-center p-1 gap-1 rounded-full shadow-inner transition-colors duration-300 backdrop-blur-xl overflow-hidden
+        <nav className={`relative grid grid-cols-4 items-center p-1 gap-1 rounded-full shadow-inner transition-colors duration-300 backdrop-blur-xl overflow-hidden
             ${isOverDark
                 ? 'bg-white/15'
                 : 'bg-black/[0.04]'

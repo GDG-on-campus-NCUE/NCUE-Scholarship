@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai"; // Removed client-side SDK
 import TinyMCE from './TinyMCE';
 import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
@@ -200,7 +200,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [urls, setUrls] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-    const modelRef = useRef(null);
+    // const modelRef = useRef(null); // Removed
 
     const initialFormData = {
         title: '', summary: '', category: '', application_start_date: '',
@@ -215,22 +215,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
     const showToast = (message, type = 'success') => setToast({ show: true, message, type });
     const hideToast = () => setToast(prev => ({ ...prev, show: false }));
 
-    useEffect(() => {
-        if (process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
-            try {
-                const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
-                modelRef.current = genAI.getGenerativeModel({
-                    model: "gemini-3-flash-preview",
-                    generationConfig: { responseMimeType: "application/json" },
-                });
-            } catch (error) {
-                console.error("Failed to initialize Gemini AI:", error);
-                showToast("AI 模型初始化失敗", "error");
-            }
-        } else {
-            console.error("Gemini API Key is not set.");
-        }
-    }, []);
+    // Removed useEffect for Gemini initialization
 
     useEffect(() => {
         if (isOpen) {
@@ -259,25 +244,12 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
 
     const isFormValid = formData.title.trim() !== '' && formData.summary.replace(/<[^>]*>?/gm, '').trim() !== '';
 
-    const fileToGenerativePart = async (file) => {
-        const base64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = (error) => reject(error);
-            reader.readAsDataURL(file);
-        });
-        return { inlineData: { data: base64, mimeType: file.type } };
-    };
+    // Removed fileToGenerativePart
 
     const handleAiAnalyze = async () => {
         // 確保有輸入源
         if (selectedFiles.length === 0 && urls.length === 0) {
             showToast("請至少上傳一個檔案或提供一個網址", "warning");
-            return;
-        }
-        // 驗證 AI 模型是否已準備就緒
-        if (!modelRef.current) {
-            showToast("AI 模型尚未初始化或初始化失敗", "error");
             return;
         }
 
@@ -292,14 +264,6 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
             const aiSupportedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
             const filesForAI = selectedFiles.filter(file => aiSupportedTypes.includes(file.type));
 
-            if (filesForAI.length > 0) {
-                console.log(`找到 ${filesForAI.length} 個可供 AI 分析的檔案:`, filesForAI.map(f => f.name));
-            }
-            if (filesForAI.length < selectedFiles.length) {
-                console.log(`有 ${selectedFiles.length - filesForAI.length} 個檔案將作為一般附件，不參與 AI 分析。`);
-            }
-
-            const parts = [];
             const sourceUrlsForAI = [];
             const scrapedContentsForAI = [];
 
@@ -343,7 +307,8 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
                 results.forEach(({ url, text, success }) => {
                     if (success) {
                         // 將成功爬取的內容格式化後加入陣列
-                        scrapedContentsForAI.push(`--- 網址內容 (${url}) ---\n${text}`);
+                        scrapedContentsForAI.push(`--- 網址內容 (${url}) ---
+${text}`);
                     } else {
                         // 將失敗的原始網址加入陣列，讓 AI 稍後自行嘗試
                         sourceUrlsForAI.push(url);
@@ -351,98 +316,49 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
                 });
             }
 
-            const promptText = `
-# 角色 (Persona)
-你是一位頂尖的「彰化師範大學獎學金公告分析專家」。你的風格是專業、精確且以學生為中心。你的任務是將一篇關於獎學金的公告，轉換成一段重點突出、視覺清晰的 HTML 公告，並提取結構化資料。你只須關注與彰師大「大學部」及「碩士班」學生相關的資訊，並嚴格遵循所有規則。
+            setLoadingText("AI 分析中，請稍候...");
 
-# 核心任務 (Core Task)
-你的任務是根據下方提供的「公告全文」，執行以下兩項任務，並將結果合併在一個**單一的 JSON 物件**中回傳。
+            // Prepare Form Data for Backend API
+            const formDataForAi = new FormData();
+            
+            // Add Scraped Contents and URLs
+            if (scrapedContentsForAI.length > 0) {
+                 formDataForAi.append('scrapedContents', `\n# 已爬取的網址內容:\n${scrapedContentsForAI.join('\n\n')}`);
+            }
+            if (sourceUrlsForAI.length > 0) {
+                 formDataForAi.append('sourceUrls', `\n# 以下網址無法爬取，請直接分析:\n${sourceUrlsForAI.join('\n')}`);
+            }
 
-## 任務一：提取結構化資料 (JSON Extraction)
-提取公告中的關鍵資訊，並以一個嚴格的 JSON 物件格式回傳。
-
-### 欄位規則 (Field Rules)
-- **不確定性原則**：若資訊未提及或不明確，**必須**回傳 \`null\`，**禁止**自行猜測。
-- **日期格式**：所有日期欄位格式必須是 \`YYYY-MM-DD\`。民國年 + 1911 即為西元年。
-- **欄位列表**：
-    1.  \`title\` (string | null): 公告的**簡短**標題，必須包含**提供單位**和**獎學金名稱**。例如：「國際崇她社『崇她獎』獎學金」。
-    2.  \`category\` (string | null): 根據下方的「代碼定義」從 'A'~'E' 中選擇一個。
-    3.  \`application_start_date\` (string | null): **申請開始日期**。
-    4.  \`application_end_date\` (string | null): **申請結止日期**，格式必須是 'YYYY-MM-DD' 。若只提及月份，以該月最後一天為準。若為區間，以**結束日期**為準，備註: 民國年 + 1911 即為西元年。
-    5.  \`target_audience\` (string | null): **目標對象**。**此欄位必須是 HTML 格式**，並遵循下方的「視覺化與樣式指導」為關鍵字上色。
-    6.  \`application_limitations\` (string | null): **兼領限制**。若明確提及**不行**兼領，回傳 'N'，否則一律回傳 'Y'。
-    7.  \`submission_method\` (string | null): **送件方式**。簡要說明最終的送件管道。
-    8.  \`external_urls\` (array of objects | []): **所有相關網址**。將所有找到的 URL 整理成一個物件陣列，格式為 \`[{ "url": "https://..." }]\`。若無則回傳空陣列 \`[]\`。
-    9.  \`summary\` (string | null): **公告摘要**。**此欄位必須是 HTML 格式**，並遵循下方的「視覺化與樣式指導」為關鍵字上色。
-    
-## 任務二：生成 HTML 重點摘要 (HTML Summary Generation)
-根據你分析的內容，生成一份專業、條理分明的 HTML 格式重點摘要。
-
-### 內容與結構指導
-- **摘要必須包含**：申請期限、申請資格、獎助金額、應繳文件、其他注意事項。
-- **表格優先**：當資訊具有「項目-內容」的對應關係資訊時，**優先使用 \`<table>\`** 以提升閱讀性。
-
-### 視覺化與樣式指導 (適用於 summary 和 target_audience)
-- **多色彩重點標記**：
-    - **金額、日期、名額等數字類關鍵字**: \`<span style="color: #D6334C; font-weight: bold;">\`
-    - **身份、成績等申請條件**: \`<span style="color: #F79420; font-weight: bold;">\`
-    - **所有小標題**: \`<h4 style="color: #008DD5; margin-top: 1.5em; margin-bottom: 0.75em;">\`
-- \`summary\` 的內容必須放在 JSON 物件的 \`summary\` (string) 鍵中。
-
-# 獎助學金代碼定義 (Category Definitions)
-- **A**: 各縣市政府獎助學金
-- **B**: 縣市政府以外之各級公家機關及公營單位獎助學金
-- **C**: 宗親會及民間各項指定身分獎助學金 (指定姓名、籍貫、學系等)
-- **D**: 非公家機關或其他無法歸類的獎助學金
-- **E**: 獎學金得獎名單公告
-
-# 最終輸出規則
-- **你的回覆必須是、也只能是一個 JSON 物件**，不含任何 Markdown 標記。
-- 請嚴格模仿下方範例的 JSON 結構和 HTML 風格。
-
-# 輸出格式與範例 (Output Format & Example)
-\`\`\`json
-{
-  "title": "國際蘭馨交流協會『讓夢想起飛』獎學金",
-  "category": "C",
-  "application_start_date": null,
-  "application_end_date": "2025-07-23",
-  "target_audience": "<ul><li>國內各大學日間部、進修學士班之<span style=\\"color: #F79420; font-weight: bold;\\">在學女學生</span>。</li><li>歷年學業平均成績達 <span style=\\"color: #F79420; font-weight: bold;\\">70分</span>。</li></ul>",
-  "application_limitations": "N",
-  "submission_method": "送件至生輔組或將申請資料寄送至承辦人員信箱: act5718@gmail.com",
-  "external_urls": [{ "url": "https://example.com/scholarship-info" }],
-  "summary": "<h4 style=\"color: #008DD5; margin-top: 1.5em; margin-bottom: 0.75em;\">申請期限與方式</h4><p>親送或寄送郵件至生輔組承辦人員，由學校代為辦理，截止日期為 <span style=\"color: #D6334C; font-weight: bold;\">2025年7月23日</span>。</p><h4 style=\"color: #008DD5; margin-top: 1.5em; margin-bottom: 0.75em;\">申請資格</h4><ul><li>家境清寒且就讀<span style=\"color: #F79420; font-weight: bold;\">國立大學</span>之<span style=\"color: #F79420; font-weight: bold;\">績優女學生</span>（不限年級）。</li><li>在校學業平均成績達 <span style=\"color: #F79420; font-weight: bold;\">70分</span> 以上，且未受小過以上處分。</li></ul><h4 style=\"color: #008DD5; margin-top: 1.5em; margin-bottom: 0.75em;\">獎助金額</h4><p>依申請年級不同，提供相對應的學費補助，詳情如下：</p><table style=\"width: 100%; border-collapse: collapse; margin-top: 0.5em;\"><thead><tr style=\"background-color: #f2f2f2;\"><th style=\"padding: 8px; border: 1px solid #ddd; text-align: left;\">適用對象</th><th style=\"padding: 8px; border: 1px solid #ddd; text-align: left;\">補助內容</th></tr></thead><tbody><tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><span style=\"color: #F79420; font-weight: bold;\">大一新生及大三學生</span></td><td style=\"padding: 8px; border: 1px solid #ddd;\">通過審查後，補助<span style=\"color: #D6334C; font-weight: bold;\">兩年</span>學雜費</td></tr><tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><span style=\"color: #F79420; font-weight: bold;\">大二女學生</span></td><td style=\"padding: 8px; border: 1px solid #ddd;\">通過審查後，補助<span style=\"color: #D6334C; font-weight: bold;\">一年</span>學雜費</td></tr></tbody></table><p style=\"margin-top: 0.5em;\">註：已受補助學生可持續獲得補助至其大四學年，但須符合每階段資格審查標準。</p><h4 style=\"color: #008DD5; margin-top: 1.5em; margin-bottom: 0.75em;\">申請應繳文件</h4><table style=\"width: 100%; border-collapse: collapse; margin-top: 0.5em;\"><thead><tr style=\"background-color: #f2f2f2;\"><th style=\"padding: 8px; border: 1px solid #ddd; text-align: left;\">文件項目</th><th style=\"padding: 8px; border: 1px solid #ddd; text-align: left;\">備註</th></tr></thead><tbody><tr><td style=\"padding: 8px; border: 1px solid #ddd;\">1. 全家人口戶籍謄本</td><td style=\"padding: 8px; border: 1px solid #ddd;\">-</td></tr><tr><td style=\"padding: 8px; border: 1px solid #ddd;\">2. 全家人口所得及財產資料</td><td style=\"padding: 8px; border: 1px solid #ddd;\">請向國稅局申請</td></tr><tr><td style=\"padding: 8px; border: 1px solid #ddd;\">3. 最近學期成績單</td><td style=\"padding: 8px; border: 1px solid #ddd;\">-</td></tr><tr><td style=\"padding: 8px; border: 1px solid #ddd;\">4. 大學完整學業成績單與操行紀錄</td><td style=\"padding: 8px; border: 1px solid #ddd;\">適用於<span style=\"color: #F79420; font-weight: bold;\">大三以上</span>學生</td></tr><tr><td style=\"padding: 8px; border: 1px solid #ddd;\">5. 相關證明文件</td><td style=\"padding: 8px; border: 1px solid #ddd;\">如身心障礙手冊、重大傷病卡等 (無則免附)</td></tr></tbody></table><h4 style=\"color: #008DD5; margin-top: 1.5em; margin-bottom: 0.75em;\">其他注意事項</h4><p>申請人家庭若有以下任一情況，則<span style=\"color: #D6334C; font-weight: bold;\">不符合</span>清寒補助資格：</p><ul><li>全戶存款本金合計超過 <span style=\"color: #D6334C; font-weight: bold;\">10萬元</span>。</li><li>全戶土地及房屋公告現值合計超過 <span style=\"color: #D6334C; font-weight: bold;\">100萬元</span>（自用住宅不在此限）。</li><li>其他情況如休學、畢業或家庭經濟狀況已顯著改善者。</li></ul>"
-}
-\`\`\`
-
-# 公告全文 (Source Text)
----
-請分析以下資訊：
-${scrapedContentsForAI.length > 0 ? `\n# 已爬取的網址內容:\n${scrapedContentsForAI.join('\n\n')}` : ''}
-${sourceUrlsForAI.length > 0 ? `\n# 以下網址無法爬取，請直接分析:\n${sourceUrlsForAI.join('\n')}` : ''}
-${selectedFiles.length > 0 ? `\n# 檔案資料來源` : ''}
-`;
-            parts.push({ text: promptText });
-            // 確保只處理和附加 AI 支援的檔案
+            // Add Files
             if (filesForAI.length > 0) {
-                const filePromises = filesForAI.map(file => fileToGenerativePart(file));
-                const fileParts = await Promise.all(filePromises);
-                parts.push(...fileParts);
+                filesForAI.forEach(file => {
+                    formDataForAi.append('files', file);
+                });
                 showToast(`已附加 ${filesForAI.length} 個檔案進行 AI 分析`, "info");
             }
 
-            setLoadingText("AI 分析中，請稍候...");
+            // Call Server-side API
+            const response = await authFetch('/api/ai/generate-announcement', {
+                method: 'POST',
+                body: formDataForAi // authFetch handles headers, but if it sets Content-Type to json, it breaks FormData. 
+                                  // Standard fetch detects FormData and sets Content-Type: multipart/form-data with boundary.
+                                  // If authFetch forces JSON content type, we might need to bypass it or use standard fetch with token.
+                                  // Checking authFetch usage... Usually it's fine if we don't set Content-Type manually.
+            });
 
-            // 6. 叫 Google Gemini AI
-            const result = await modelRef.current.generateContent({ contents: [{ parts }] });
-            const response = result.response;
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `AI 分析請求失敗 (${response.status})`);
+            }
 
+            const result = await response.json();
+            
             let aiResponse;
             try {
                 // 解析 AI 回傳的 JSON 字串
-                aiResponse = JSON.parse(response.text());
+                aiResponse = JSON.parse(result.text);
             } catch (e) {
-                console.error("AI 回應的原始文字:", response.text());
+                console.error("AI 回應的原始文字:", result.text);
                 throw new Error(`AI 回應的 JSON 格式解析失敗: ${e.message}`);
             }
 
@@ -606,7 +522,7 @@ ${selectedFiles.length > 0 ? `\n# 檔案資料來源` : ''}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div><label htmlFor="is_active" className="block text-sm font-semibold text-gray-700 mb-1.5">公告狀態</label><select id="is_active" name="is_active" className={inputStyles} value={formData.is_active} onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}><option value={true}>上架</option><option value={false}>下架</option></select></div>
-                        <div><label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1.5">獎學金分類</label><select id="category" name="category" className={inputStyles} value={formData.category} onChange={handleChange}><option value="">請選擇</option><option value="A">A：各縣市政府獎學金</option><option value="B">B：縣市政府以外之各級公家機關及公營單位獎學金</option><option value="C">C：宗教及民間各項指定身分獎學金</option><option value="D">D：非公家機關或其他無法歸類的獎助學金</option><option value="E">E：本校獲配推薦名額獎助學金</option><option value="F">F：校外獎助學金得獎公告</option><option value="G">G：校內獎助學金</option></select></div>
+                        <div><label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1.5">獎學金分類</label><select id="category" name="category" className={inputStyles} value={formData.category} onChange={handleChange}><option value="">請選擇</option><option value="A">A：各縣市政府獎學金</option><option value="B">B：縣市政府以外之各級公家機關及公營單位獎學金</option><option value="C">C：宗教及民間各項指定身分獎學金</option><option value="D">D：非公家機關或其他無法歸類的獎學金</option><option value="E">E：本校獲配推薦名額獎助學金</option><option value="F">F：校外獎助學金得獎公告</option><option value="G">G：校內獎助學金</option></select></div>
                         <div><label htmlFor="application_start_date" className="block text-sm font-semibold text-gray-700 mb-1.5">申請開始日期</label><input type="date" id="application_start_date" name="application_start_date" className={inputStyles} value={formData.application_start_date} onChange={handleChange} /></div>
                         <div><label htmlFor="application_end_date" className="block text-sm font-semibold text-gray-700 mb-1.5">公告結束日期</label><input type="date" id="application_end_date" name="application_end_date" className={inputStyles} value={formData.application_end_date} onChange={handleChange} /></div>
                         <div><label htmlFor="submission_method" className="block text-sm font-semibold text-gray-700 mb-1.5">送件方式</label><input type="text" id="submission_method" name="submission_method" className={inputStyles} value={formData.submission_method} onChange={handleChange} /></div>

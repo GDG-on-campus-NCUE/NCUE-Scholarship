@@ -1,17 +1,18 @@
 # 待辦事項 (TODO List)
 
-## 任務目標：於後台頁面新增系統金鑰管理功能 (System Keys Management)
+## 任務目標：於後台頁面新增系統金鑰管理功能 (System Keys Management) & AI 呼叫重構
 
-此功能旨在讓管理員能夠在後台介面直接配置系統所需的 API Keys，優先級高於環境變數，且無需重新部署即可生效。
+此功能旨在讓管理員能夠在後台介面直接配置系統所需的 API Keys，並將原本前端直接呼叫 Gemini 的邏輯重構為後端 API，以確保金鑰安全。
+
 **需支援的金鑰：**
 1. `SERP_API_KEY` (Server-side only): 用於 Google Search 增強 AI 回覆。
-2. `NEXT_PUBLIC_GEMINI_API_KEY` (Client & Server): 用於 AI 聊天與摘要生成。
+2. `GEMINI_API_KEY` (Server-side only): 用於 AI 聊天與摘要生成 (原 `NEXT_PUBLIC_GEMINI_API_KEY` 改為後端專用)。
 3. `NEXT_PUBLIC_TINYMCE_API_KEY` (Client only): 用於富文字編輯器。
 
 ### 1. 資料庫規劃 (Database)
 - [ ] **建立 `system_settings` 資料表**
-    - `key` (Text, Primary Key): 設定鍵名 (Enum: `SERP_API_KEY`, `NEXT_PUBLIC_GEMINI_API_KEY`, `NEXT_PUBLIC_TINYMCE_API_KEY`)
-    - `value` (Text): 設定值 (加密或明文儲存，視需求而定，目前建議明文但限制存取)
+    - `key` (Text, Primary Key): 設定鍵名 (Enum: `SERP_API_KEY`, `GEMINI_API_KEY`, `NEXT_PUBLIC_TINYMCE_API_KEY`)
+    - `value` (Text): 設定值 (建議明文儲存但限制存取)
     - `description` (Text): 設定說明
     - `updated_at` (Timestamp): 最後更新時間
     - `updated_by` (UUID): 最後更新者 (關聯至 auth.users)
@@ -22,43 +23,47 @@
 ### 2. 後端開發 (Backend)
 - [ ] **建立設定存取庫 `src/lib/config.js`**
     - 實作 `getSystemConfig(key)`：優先讀取 DB，若無則回退至 `process.env`。
-    - 實作 `getPublicSystemConfig()`：僅回傳允許公開的金鑰 (`NEXT_PUBLIC_*`)。
+    - 實作 `getPublicSystemConfig()`：僅回傳允許公開的金鑰 (`NEXT_PUBLIC_TINYMCE_API_KEY`)。
 - [ ] **新增管理 API `src/app/api/admin/settings/route.js`**
-    - `GET`: 回傳所有設定狀態 (金鑰值需遮蔽，如 `sk-******`，僅供確認是否有值)。
+    - `GET`: 回傳所有設定狀態 (金鑰值需遮蔽)。
     - `POST`: 接收並更新設定值 (需驗證 Admin 權限)。
 - [ ] **新增公開設定 API `src/app/api/settings/public/route.js`**
-    - `GET`: 回傳前端需要的公開金鑰 (`NEXT_PUBLIC_GEMINI_API_KEY`, `NEXT_PUBLIC_TINYMCE_API_KEY`)。
-    - 快取策略：可設定短暫 Cache 以減少 DB 負擔。
+    - `GET`: 回傳前端需要的公開金鑰 (`NEXT_PUBLIC_TINYMCE_API_KEY`)。
+- [ ] **新增 AI 生成 API `src/app/api/ai/generate-announcement/route.js`**
+    - 遷移原 `CreateAnnouncementModal` 中的 Prompt 邏輯至此。
+    - 使用 `getSystemConfig('GEMINI_API_KEY')` 讀取金鑰。
+    - 接收參數：`prompt` (或相關欄位資料)。
+    - 回傳：AI 生成的公告內容/摘要。
 - [ ] **更新 Server-side 使用點**
-    - `src/app/api/chat/route.js`: 使用 `getSystemConfig` 讀取 `SERP_API_KEY` 與 `NEXT_PUBLIC_GEMINI_API_KEY`。
+    - `src/app/api/chat/route.js`: 使用 `getSystemConfig` 讀取 `SERP_API_KEY` 與 `GEMINI_API_KEY`。
 
 ### 3. 前端開發 (Frontend)
 - [ ] **建立 Hook `src/hooks/useSystemSettings.js`**
-    - 用於 Client Components 獲取公開金鑰。
-    - 實作 Context 或 SWR 抓取 `/api/settings/public`。
+    - 用於 Client Components 獲取公開金鑰 (`TinyMCE`)。
+- [ ] **重構公告編輯模組 (Refactor)**
+    - `src/components/CreateAnnouncementModal.jsx` & `UpdateAnnouncementModal.jsx`:
+        - **移除** `GoogleGenerativeAI` SDK 的直接引用。
+        - **移除** `process.env.NEXT_PUBLIC_GEMINI_API_KEY` 的讀取。
+        - **新增** 呼叫 `/api/ai/generate-announcement` 的邏輯。
 - [ ] **更新 Client-side 使用點**
     - `src/components/TinyMCE.jsx`: 改用 Hook 取得 `NEXT_PUBLIC_TINYMCE_API_KEY`。
-    - `src/components/CreateAnnouncementModal.jsx` & `UpdateAnnouncementModal.jsx`: 改用 Hook 取得 `NEXT_PUBLIC_GEMINI_API_KEY`。
 - [ ] **新增元件 `src/components/admin/SettingsTab.jsx`**
-    - 表單欄位：
-        - SerpAPI Key
-        - Gemini API Key
-        - TinyMCE API Key
-    - 狀態顯示：區分「使用環境變數」或「使用資料庫設定」。
-    - 驗證與儲存功能。
+    - 表單欄位：SerpAPI Key, Gemini API Key, TinyMCE API Key。
+    - 狀態顯示與儲存功能。
 - [ ] **整合至 `src/app/manage/page.jsx`**
     - 新增「系統設定」分頁。
 
 ### 4. 安全性考量 (Security Check)
-- [ ] **權限控管**：`/api/admin/settings` 必須嚴格檢查 Admin 權限。
-- [ ] **敏感資料隔離**：`SERP_API_KEY` 絕對不可透過 `/api/settings/public` 洩漏給前端。
-- [ ] **遮蔽處理**：管理介面回傳金鑰時，務必進行遮蔽處理 (Masking)，避免管理員帳號被盜用時直接洩漏明碼。
+- [ ] **權限控管**：`/api/admin/settings` 與 `/api/ai/generate-announcement` 必須檢查 Admin 權限。
+- [ ] **敏感資料隔離**：確保 `GEMINI_API_KEY` 與 `SERP_API_KEY` 不會出現在 `/api/settings/public` 的回應中。
+- [ ] **遮蔽處理**：管理介面回傳金鑰時進行 Masking。
 
 ### 5. 測試 (Testing)
-- [ ] 驗證後台儲存後，API 回傳值是否更新。
-- [ ] 驗證前端 TinyMCE 編輯器在無環境變數但有 DB 設定時能否正常載入。
-- [ ] 驗證 Chat 功能 (Server-side) 是否能正確讀取 DB 中的 Gemini/Serp Key。
-- [ ] 驗證非管理員無法存取 `/api/admin/settings`。
+- [ ] 驗證後台儲存金鑰功能。
+- [ ] 驗證 TinyMCE 是否能正確載入。
+- [ ] 驗證 AI 聊天功能 (Chat) 是否正常。
+- [ ] 驗證 新增/修改公告時的 AI 輔助生成功能是否正常 (透過新 API)。
+
 
 
 請幫我修改，要適配以下三個環境變數，並能夠安全傳輸、正確使用，並且後台新的 tab 中可以輸入這三個金鑰：

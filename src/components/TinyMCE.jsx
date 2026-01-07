@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 const TinyMceEditor = ({ value, onChange, placeholder, disabled }) => {
     const [isClient, setIsClient] = useState(false);
     const editorRef = useRef(null);
+    const { settings } = useSystemSettings();
 
     useEffect(() => {
         // 這個 effect 確保程式碼只在客戶端執行，以避免 Next.js 的 SSR (伺服器端渲染) 問題。
@@ -54,7 +56,7 @@ const TinyMceEditor = ({ value, onChange, placeholder, disabled }) => {
                 }
             `}</style>
             <Editor
-                apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+                apiKey={settings.NEXT_PUBLIC_TINYMCE_API_KEY || process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
                 onInit={(evt, editor) => editorRef.current = editor}
                 
                 // --- 修正點 ---

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { verifyUserAuth, checkRateLimit, validateRequestData, handleApiError, logSuccessAction } from '@/lib/apiMiddleware'
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { supabase } from '@/lib/supabase/client'
+import { getSystemConfig } from '@/lib/config'
 
 const SYSTEM_PROMPT = `# 角色 (Persona)
 你是一位專為「彰化師範大學獎學金資訊平台」設計的**頂尖AI助理**。你的個性是專業、精確且樂於助人，你的任務是根據我提供給你的「# 參考資料」（這可能來自內部公告或外部網路搜尋），用**流暢的繁體中文**總結並回覆獎學金問題。
@@ -30,11 +31,12 @@ const SYSTEM_PROMPT = `# 角色 (Persona)
 
 async function callGeminiAPI(prompt, temperature = 0.4, isJsonResponse = false) {
     try {
-        if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
+        const apiKey = await getSystemConfig('GEMINI_API_KEY');
+        if (!apiKey) {
             throw new Error('Gemini API key not configured');
         }
 
-        const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(apiKey);
         const generationConfig = {
             temperature: temperature,
             maxOutputTokens: 8192
