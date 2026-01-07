@@ -314,7 +314,13 @@ export default function AnnouncementsTab() {
             </div>
 
             <CreateAnnouncementModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} refreshAnnouncements={fetchAnnouncements} />
-            <UpdateAnnouncementModal isOpen={!!editing} onClose={() => setEditing(null)} announcement={editing} refreshAnnouncements={fetchAnnouncements} />
+            <UpdateAnnouncementModal 
+                isOpen={!!editing} 
+                onClose={() => setEditing(null)} 
+                announcement={editing} 
+                refreshAnnouncements={fetchAnnouncements} 
+                onSwitchTo={setEditing}
+            />
             <DeleteAnnouncementModal isOpen={!!deletingId} onClose={() => setDeletingId(null)} announcementId={deletingId} refreshAnnouncements={fetchAnnouncements} />
             <AnnouncementPreviewModal
                 isOpen={preview.open}

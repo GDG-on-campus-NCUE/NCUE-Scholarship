@@ -8,7 +8,7 @@ import TinyMCE from './TinyMCE';
 import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import { authFetch } from '@/lib/authFetch';
-import { X, Loader2, Save, Trash2, Undo, UploadCloud, File as FileIcon, Link as LinkIcon, PlusCircle } from 'lucide-react';
+import { X, Loader2, Save, Trash2, Undo, UploadCloud, File as FileIcon, Link as LinkIcon, PlusCircle, Copy } from 'lucide-react';
 
 // --- Reusable Components for this Modal ---
 const formatFileSize = (size) => {
@@ -124,8 +124,9 @@ const MultipleFilesUploadArea = ({ selectedFiles, setSelectedFiles, filesToRemov
 };
 
 
-export default function UpdateAnnouncementModal({ isOpen, onClose, announcement, refreshAnnouncements }) {
+export default function UpdateAnnouncementModal({ isOpen, onClose, announcement, refreshAnnouncements, onSwitchTo }) {
     const [isSaving, setIsSaving] = useState(false);
+    const [isDuplicating, setIsDuplicating] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [filesToRemove, setFilesToRemove] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -205,6 +206,37 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
     };
     const addUrlInput = () => setFormData(prev => ({ ...prev, external_urls: [...prev.external_urls, { url: '' }] }));
     const removeUrlInput = (index) => setFormData(prev => ({ ...prev, external_urls: prev.external_urls.filter((_, i) => i !== index) }));
+
+    const handleDuplicate = async () => {
+        if (!window.confirm('確定要複製此公告嗎？')) return;
+        setIsDuplicating(true);
+        try {
+            showToast('正在複製公告...', 'info');
+            const res = await authFetch('/api/admin/announcements/duplicate', {
+                method: 'POST',
+                body: JSON.stringify({ announcementId: announcement.id })
+            });
+            const data = await res.json();
+            
+            if (!res.ok) throw new Error(data.error || '複製失敗');
+            
+            showToast('公告已成功複製！即將跳轉...', 'success');
+            
+            if (refreshAnnouncements) await refreshAnnouncements();
+            onClose();
+            
+            if (onSwitchTo && data.newAnnouncement) {
+                // 稍微延遲以確保列表刷新 (雖然 await refreshAnnouncements 應該夠了)
+                setTimeout(() => {
+                    onSwitchTo(data.newAnnouncement);
+                }, 100);
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            setIsDuplicating(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!formData.title.trim() || !formData.summary.replace(/<[^>]*>?/gm, '').trim()) {
@@ -380,6 +412,15 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                             </div>
 
                             <div className="p-4 bg-black/5 flex justify-end space-x-3 flex-shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={handleDuplicate}
+                                    disabled={isSaving || isDuplicating}
+                                    className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg border border-amber-400 bg-transparent text-amber-600 transition-all duration-300 ease-in-out transform hover:bg-amber-100 hover:text-amber-700 hover:border-amber-400 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-amber-500/20 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200 disabled:transform-none disabled:shadow-none"
+                                >
+                                    {isDuplicating ? <Loader2 size={16} className="animate-spin" /> : <Copy size={16} />}
+                                    <span>複製公告</span>
+                                </button>
                                 <button
                                     type="button"
                                     onClick={handleSave}
