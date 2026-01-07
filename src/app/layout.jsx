@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const notoSans = Noto_Sans_TC({
 	subsets: ['latin'],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
 						</main>
 						<Footer />
 					</div>
+					<ScrollToTop />
 				</ClientProviders>
 			</body>
 		</html>
