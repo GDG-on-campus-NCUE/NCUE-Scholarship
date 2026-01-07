@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Paperclip, Link as LinkIcon, Calendar, Users, Send as SendIcon, Download, Info, ExternalLink } from 'lucide-react';
+import { X, Paperclip, Link as LinkIcon, Calendar, Users, Send as SendIcon, Download, Info, ExternalLink, Eye } from 'lucide-react';
 import DownloadPDFButton from '@/components/admin/DownloadPDFButton';
 
 const categoryStyles = {
@@ -24,18 +24,51 @@ const getPublicAttachmentUrl = (filePath) => {
     return `/api/attachments/${fileName}`;
 };
 
+// Helper to wrap tables in a scrollable container
+const wrapTables = (htmlContent) => {
+    if (!htmlContent) return '';
+    // Use regex to find table tags and wrap them
+    // Note: This matches the opening <table...> up to the closing </table>
+    return htmlContent.replace(
+        /(<table[^>]*>[\s\S]*?<\/table>)/gi, 
+        '<div class="table-scroll-wrapper">$1</div>'
+    );
+};
+
 export default function AnnouncementDetailModal({ isOpen, onClose, announcement }) {
+    const [viewCount, setViewCount] = useState(null);
 
     useEffect(() => {
         if (isOpen) {
             document.body.classList.add('modal-open');
+            
+            // Fetch and increment view count
+            if (announcement?.id) {
+                // Initialize with existing count if available (optional)
+                setViewCount(announcement.view_count || 0);
+
+                fetch('/api/announcements/view', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ announcementId: announcement.id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.view_count !== undefined) {
+                        setViewCount(data.view_count);
+                    }
+                })
+                .catch(console.error);
+            }
+
         } else {
             document.body.classList.remove('modal-open');
+            setViewCount(null);
         }
         return () => {
             document.body.classList.remove('modal-open');
         };
-    }, [isOpen]);
+    }, [isOpen, announcement]);
 
     const parsedUrls = useMemo(() => {
         if (!announcement?.external_urls) return [];
@@ -84,19 +117,17 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
         return { displayString, colorClass };
     }, [announcement]);
 
+    const targetAudienceHtml = useMemo(() => {
+        if (!announcement?.target_audience) return '未指定';
+        return wrapTables(announcement.target_audience);
+    }, [announcement]);
+
     const finalContent = useMemo(() => {
         if (!announcement) return '無詳細內容';
-        return announcement.summary || '無詳細內容';
+        return wrapTables(announcement.summary || '無詳細內容');
     }, [announcement]);
 
     if (!isOpen || !announcement) return null;
-
-    const downloadButton = (
-        <DownloadPDFButton
-            announcement={announcement}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold border border-violet-300 bg-white/80 backdrop-blur-sm text-violet-700 rounded-lg transition-all duration-300 ease-in-out transform hover:bg-violet-100 hover:text-violet-800 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-violet-500/30"
-        />
-    );
 
     return (
         <AnimatePresence>
@@ -116,11 +147,28 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                         body.modal-open .header-fixed {
                             display: none;
                         }
-                        .rich-text-content table {
-                            display: block;
-                            max-width: 100%;
+                        .rich-text-content {
+                            overflow-x: hidden; /* Prevent horizontal scroll on container */
+                        }
+                        /* Scroll wrapper for tables */
+                        .table-scroll-wrapper {
+                            width: 100%;
                             overflow-x: auto;
-                            white-space: nowrap;
+                            -webkit-overflow-scrolling: touch;
+                            margin-bottom: 1rem;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 0.5rem;
+                        }
+                        .table-scroll-wrapper table {
+                            width: 100% !important; /* Force full width within wrapper */
+                            border-collapse: collapse;
+                            margin: 0; /* Remove margin as wrapper handles it */
+                        }
+                        .table-scroll-wrapper th, 
+                        .table-scroll-wrapper td {
+                            padding: 0.75rem 1rem;
+                            white-space: normal; /* Allow text wrapping */
+                            min-width: 120px; /* Ensure columns don't collapse too much on mobile */
                         }
                         .rich-text-content img {
                             max-width: 100%;
@@ -156,7 +204,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                             </div>
                         </div>
 
-                        <div className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto hide-scrollbar pb-24">
+                        <div className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto hide-scrollbar">
                             <div className="grid grid-cols-1 sm:grid-cols-10 gap-x-8 gap-y-6 text-sm">
                                 <div className="sm:col-span-3 flex flex-col gap-y-6">
                                     <div className="flex items-start gap-3">
@@ -232,14 +280,20 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                             )}
                         </div>
 
-                        <div className="hidden sm:block absolute bottom-6 right-6 z-10">
-                            {downloadButton}
+                        {/* Footer - Synchronized with Header style */}
+                        <div className="p-5 border-t border-black/10 flex justify-between items-center gap-4 flex-shrink-0">
+                            <div className="flex items-center text-slate-500 text-sm font-medium gap-1.5 px-3">
+                                <Eye className="w-4 h-4 text-slate-400" />
+                                <span className="tabular-nums">瀏覽數：{viewCount !== null ? viewCount : '...'} 次</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <DownloadPDFButton
+                                    announcement={announcement}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-100"
+                                />
+                            </div>
                         </div>
                     </motion.div>
-
-                    <div className="sm:hidden fixed bottom-6 right-6 z-50">
-                        {downloadButton}
-                    </div>
                 </motion.div>
             )}
         </AnimatePresence>

@@ -1,214 +1,82 @@
-'use client';
+# 公告瀏覽計數器開發規劃書
 
-import { useEffect, useRef, useState } from 'react';
-import { ArrowUpIcon } from '@heroicons/react/24/solid';
-import { useLanguage } from '@/hooks/useLanguage';
-import { useTheme } from '@/hooks/useTheme';
+## 1. 功能概述
+實作公告瀏覽計數功能，具備 IP 防刷機制（1小時內重複進入不重複計算），並在首頁公告詳情與管理後台顯示。
 
-export default function ScrollToTop() {
-    const [progress, setProgress] = useState(0);
-    const [visible, setVisible] = useState(true);    // 是否顯示進度環（含淡入淡出）
-    const prevYRef = useRef(0);                      // 記錄前一次滾動位置
+## 2. 資料庫設計 (Database Schema)
+將建立新的 Migration 檔案 `supabase/migrations/20260107_add_view_counter.sql`：
 
-    const { language } = useLanguage();
-    const { theme } = useTheme();
-    const isLightTheme = theme === 'light';
+```sql
+-- 1. 在 announcements 表中新增計數欄位
+ALTER TABLE public.announcements 
+ADD COLUMN view_count INTEGER DEFAULT 0 NOT NULL;
 
-    // 幾何
-    const radius = 20;
-    const circumference = 2 * Math.PI * radius;
-    const segmentLength = circumference / 4;
+-- 2. 建立瀏覽記錄表（防刷用途）
+CREATE TABLE public.announcement_views (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    announcement_id uuid NOT NULL,
+    ip_address inet NOT NULL,
+    viewed_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT announcement_views_pkey PRIMARY KEY (id),
+    CONSTRAINT announcement_views_announcement_id_fkey FOREIGN KEY (announcement_id) 
+        REFERENCES public.announcements(id) ON DELETE CASCADE
+);
 
-    // 四段（12 點開始、順時鐘）
-    const segments = [
-        { id: 'grad-red-yellow', d: `M 24 4  A ${radius} ${radius} 0 0 1 44 24`, start: 0.00 },
-        { id: 'grad-yellow-green', d: `M 44 24 A ${radius} ${radius} 0 0 1 24 44`, start: 0.25 },
-        { id: 'grad-green-blue', d: `M 24 44 A ${radius} ${radius} 0 0 1 4  24`, start: 0.50 },
-        { id: 'grad-blue-red', d: `M 4  24 A ${radius} ${radius} 0 0 1 24 4`, start: 0.75 },
-    ];
+-- 建立索引加速查詢
+CREATE INDEX idx_announcement_views_check 
+ON public.announcement_views (announcement_id, ip_address, viewed_at);
 
-    useEffect(() => {
-        const UP_THRESHOLD = 4;          // px：過濾微小抖動
-        const DOWN_THRESHOLD = 4;
-        const HIDE_OFFSET = 80;          // px：向下超過此距離才隱藏
-        const MOBILE_BREAKPOINT = 768;   // 與 Tailwind md 相同
+-- 3. 自動更新計數的 Trigger
+CREATE OR REPLACE FUNCTION public.increment_view_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE public.announcements
+    SET view_count = view_count + 1
+    WHERE id = NEW.announcement_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-        const onScroll = () => {
-            const y = window.scrollY;
-            const docH = document.documentElement.scrollHeight - window.innerHeight;
-            const p = docH > 0 ? y / docH : 0;
-            setProgress(Math.max(0, Math.min(p, 1)));
+CREATE TRIGGER on_view_created
+AFTER INSERT ON public.announcement_views
+FOR EACH ROW
+EXECUTE FUNCTION public.increment_view_count();
+```
 
-            const dy = y - prevYRef.current;
-            const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+## 3. 後端 API 實作
+- **路徑**: `src/app/api/announcements/view/route.js`
+- **邏輯**: 
+    1. 獲取 Client IP (`x-forwarded-for`)。
+    2. 檢查 `announcement_views` 在過去 1 小時內是否有相同 IP 與 ID 的紀錄。
+    3. 若無紀錄，則插入新紀錄（觸發 Trigger 更新總數）。
 
-            if (isMobile) {
-                // 手機版：向上顯示，向下（且已離開頂端）隱藏
-                if (dy < -UP_THRESHOLD) {
-                    setVisible(true);
-                } else if (dy > DOWN_THRESHOLD && y > HIDE_OFFSET) {
-                    setVisible(false);
-                }
-            } else {
-                // 桌機版：始終顯示
-                setVisible(true);
-            }
+## 4. 前端介面規劃
 
-            prevYRef.current = y;
-        };
+### A. 公開首頁 (Public)
+- **檔案**: `src/components/AnnouncementDetailModal.jsx`
+- **位置**: 於 Modal Footer 的「下載按鈕」左方顯示。
+- **樣式**: 「瀏覽數：X 次」，搭配灰色系文字或小圖示。
+- **觸發**: Modal 開啟時呼叫 API。
 
-        prevYRef.current = window.scrollY;
-        onScroll();
-        window.addEventListener('scroll', onScroll, { passive: true });
-        window.addEventListener('resize', onScroll);
-        return () => {
-            window.removeEventListener('scroll', onScroll);
-            window.removeEventListener('resize', onScroll);
-        };
-    }, []);
+### B. 管理後台 (Admin)
+- **檔案**: `src/components/admin/AnnouncementsTab.jsx`
+- **RWD 設計**:
+    - **桌面版**: 於表格中新增「瀏覽數」獨立直欄，支援點擊標題排序。
+    - **手機版**: 為了節省空間，瀏覽數將顯示在「公告標題」下方的副標題區域（例如：標題下方的灰色小字或 Badge 標籤），確保不擠壓表格寬度。
 
-    return (
-        <div
-            className={[
-                'fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50',
-                'transition-opacity duration-300',
-                visible ? 'opacity-100' : 'opacity-0 pointer-events-none',
-            ].join(' ')}
-            style={{ width: '3.25rem', height: '3.25rem' }}
-        >
-            <div className="relative w-full h-full aspect-square">
-                <button
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    aria-label={language === 'zh' ? '回到頂端' : 'Back to top'}
-                    className={[
-                        'absolute inset-0 rounded-full flex items-center justify-center',
-                        'shadow-lg transition-transform duration-300 hover:scale-110',
-                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-                        isLightTheme
-                            ? 'bg-slate-200/90 text-slate-900 focus-visible:ring-slate-800'
-                            : 'bg-slate-800/85 text-white focus-visible:ring-slate-200',
-                    ].join(' ')}
-                    style={{ lineHeight: 0, zIndex: 0 }}
-                >
-                    <ArrowUpIcon className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-
-                {/* 外環（彩色進度） */}
-                <svg
-                    className="absolute inset-0 w-full h-full"
-                    viewBox="0 0 48 48"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ pointerEvents: 'none', zIndex: 10 }}
-                    aria-hidden="true"
-                >
-                    <defs>
-                        <linearGradient id="grad-red-yellow" x1="24" y1="4" x2="44" y2="24" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stopColor="#ea4335" />
-                            <stop offset="100%" stopColor="#f9ab00" />
-                        </linearGradient>
-                        <linearGradient id="grad-yellow-green" x1="44" y1="24" x2="24" y2="44" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stopColor="#f9ab00" />
-                            <stop offset="100%" stopColor="#34a853" />
-                        </linearGradient>
-                        <linearGradient id="grad-green-blue" x1="24" y1="44" x2="4" y2="24" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stopColor="#34a853" />
-                            <stop offset="100%" stopColor="#4285f4" />
-                        </linearGradient>
-                        <linearGradient id="grad-blue-red" x1="4" y1="24" x2="24" y2="4" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stopColor="#4285f4" />
-                            <stop offset="100%" stopColor="#ea4335" />
-                        </linearGradient>
-                    </defs>
-
-                    {/* 背景圓環 */}
-                    <circle
-                        cx="24"
-                        cy="24"
-                        r={radius}
-                        strokeWidth="4"
-                        fill="none"
-                        className={isLightTheme ? 'stroke-slate-300' : 'stroke-slate-700'}
-                    />
-
-                    {/* 彩色進度：未到該段不渲染，避免頂部四色點 */}
-                    {segments.map(({ id, d, start }) => {
-                        const segProgress = (progress - start) * 4; // 0~1
-                        if (segProgress <= 0) return null;
-                        const clamped = Math.min(segProgress, 1);
-                        return (
-                            <path
-                                key={id}
-                                d={d}
-                                stroke={`url(#${id})`}
-                                strokeWidth="4"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                pathLength={segmentLength}
-                                strokeDasharray={segmentLength}
-                                strokeDashoffset={segmentLength * (1 - clamped)}
-                            />
-                        );
-                    })}
-                </svg>
-            </div>
-        </div>
-    );
-}
-
+## 5. 實作步驟
+1. [x] 執行資料庫 Migration。
+2. [x] 建立後端計數 API。
+3. [x] 實作前端 Public Modal 的計數觸發與顯示。
+4. [x] 實作 Admin 後台表格的瀏覽數顯示與排序功能。
 
 ---
 
-以下是現有之 supabase 資料表結構，供參考：
+### 附錄：原始需求與參考結構
+> 幫我規劃並新增公告瀏覽計數器的功能，並且要能避免同一個 IP 在短時間內開啟導致的重複計數，該記數要顯示在首頁的公告列表點開單一公告後，下載按鈕的左方，顯示內容為「瀏覽數：X 次」，X 為該公告的瀏覽次數。
+> 並且在管理後台>公告管理頁面中，也要能看到每則公告的瀏覽次數，方便管理者了解每則公告的受歡迎程度。至於要放置的地方，請幫我規劃並且要有良好的 RWD，最好是可以在手機版與桌面版都能有良好的顯示效果。
 
--- WARNING: This schema is for context only and is not meant to be run.
--- Table order and constraints may not be valid for execution.
-
-CREATE TABLE public.announcements (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  title character varying NOT NULL,
-  summary text,
-  category character varying,
-  application_start_date date,
-  application_end_date date,
-  target_audience text,
-  application_limitations character varying,
-  submission_method character varying,
-  external_urls text,
-  is_active boolean DEFAULT false,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT announcements_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.attachments (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  announcement_id uuid,
-  file_name character varying NOT NULL,
-  stored_file_path character varying NOT NULL,
-  uploaded_at timestamp with time zone DEFAULT now(),
-  file_size integer,
-  mime_type character varying,
-  CONSTRAINT attachments_pkey PRIMARY KEY (id),
-  CONSTRAINT attachments_announcement_id_fkey FOREIGN KEY (announcement_id) REFERENCES public.announcements(id)
-);
-CREATE TABLE public.chat_history (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid,
-  session_id uuid DEFAULT uuid_generate_v4(),
-  role character varying,
-  message_content text,
-  timestamp timestamp with time zone DEFAULT now(),
-  is_read boolean DEFAULT false,
-  CONSTRAINT chat_history_pkey PRIMARY KEY (id),
-  CONSTRAINT chat_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
-);
-CREATE TABLE public.profiles (
-  id uuid NOT NULL,
-  student_id text UNIQUE,
-  username text,
-  role text DEFAULT 'user'::text,
-  created_at timestamp with time zone DEFAULT now(),
-  avatar_url text,
-  CONSTRAINT profiles_pkey PRIMARY KEY (id),
-  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
-);
+#### 現有 Table 參考
+- `public.announcements`: 主表
+- `public.attachments`: 附件表
+- `public.profiles`: 用戶表

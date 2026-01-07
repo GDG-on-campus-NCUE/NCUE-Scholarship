@@ -11,6 +11,7 @@ import { ChevronUp } from 'lucide-react';
 export default function ScrollToTop() {
     const [progress, setProgress] = useState(0);
     const [visible, setVisible] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const prevYRef = useRef(0);
 
     // 外框尺寸 56px (3.5rem)
@@ -19,6 +20,21 @@ export default function ScrollToTop() {
     // 圓環直徑 (SVG viewbox 48) -> 實際像素換算
     // 為了簡單對齊，我們讓 CSS 漸層填滿整個容器，然後用 mask 挖洞
     const progressDeg = progress * 360;
+
+    useEffect(() => {
+        // 監聽 Modal 開啟狀態
+        const checkModalStatus = () => {
+            setIsModalOpen(document.body.classList.contains('modal-open'));
+        };
+
+        const observer = new MutationObserver(checkModalStatus);
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        
+        // 初始化檢查
+        checkModalStatus();
+
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -57,10 +73,12 @@ export default function ScrollToTop() {
     const endX = center + r * Math.sin(angleRad);
     const endY = center - r * Math.cos(angleRad);
 
+    const shouldShow = visible && !isModalOpen;
+
     return (
         <div
             className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ease-in-out ${
-                visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-50 pointer-events-none'
+                shouldShow ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-10 scale-50 pointer-events-none'
             }`}
             style={{ width: `${size}px`, height: `${size}px` }}
         >

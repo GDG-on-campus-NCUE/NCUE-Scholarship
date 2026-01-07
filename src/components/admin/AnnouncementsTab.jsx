@@ -7,7 +7,7 @@ import UpdateAnnouncementModal from '@/components/UpdateAnnouncementModal';
 import DeleteAnnouncementModal from '@/components/DeleteAnnouncementModal';
 import AnnouncementPreviewModal from '@/components/AnnouncementPreviewModal';
 import Toast from '@/components/ui/Toast';
-import { Plus, Search, ChevronsUpDown, ArrowDown, ArrowUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ChevronDown, Link } from 'lucide-react';
+import { Plus, Search, ChevronsUpDown, ArrowDown, ArrowUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ChevronDown, Link, Eye } from 'lucide-react';
 import { authFetch } from '@/lib/authFetch';
 import { motion, AnimatePresence } from 'framer-motion';
 import DownloadPDFButton from './DownloadPDFButton';
@@ -169,6 +169,9 @@ export default function AnnouncementsTab() {
                             <tr>
                                 <th className="p-4 px-6 font-semibold text-gray-500">標題</th>
                                 <th className="p-4 px-6 font-semibold text-gray-500 w-24">分類</th>
+                                <th className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-28 text-center" onClick={() => handleSort('view_count')}>
+                                    <div className="flex items-center justify-center">瀏覽數 {renderSortIcon('view_count')}</div>
+                                </th>
                                 <th className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-36" onClick={() => handleSort('application_end_date')}>
                                     <div className="flex items-center">申請截止日 {renderSortIcon('application_end_date')}</div>
                                 </th>
@@ -181,14 +184,17 @@ export default function AnnouncementsTab() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr><td colSpan="6" className="text-center p-12 text-gray-500">載入中...</td></tr>
+                                <tr><td colSpan="7" className="text-center p-12 text-gray-500">載入中...</td></tr>
                             ) : paginatedAnnouncements.length === 0 ? (
-                                <tr><td colSpan="6" className="text-center p-12 text-gray-500">找不到符合條件的公告。</td></tr>
+                                <tr><td colSpan="7" className="text-center p-12 text-gray-500">找不到符合條件的公告。</td></tr>
                             ) : (
                                 paginatedAnnouncements.map((ann) => (
                                     <tr key={ann.id} className="transform transition-all duration-300 hover:bg-violet-100/50 hover:shadow-xl z-0 hover:z-10 hover:scale-[1.02]">
                                         <td className="p-4 px-6 font-medium text-gray-800 break-words">{ann.title}</td>
                                         <td className="p-4 px-6 text-gray-600">{ann.category}</td>
+                                        <td className="p-4 px-6 text-center text-gray-600 font-mono">
+                                            {(ann.view_count || 0).toLocaleString()}
+                                        </td>
                                         <td className="p-4 px-6 text-gray-600 font-medium">{ann.application_end_date ? new Date(ann.application_end_date).toLocaleDateString('en-CA') : '無期限'}</td>
                                         <td className="p-4 px-6">
                                             <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${ann.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{ann.is_active ? '上架' : '下架'}</span>
@@ -231,6 +237,13 @@ export default function AnnouncementsTab() {
                                     >
                                         <div className="flex-1 pr-4">
                                             <h3 className="font-bold text-base text-gray-900">{ann.title}</h3>
+                                            <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
+                                                <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                    <Eye className="w-3 h-3" />
+                                                    {ann.view_count || 0}
+                                                </span>
+                                                <span>{ann.category}</span>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-x-3 flex-shrink-0">
                                             <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${ann.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -256,6 +269,9 @@ export default function AnnouncementsTab() {
                                                     <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm mb-4">
                                                         <div className="font-semibold text-gray-500">分類</div>
                                                         <div className="text-gray-700">{ann.category || '-'}</div>
+
+                                                        <div className="font-semibold text-gray-500">瀏覽數</div>
+                                                        <div className="text-gray-700">{(ann.view_count || 0).toLocaleString()} 次</div>
 
                                                         <div className="font-semibold text-gray-500">申請截止</div>
                                                         <div className="text-gray-700">{ann.application_end_date ? new Date(ann.application_end_date).toLocaleDateString('en-CA') : '無期限'}</div>
