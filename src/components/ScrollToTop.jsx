@@ -83,35 +83,25 @@ export default function ScrollToTop() {
             style={{ width: `${size}px`, height: `${size}px` }}
         >
             <div className="relative w-full h-full">
-                {/* 
-                   底層背景圓環 (淺灰色軌道) 
-                   直接畫一個圓框
-                */}
+                {/* 底層背景圓環 (淺灰色軌道) 直接畫一個圓框 */}
                 <div 
                     className="absolute inset-0 rounded-full border-4 border-slate-100" 
                     style={{ zIndex: 0 }}
                 />
 
-                {/* 
-                   進度漸層環 (CSS Conic Gradient)
-                */}
+                {/* 進度漸層環 (CSS Conic Gradient) */}
                 <div 
                     className="absolute inset-0 rounded-full" 
                     style={{ 
                         zIndex: 1,
                         background: `conic-gradient(from 0deg at 50% 50%, #d8b4fe 0%, #7e22ce ${progressDeg}deg, transparent ${progressDeg}deg)`,
-                        // 使用 maskImage 挖出中間的洞
                         // 遮罩：白色區域會顯示，透明區域會隱藏
-                        // 我們要顯示一個圓環：radial-gradient
                         WebkitMaskImage: 'radial-gradient(transparent 58%, black 61%)',
                         maskImage: 'radial-gradient(transparent 58%, black 61%)',
                     }}
                 />
 
-                {/* 
-                   圓頭修飾 (SVG)
-                   覆蓋在漸層之上
-                */}
+                {/* 圓頭修飾 (SVG) 覆蓋在漸層之上 */}
                 <svg 
                     className="absolute inset-0 w-full h-full pointer-events-none" 
                     style={{ zIndex: 2 }}
@@ -131,10 +121,7 @@ export default function ScrollToTop() {
                     )}
                 </svg>
 
-                {/* 
-                   中央按鈕 
-                   內縮 4px (inset-1) 避免蓋住外環
-                */}
+                {/* 中央按鈕內縮 4px (inset-1) 避免蓋住外環 */}
                 <button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     aria-label="回到頂端"

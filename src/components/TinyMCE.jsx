@@ -10,18 +10,16 @@ const TinyMceEditor = ({ value, onChange, placeholder, disabled }) => {
     const { settings } = useSystemSettings();
 
     useEffect(() => {
-        // 這個 effect 確保程式碼只在客戶端執行，以避免 Next.js 的 SSR (伺服器端渲染) 問題。
+        // 確保程式碼只在客戶端執行，以避免 Next.js 的 SSR (伺服器端渲染) 問題。
         setIsClient(true);
     }, []);
 
     const handleEditorChange = (content, editor) => {
-        // 當編輯器內容改變時，呼叫從 props 傳入的 onChange 函式，
-        // 將新的內容傳回給父元件，更新父元件的狀態。
+        // 當編輯器內容改變時，呼叫從 props 傳入的 onChange 函式，將新的內容傳回給父元件，更新父元件的狀態。
         onChange(content);
     };
 
     // 如果還沒切換到客戶端環境，顯示一個載入提示。
-    // 這是因為 TinyMCE 這種複雜的編輯器依賴瀏覽器環境 (window, document)，無法在伺服器端渲染。
     if (!isClient) {
         return (
             <div
@@ -59,11 +57,6 @@ const TinyMceEditor = ({ value, onChange, placeholder, disabled }) => {
                 apiKey={settings.NEXT_PUBLIC_TINYMCE_API_KEY || process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
                 onInit={(evt, editor) => editorRef.current = editor}
                 
-                // --- 修正點 ---
-                // 將 initialValue 改為 value。
-                // initialValue 只在元件首次掛載時生效。
-                // 使用 value 才能讓編輯器成為一個真正的「受控元件」，
-                // 其內容會跟隨 props 的變化而更新，且不會遺失游標位置。
                 value={value || ''}
                 
                 onEditorChange={handleEditorChange}
