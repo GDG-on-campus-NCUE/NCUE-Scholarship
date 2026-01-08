@@ -12,23 +12,44 @@ export const HeaderContext = createContext({ isHeaderVisible: true });
 
 const Header = forwardRef((props, ref) => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 	const [isOverDark, setIsOverDark] = useState(false);
 	const mobileMenuRef = useRef(null);
+	const userMenuRef = useRef(null);
 
 	const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 	const scrollPosition = useRef(0);
 	const scrollingDownDelta = useRef(0);
 
 	const { user, loading, signOut, isAuthenticated, isAdmin } = useAuth();
+	const [userIp, setUserIp] = useState("");
 	const pathname = usePathname();
 
 	const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-	const closeMenu = () => setIsMenuOpen(false);
+	const closeMenu = () => {
+		setIsMenuOpen(false);
+		setIsUserMenuOpen(false);
+	};
 
 	const handleLogout = async () => {
 		await signOut();
 		closeMenu();
 	};
+
+	useEffect(() => {
+		const fetchIp = async () => {
+			if (isAuthenticated && !userIp) {
+				try {
+					const response = await fetch('/api/get-ip');
+					const data = await response.json();
+					setUserIp(data.ip);
+				} catch (error) {
+					console.error("Failed to fetch IP:", error);
+				}
+			}
+		};
+		fetchIp();
+	}, [isAuthenticated, userIp]);
 
 	const handleKeyDown = (event) => {
 		if (event.key === 'Escape') {
@@ -83,6 +104,23 @@ const Header = forwardRef((props, ref) => {
 		};
 	}, [isMenuOpen]);
 
+	// 點擊外部關閉選單
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+				setIsUserMenuOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
+
+	// 路徑變更自動關閉選單
+	useEffect(() => {
+		setIsUserMenuOpen(false);
+		setIsMenuOpen(false);
+	}, [pathname]);
+
 
 	const navLinks = [
 		{ href: '/', label: '首頁' },
@@ -107,6 +145,14 @@ const Header = forwardRef((props, ref) => {
 	};
 
 	const filteredNavLinks = getFilteredLinks();
+
+	const formatIp = (ip) => {
+		if (!ip) return "";
+		if (ip.includes(':') && ip.length > 15) {
+			return `${ip.substring(0, 8)}...${ip.substring(ip.length - 4)}`;
+		}
+		return ip;
+	};
 
 	const LogoTitle = () => (
 		<Link href="/" className="flex items-center space-x-3 focus:outline-none p-1" aria-label="回到首頁" onClick={closeMenu}>
@@ -136,18 +182,38 @@ const Header = forwardRef((props, ref) => {
 							</Link>
 						))}
 						{isAuthenticated && (
-							<div className="relative group ml-4">
-								<button className="flex flex-row items-center space-x-2 nav-link navbar-link">
-									<span>Hi, {user?.user_metadata?.name || 'User'}</span>
-									<svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+							<div 
+								className="relative ml-4" 
+								ref={userMenuRef}
+								onMouseEnter={() => setIsUserMenuOpen(true)}
+								onMouseLeave={() => setIsUserMenuOpen(false)}
+							>
+								<button 
+									onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+									className="flex flex-row items-center space-x-2 nav-link navbar-link focus:outline-none"
+								>
+									<span className="truncate max-w-[150px] xl:max-w-xs text-left">
+										Hi, {user?.user_metadata?.name || 'User'}
+										{userIp && <span className="hidden xl:inline ml-1 text-xs opacity-75 font-normal">({formatIp(userIp)})</span>}
+									</span>
+									<svg 
+										className={`w-4 h-4 transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`} 
+										fill="none" stroke="currentColor" viewBox="0 0 24 24"
+									>
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+									</svg>
 								</button>
-								<div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-2">
-									<Link href="/profile" className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md">
-										個資管理
-									</Link>
-									<button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md">
-										登出
-									</button>
+								{/* Dropdown 容器：使用 pt-2 替代 mt-2 來作為透明橋樑，防止滑鼠經過間隙時選單消失 */}
+								<div className={`absolute right-0 top-full pt-2 w-48 z-50 transition-all duration-300 ${isUserMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+									<div className="bg-white rounded-lg shadow-xl p-2 border border-gray-100">
+										<Link href="/profile" className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors">
+											個資管理
+										</Link>
+										<hr className="my-1 border-gray-100" />
+										<button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors">
+											登出
+										</button>
+									</div>
 								</div>
 							</div>
 						)}
@@ -199,7 +265,7 @@ const Header = forwardRef((props, ref) => {
 								style={{ transitionDelay: isMenuOpen ? `${filteredNavLinks.length * 50}ms` : '0ms' }}
 							>
 								<div className={`text-left px-4 py-2 transition-colors duration-200 ${isOverDark ? 'text-white' : 'text-text'}`}>
-									Hi, {user?.user_metadata?.name || 'User'}
+									Hi, {user?.user_metadata?.name || 'User'} {userIp && `(${userIp})`}
 								</div>
 								<Link
 									href="/profile"

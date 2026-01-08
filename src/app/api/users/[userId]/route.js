@@ -4,7 +4,7 @@ import { verifyUserAuth, checkRateLimit, validateRequestData, handleApiError, lo
 
 export async function PUT(request, { params }) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
 
     // 1. Rate limiting 檢查
     const rateLimitCheck = checkRateLimit(request, 'users-put', 5, 60000); // 每分鐘5次

@@ -19,7 +19,7 @@ const tabs = [
     { id: 'settings', label: '系統設定', icon: Shield, component: <SettingsTab /> },
 ];
 
-const TabComponent = ({ activeTab, onTabClick, isOverDark = false }) => {
+const TabComponent = ({ activeTab, onTabClick, isOverDark = false, isFloating = false }) => {
     const tabsRef = useRef([]);
     const activeTabRef = tabsRef.current[tabs.findIndex(tab => tab.id === activeTab)];
 
@@ -53,7 +53,7 @@ const TabComponent = ({ activeTab, onTabClick, isOverDark = false }) => {
                         }
                     `}
                 >
-                    <tab.icon className="h-5 w-5" />
+                    <tab.icon className={`h-5 w-5 ${isFloating ? 'hidden' : 'hidden md:block'}`} />
                     <span>{tab.label}</span>
                 </button>
             ))}
@@ -155,7 +155,7 @@ function ManagePageContent() {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
                 <div className="max-w-sm sm:max-w-md mx-auto pointer-events-auto">
-                    <TabComponent activeTab={activeTab} onTabClick={handleTabClick} isOverDark={isOverDarkBg} />
+                    <TabComponent activeTab={activeTab} onTabClick={handleTabClick} isOverDark={isOverDarkBg} isFloating={true} />
                 </div>
             </motion.div>
 

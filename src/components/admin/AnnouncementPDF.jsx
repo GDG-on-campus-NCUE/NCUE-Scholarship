@@ -3,6 +3,10 @@ import { Page, Text, View, Document, StyleSheet, Font, Image, Link } from '@reac
 import Html from 'react-pdf-html';
 import QRCode from 'qrcode';
 
+// Globally disable hyphenation to prevent any dash (-) at the end of lines
+// Must be registered BEFORE Font.register to take effect
+Font.registerHyphenationCallback(word => [word]);
+
 Font.register({
     family: 'NotoSansTC',
     fonts: [
@@ -118,6 +122,8 @@ const styles = StyleSheet.create({
     infoColumn: {
         flex: 1,
         padding: 12,
+        // Ensure long text doesn't push the column width
+        overflow: 'hidden',
     },
     infoColumnDivider: {
         borderRightWidth: 1,
@@ -161,27 +167,29 @@ const styles = StyleSheet.create({
 });
 
 const htmlStyles = StyleSheet.create({
-    p: { margin: 0, marginBottom: 4, fontSize: 10, lineHeight: 1.5 },
-    ul: { paddingLeft: 10, margin: 0 },
-    ol: { paddingLeft: 10, margin: 0 },
-    li: { marginBottom: 4, fontSize: 10 },
-    strong: { fontWeight: 'bold' },
-    b: { fontWeight: 'bold' },
-    u: { textDecoration: 'underline' },
-    i: { fontStyle: 'italic' },
-    h4: { fontSize: 11, fontWeight: 'bold', color: colors.primary, margin: 0 },
-    span: {},
+    p: { fontFamily: 'NotoSansTC', margin: 0, marginBottom: 4, fontSize: 10, lineHeight: 1.5 },
+    ul: { fontFamily: 'NotoSansTC', paddingLeft: 10, margin: 0 },
+    ol: { fontFamily: 'NotoSansTC', paddingLeft: 10, margin: 0 },
+    li: { fontFamily: 'NotoSansTC', marginBottom: 4, fontSize: 10 },
+    strong: { fontFamily: 'NotoSansTC', fontWeight: 'bold' },
+    b: { fontFamily: 'NotoSansTC', fontWeight: 'bold' },
+    u: { fontFamily: 'NotoSansTC', textDecoration: 'underline' },
+    i: { fontFamily: 'NotoSansTC', fontStyle: 'italic' },
+    h4: { fontFamily: 'NotoSansTC', fontSize: 11, fontWeight: 'bold', color: colors.primary, margin: 0 },
+    span: { fontFamily: 'NotoSansTC' },
     table: {
+        fontFamily: 'NotoSansTC',
         width: '100%',
         borderStyle: 'solid',
         borderWidth: 1,
         borderColor: '#E5E7EB',
         borderCollapse: 'collapse',
     },
-    thead: {},
-    tbody: {},
-    tr: {},
+    thead: { fontFamily: 'NotoSansTC' },
+    tbody: { fontFamily: 'NotoSansTC' },
+    tr: { fontFamily: 'NotoSansTC' },
     th: {
+        fontFamily: 'NotoSansTC',
         padding: 6,
         fontSize: 10,
         fontWeight: 'bold',
@@ -191,6 +199,7 @@ const htmlStyles = StyleSheet.create({
         backgroundColor: '#F9FAFB',
     },
     td: {
+        fontFamily: 'NotoSansTC',
         padding: 6,
         fontSize: 10,
         borderStyle: 'solid',
@@ -199,10 +208,12 @@ const htmlStyles = StyleSheet.create({
     },
 });
 
-const breakTextForAllChars = (text, maxLength = 27) => {
+// Improved text breaking strategy for PDF:
+// Insert Zero Width Space (\u200B) after every character to allow natural wrapping anywhere.
+// This prevents forced dashes (hyphenation) and handles long alphanumeric strings (like IDs) preventing overflow.
+const breakTextAggressive = (text) => {
     if (typeof text !== 'string') return text;
-    const regex = new RegExp(`(.{${maxLength}})`, 'g');
-    return text.replace(regex, '$1\u200B');
+    return Array.from(text).join('\u200B');
 };
 
 const sanitizeHtmlForPdf = (htmlString) => {
@@ -225,7 +236,15 @@ const sanitizeHtmlForPdf = (htmlString) => {
 const breakWordsInHtml = (htmlString) => {
     if (!htmlString) return '';
     return htmlString.replace(/>([^<]+)</g, (match, textContent) => {
-        return `>${breakTextForAllChars(textContent)}<`;
+        // Split by HTML entities to avoid breaking them (e.g. &nbsp;)
+        // Match entities like &name; or &#123; or &#xABC;
+        const parts = textContent.split(/(&[a-zA-Z\d#]+;)/g);
+        return '>' + parts.map(part => {
+            // If part looks like an entity, keep it as is
+            if (part.match(/^&[a-zA-Z\d#]+;$/)) return part;
+            // Otherwise, apply aggressive breaking
+            return breakTextAggressive(part);
+        }).join('') + '<';
     });
 };
 
@@ -302,13 +321,13 @@ const AnnouncementPDF = ({ announcement }) => {
                     </Text>
                 </View>
 
-                <Text style={styles.title}>{breakTextForAllChars(announcement.title || '公告詳情', 20)}</Text>
+                <Text style={styles.title}>{breakTextAggressive(announcement.title || '公告詳情')}</Text>
 
                 <View style={styles.topInfoContainer} wrap={false}>
                     <View style={[styles.infoColumn, styles.infoColumnDivider]}>
                         <Text style={styles.sectionTitle}>公告資訊</Text>
                         <Text style={styles.infoTextLabel}>公告 ID</Text>
-                        <Text style={styles.infoTextValue}>{breakTextForAllChars(announcement.id, 18)}</Text>
+                        <Text style={styles.infoTextValue}>{breakTextAggressive(announcement.id)}</Text>
                         <Text style={{ ...styles.infoTextLabel, marginTop: 8 }}>最近編輯</Text>
                         <Text style={styles.infoTextValue}>{new Date(announcement.updated_at).toLocaleDateString('zh-TW')}</Text>
                     </View>
@@ -324,7 +343,7 @@ const AnnouncementPDF = ({ announcement }) => {
                         <Text style={styles.infoTextLabel}>申請限制</Text>
                         <Text style={{ ...styles.infoTextValue, color: applicationLimit.color }}>{applicationLimit.text}</Text>
                         <Text style={{ ...styles.infoTextLabel, marginTop: 8 }}>送件方式</Text>
-                        <Text style={styles.infoTextValue}>{breakTextForAllChars(announcement.submission_method || '未指定', 10)}</Text>
+                        <Text style={styles.infoTextValue}>{breakTextAggressive(announcement.submission_method || '未指定')}</Text>
                     </View>
                     <View style={styles.infoColumn}>
                         {qrCodeDataUrl && <Image style={styles.qrCodeImage} src={qrCodeDataUrl} />}

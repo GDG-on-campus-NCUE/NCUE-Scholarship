@@ -33,7 +33,7 @@ export async function GET(request) {
   console.log(`[AUTH-CALLBACK] Code: ${code ? 'present' : 'missing'}`)
 
   if (code) {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     
     // 使用與前端一致的配置
     const supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:8000'
