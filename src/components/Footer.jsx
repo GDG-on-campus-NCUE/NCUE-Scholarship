@@ -104,6 +104,12 @@ export default function Footer() {
                                         </span> Developer Group<br/>On Campus NCUE
                                     </span>
                                 </a>
+                                <div className="mt-6">
+                                    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 mb-1">Especially thanks to</p>
+                                    <p className="text-sm text-gray-400 font-medium">
+                                        陳泰銘 <span className="mx-2 text-gray-700">|</span> 楊敦傑
+                                    </p>
+                                </div>
                                 <Link href="https://forms.gle/GmPVHsdV7mLeGyhx7" className="group flex items-center justify-center sm:justify-start gap-3 text-gray-300 hover:text-white transition-all duration-300 hover:-translate-y-0.5" target="_blank" rel="noopener noreferrer">
                                     <MessageSquare className="w-5 h-5 flex-shrink-0" />
                                     <span className="footer-link-underline">平台問題回報</span>

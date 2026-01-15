@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from '@/components/ui/Toast';
 import { authFetch } from '@/lib/authFetch';
-import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail } from 'lucide-react';
+import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail, ChevronDown } from 'lucide-react';
 import SendNotificationModal from './SendNotificationModal';
 
 const NotifyIcon = () => (
@@ -25,7 +25,11 @@ export default function UsersTab() {
     // --- Modal 相關狀態 ---
     const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
     const [notificationUser, setNotificationUser] = useState(null); // 要寄送通知的目標使用者
+    const [bulkTargetRole, setBulkTargetRole] = useState('all'); // 群發目標角色: 'all', 'user', 'admin'
     const [isSending, setIsSending] = useState(false); // 控制 Modal 中的寄送中狀態
+    
+    // --- 下拉選單狀態 (行動版/點擊) ---
+    const [isBulkDropdownOpen, setIsBulkDropdownOpen] = useState(false);
 
     const showToast = (message, type = 'success') => setToast({ show: true, message, type });
     const hideToast = () => setToast(prev => ({ ...prev, show: false }));
@@ -50,6 +54,18 @@ export default function UsersTab() {
     }, []);
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+    // 點擊外部關閉 dropdown
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isBulkDropdownOpen && !event.target.closest('.bulk-email-dropdown')) {
+                setIsBulkDropdownOpen(false);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [isBulkDropdownOpen]);
+
 
     const handleRoleChange = async (userToUpdate) => {
         if (currentUser && userToUpdate.id === currentUser.id) {
@@ -77,8 +93,10 @@ export default function UsersTab() {
         }
     };
 
-    const openNotificationModal = (user) => {
+    const openNotificationModal = (user, role = 'all') => {
         setNotificationUser(user);
+        setBulkTargetRole(role);
+        setIsBulkDropdownOpen(false); // 關閉下拉選單
         setIsNotificationModalOpen(true);
     };
 
@@ -95,9 +113,19 @@ export default function UsersTab() {
             
             let apiPayload;
             if (isBulkSend) {
-                const allUserEmails = allUsers.map(u => u.emailFull);
+                let targets = allUsers;
+                if (bulkTargetRole === 'user') targets = allUsers.filter(u => u.role === 'user');
+                if (bulkTargetRole === 'admin') targets = allUsers.filter(u => u.role === 'admin');
+
+                if (targets.length === 0) {
+                     showToast('沒有符合條件的收件者', 'error');
+                     setIsSending(false);
+                     return;
+                }
+
+                const targetEmails = targets.map(u => u.emailFull);
                 apiPayload = {
-                    bcc: allUserEmails,
+                    bcc: targetEmails,
                     subject: subject,
                     body: htmlContent
                 };
@@ -161,13 +189,30 @@ export default function UsersTab() {
         users: allUsers.filter(u => u.role === 'user').length,
     }), [allUsers]);
 
+    // 計算群發的目標數量與標籤
+    const bulkTargetInfo = useMemo(() => {
+        let count = 0;
+        let label = '所有使用者';
+        if (bulkTargetRole === 'user') {
+            count = stats.users;
+            label = '一般使用者';
+        } else if (bulkTargetRole === 'admin') {
+            count = stats.admins;
+            label = '管理員';
+        } else {
+            count = stats.total;
+            label = '所有使用者';
+        }
+        return { count, label };
+    }, [bulkTargetRole, stats]);
+
     // --- 按鈕樣式 ---
     const ghostButtonBase = "flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg border transition-all duration-300 ease-in-out transform disabled:transform-none disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed";
     const buttonStyles = {
         demote: `${ghostButtonBase} border-indigo-200 bg-transparent text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/20 whitespace-nowrap`,
         promote: `${ghostButtonBase} border-rose-200 bg-transparent text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-rose-500/20 whitespace-nowrap`,
         notify: `${ghostButtonBase} p-2 border-sky-200 bg-transparent text-sky-600 hover:bg-sky-100 hover:text-sky-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-sky-500/20`,
-        notifyAll: `${ghostButtonBase} py-3 px-4 rounded-lg bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800 hover:shadow-green-500/20 whitespace-nowrap`,
+        notifyAll: `${ghostButtonBase} py-3 px-4 rounded-lg bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800 hover:shadow-green-500/20 whitespace-nowrap relative`,
     };
 
     return (
@@ -180,10 +225,41 @@ export default function UsersTab() {
                             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                                 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30" />
                     </div>
-                     <button onClick={() => openNotificationModal(null)} className={buttonStyles.notifyAll} title="寄送群體通知">
-                        <Mail size={16} />
-                        <span className="hidden sm:inline whitespace-nowrap">群發信件</span>
-                    </button>
+                    
+                    {/* --- 群發信件 Dropdown --- */}
+                    <div className="relative group bulk-email-dropdown">
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsBulkDropdownOpen(!isBulkDropdownOpen);
+                            }}
+                            className={`${buttonStyles.notifyAll} w-full md:w-auto`}
+                            title="群發信件選項"
+                        >
+                            <Mail size={16} />
+                            <span className="hidden sm:inline whitespace-nowrap">群發信件</span>
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${isBulkDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {/* Dropdown Menu */}
+                        <div className={`absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 transition-all duration-200 origin-top-right transform
+                            ${isBulkDropdownOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible group-hover:opacity-100 group-hover:scale-100 group-hover:visible'}
+                            md:invisible md:group-hover:visible md:group-hover:opacity-100 md:group-hover:scale-100
+                        `}>
+                            <div className="py-1">
+                                <button onClick={() => openNotificationModal(null, 'all')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2 transition-colors">
+                                    <Users size={14} /> 寄送給所有人
+                                </button>
+                                <button onClick={() => openNotificationModal(null, 'user')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2 transition-colors">
+                                    <UserCheck size={14} /> 寄送給使用者
+                                </button>
+                                <button onClick={() => openNotificationModal(null, 'admin')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2 transition-colors">
+                                    <Shield size={14} /> 寄送給管理員
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <div className="lg:col-span-2 grid grid-cols-3 gap-4 text-center bg-white p-3 rounded-xl border border-gray-200/80">
                     <div><h3 className="text-sm font-medium text-gray-500 flex items-center justify-center gap-1.5"><Users size={14} />總用戶數</h3><p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p></div>
@@ -262,7 +338,8 @@ export default function UsersTab() {
                 user={notificationUser}
                 onConfirm={handleSendNotification}
                 isSending={isSending}
-                allUsersCount={allUsers.length}
+                targetCount={bulkTargetInfo.count}
+                targetLabel={bulkTargetInfo.label}
             />
             <Toast show={toast.show} message={toast.message} type={toast.type} onClose={hideToast} />
         </div>

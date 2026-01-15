@@ -34,6 +34,7 @@ CREATE TABLE public.attachments (
   uploaded_at timestamp with time zone DEFAULT now(),
   file_size integer,
   mime_type character varying,
+  display_order integer DEFAULT 0,
   CONSTRAINT attachments_pkey PRIMARY KEY (id),
   CONSTRAINT attachments_announcement_id_fkey FOREIGN KEY (announcement_id) REFERENCES public.announcements(id)
 );
