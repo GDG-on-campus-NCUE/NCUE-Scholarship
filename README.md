@@ -169,9 +169,17 @@ Contributions are welcome!
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the **PolyForm Noncommercial License 1.0.0**.
+
+> [!IMPORTANT]
+> This license permits personal and non-commercial use, especially for educational and public-interest purposes. **Commercial use is strictly prohibited.**
+
+For the full license text and copyright information, please refer to the [LICENSE](LICENSE) file.
 
 ## Contact
 
-- **Project Maintainer:** [Tai Ming Chen](https://github.com/Ming874), [Grason Yang](https://github.com/grasonyang)
-- **Report an issue:** [GitHub Issues](https://github.com/NCUESA/NCUE-Scholarship/issues)
+- **Project Maintainers:**
+  - [Tai Ming Chen](https://github.com/Ming874)
+  - [Grason Yang](https://github.com/grasonyang)
+- **Organization:** [GDGoC NCUE (Google Developer Group On Campus NCUE)](https://github.com/GDG-on-campus-NCUE)
+- **Report an issue:** [GitHub Issues](https://github.com/GDG-on-campus-NCUE/NCUE-Scholarship/issues)
