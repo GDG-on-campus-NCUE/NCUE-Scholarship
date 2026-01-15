@@ -24,7 +24,9 @@ export default function ScrollToTop() {
     useEffect(() => {
         // 監聽 Modal 開啟狀態
         const checkModalStatus = () => {
-            setIsModalOpen(document.body.classList.contains('modal-open'));
+            const hasModalOpen = document.body.classList.contains('modal-open');
+            const hasAdminModalOpen = document.body.classList.contains('admin-modal-open');
+            setIsModalOpen(hasModalOpen || hasAdminModalOpen);
         };
 
         const observer = new MutationObserver(checkModalStatus);

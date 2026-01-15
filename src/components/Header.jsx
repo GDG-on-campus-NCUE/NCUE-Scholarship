@@ -63,7 +63,7 @@ const Header = forwardRef((props, ref) => {
 
 		const handleScroll = () => {
 			const currentPosition = window.scrollY;
-			if (isMenuOpen) {
+			if (isMenuOpen || pathname === '/manage') {
 				setIsHeaderVisible(true);
 				return;
 			}

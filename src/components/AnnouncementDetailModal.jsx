@@ -127,6 +127,11 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
         return wrapTables(announcement.summary || '無詳細內容');
     }, [announcement]);
 
+    const sortedAttachments = useMemo(() => {
+        if (!announcement?.attachments) return [];
+        return [...announcement.attachments].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    }, [announcement]);
+
     if (!isOpen || !announcement) return null;
 
     return (
@@ -245,18 +250,18 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                     dangerouslySetInnerHTML={{ __html: finalContent }} />
                             </div>
 
-                            {announcement.attachments?.length > 0 && (
+                            {sortedAttachments.length > 0 && (
                                 <div>
                                     <h3 className="text-base font-semibold text-indigo-700 border-l-4 border-indigo-500 pl-3 mb-3">相關附件</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {announcement.attachments.map(att => (
+                                        {sortedAttachments.map((att, index) => (
                                             <a key={att.id}
                                                 href={getPublicAttachmentUrl(att.stored_file_path)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="group flex items-center gap-3 bg-slate-100 hover:bg-indigo-100 hover:border-indigo-300 border border-transparent p-3 rounded-lg text-indigo-800 font-medium transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">
                                                 <Paperclip className="h-5 w-5 flex-shrink-0 text-indigo-500 group-hover:text-indigo-600 transition-colors" />
-                                                <span className="truncate flex-1">{att.file_name}</span>
+                                                <span className="truncate flex-1">{index + 1}. {att.file_name}</span>
                                                 <span className="text-xs text-indigo-500/80 opacity-0 group-hover:opacity-100 transition-opacity">點擊下載</span>
                                             </a>
                                         ))}

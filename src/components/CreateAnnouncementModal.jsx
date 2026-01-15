@@ -2,13 +2,13 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
 // import { GoogleGenerativeAI } from "@google/generative-ai"; // Removed client-side SDK
 import TinyMCE from './TinyMCE';
 import Button from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import { authFetch } from '@/lib/authFetch';
-import { X, Loader2, Save, Trash2, UploadCloud, Link as LinkIcon, PlusCircle, File as FileIcon } from 'lucide-react';
+import { X, Loader2, Save, Trash2, UploadCloud, Link as LinkIcon, PlusCircle, File as FileIcon, GripVertical, ArrowLeft } from 'lucide-react';
 
 // --- Button Styles ---
 const buttonStyles = {
@@ -19,25 +19,80 @@ const buttonStyles = {
 
 const InputModeSelector = ({ inputMode, setInputMode, disabled }) => (
     <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">選擇輸入模式</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-2 select-none">選擇輸入模式</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${inputMode === 'ai' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-300 hover:border-gray-400'}`} onClick={() => !disabled && setInputMode('ai')}>
-                <h4 className="font-bold text-gray-900">AI 智慧分析</h4>
-                <p className="text-sm text-gray-600 mt-1">上傳檔案或網址，由 AI 自動生成摘要</p>
+            <div className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${inputMode === 'ai' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-300 hover:border-gray-400'}`} onClick={() => !disabled && setInputMode('ai')}> 
+                <h4 className="font-bold text-gray-900 select-none">AI 智慧分析</h4>
+                <p className="text-sm text-gray-600 mt-1 select-none">上傳檔案或網址，由 AI 自動生成摘要</p>
             </div>
-            <div className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${inputMode === 'manual' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-300 hover:border-gray-400'}`} onClick={() => !disabled && setInputMode('manual')}>
-                <h4 className="font-bold text-gray-900">手動輸入</h4>
-                <p className="text-sm text-gray-600 mt-1">自行填寫所有公告欄位</p>
+            <div className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${inputMode === 'manual' ? 'border-indigo-500 bg-indigo-500/10' : 'border-gray-300 hover:border-gray-400'}`} onClick={() => !disabled && setInputMode('manual')}> 
+                <h4 className="font-bold text-gray-900 select-none">手動輸入</h4>
+                <p className="text-sm text-gray-600 mt-1 select-none">自行填寫所有公告欄位</p>
             </div>
         </div>
     </div>
 );
+
+const DraggableFileItem = ({ file, onRemove, formatFileSize, constraintsRef }) => {
+    const dragControls = useDragControls();
+
+    const handleFileClick = (e) => {
+        e.preventDefault();
+        // Since selectedFiles in CreateAnnouncementModal are mostly File objects (from input type=file)
+        if (file instanceof File) {
+            const url = URL.createObjectURL(file);
+            window.open(url, '_blank');
+        }
+    };
+
+    return (
+        <Reorder.Item
+            value={file}
+            dragListener={false} // Disable default drag listener
+            dragControls={dragControls}
+            dragConstraints={constraintsRef}
+            className="relative flex items-center justify-between p-3 rounded-lg bg-white border hover:shadow-md transition-shadow"
+        >
+            <div className="flex items-center space-x-3 overflow-hidden">
+                {/* Drag Handle */}
+                <div
+                    onPointerDown={(e) => dragControls.start(e)}
+                    className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600"
+                >
+                    <GripVertical size={20} />
+                </div>
+                
+                <FileIcon className="h-6 w-6 flex-shrink-0 text-blue-500" />
+                
+                <div className="overflow-hidden">
+                    <a 
+                        href="#"
+                        onClick={handleFileClick} 
+                        className="text-sm font-medium text-gray-800 truncate hover:underline hover:text-indigo-600 block transition-colors select-none"
+                        title="點擊預覽"
+                    >
+                        {file.name}
+                    </a>
+                    <p className="text-xs text-gray-500 select-none">{file.type} • {formatFileSize(file.size)}</p>
+                </div>
+            </div>
+            <button
+                onClick={() => onRemove(file)}
+                className="p-1 rounded-full transition-colors text-red-500 hover:bg-red-100"
+                title="移除"
+            >
+                <Trash2 size={18} />
+            </button>
+        </Reorder.Item>
+    );
+};
 
 const FileUploadArea = ({ selectedFiles, setSelectedFiles, disabled, showToast }) => {
     const fileInputRef = useRef(null);
     const maxFiles = 8;
     const maxFileSize = 15 * 1024 * 1024; // 15MB
     const displayMaxSize = `${maxFileSize / 1024 / 1024} MB`;
+    const constraintsRef = useRef(null);
 
     const supportedTypes = {
         // PDF
@@ -74,6 +129,7 @@ const FileUploadArea = ({ selectedFiles, setSelectedFiles, disabled, showToast }
             if (selectedFiles.length + newFiles.length >= maxFiles) { showToast(`最多只能選擇 ${maxFiles} 個檔案`, 'warning'); break; }
 
             file.isNewFile = true;
+            file.id = file.id || crypto.randomUUID();
             newFiles.push(file);
         }
         if (newFiles.length > 0) {
@@ -84,7 +140,7 @@ const FileUploadArea = ({ selectedFiles, setSelectedFiles, disabled, showToast }
     const handleFileChange = (e) => { handleFiles(Array.from(e.target.files)); e.target.value = ''; };
     const handleDragOver = (e) => e.preventDefault();
     const handleDrop = (e) => { e.preventDefault(); if (!disabled) handleFiles(Array.from(e.dataTransfer.files)); };
-    const handleRemoveFile = (index) => setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    const handleRemoveFile = (fileToRemove) => setSelectedFiles(prev => prev.filter((f) => f.id !== fileToRemove.id));
     const formatFileSize = (size) => {
         if (!size) return '0 B';
         if (size < 1024) return `${size} B`;
@@ -96,39 +152,30 @@ const FileUploadArea = ({ selectedFiles, setSelectedFiles, disabled, showToast }
         <div className="space-y-4">
             <div
                 className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-300 ${!disabled ? 'border-gray-300 hover:border-indigo-400 bg-transparent cursor-pointer' : 'bg-gray-100/50 cursor-not-allowed'}`}
-                onDragOver={handleDragOver} onDrop={handleDrop} onClick={() => !disabled && fileInputRef.current?.click()}>
+                onDragOver={handleDragOver} onDrop={handleDrop} onClick={() => !disabled && fileInputRef.current?.click()}> 
 
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept={acceptString} disabled={disabled} multiple />
 
                 <UploadCloud className="mx-auto h-10 w-10 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-600">拖曳檔案到此，或 <span className="font-medium text-indigo-600">點擊上傳</span></p>
-                <p className="mt-1 text-xs text-gray-500">已選擇 {selectedFiles.length} / {maxFiles} 個檔案</p>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-2 text-sm text-gray-600 select-none">拖曳檔案到此，或 <span className="font-medium text-indigo-600">點擊上傳</span></p>
+                <p className="mt-1 text-xs text-gray-500 select-none">已選擇 {selectedFiles.length} / {maxFiles} 個檔案</p>
+                <p className="mt-1 text-xs text-gray-400 select-none">
                     支援文件 (Word, Excel, PPT, PDF, ODT, ODS, ODP) 及圖片格式，單一檔案大小上限為 {displayMaxSize}
                 </p>
             </div>
             {selectedFiles.length > 0 && (
-                <div className="space-y-2">
-                    <div className="space-y-2 rounded-lg p-2 bg-transparent">
-                        {selectedFiles.map((file, index) => (
-                            <div key={file.name + index} className="relative flex items-center justify-between p-3 rounded-lg bg-white border">
-                                <div className="flex items-center space-x-3 overflow-hidden">
-                                    <FileIcon className="h-6 w-6 flex-shrink-0 text-blue-500" />
-                                    <div className="overflow-hidden">
-                                        <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-                                        <p className="text-xs text-gray-500">{file.type} • {formatFileSize(file.size)}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => handleRemoveFile(index)}
-                                    className="p-1 rounded-full transition-colors text-red-500 hover:bg-red-100"
-                                    title="移除"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
+                <div ref={constraintsRef} className="relative">
+                    <Reorder.Group axis="y" values={selectedFiles} onReorder={setSelectedFiles} className="space-y-2 rounded-lg p-2 bg-transparent">
+                        {selectedFiles.map((file) => (
+                            <DraggableFileItem 
+                                key={file.id} 
+                                file={file} 
+                                onRemove={handleRemoveFile} 
+                                formatFileSize={formatFileSize}
+                                constraintsRef={constraintsRef}
+                            />
                         ))}
-                    </div>
+                    </Reorder.Group>
                 </div>
             )}
         </div>
@@ -167,7 +214,7 @@ const UrlInputArea = ({ urls, setUrls, disabled, showToast }) => {
                     disabled={disabled || !urlInput.trim()}
                     className={buttonStyles.primary}
                 >
-                    添加
+                    <span className="select-none">添加</span>
                 </button>
             </div>
             {urls.length > 0 && (
@@ -176,7 +223,7 @@ const UrlInputArea = ({ urls, setUrls, disabled, showToast }) => {
                         <div key={index} className="flex items-center justify-between p-3 bg-white border rounded-lg">
                             <div className="flex items-center space-x-3 overflow-hidden">
                                 <LinkIcon className="w-5 h-5 text-indigo-500 flex-shrink-0" />
-                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline truncate">{url}</a>
+                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline truncate select-none">{url}</a>
                             </div>
                             {!disabled && (
                                 <button onClick={() => handleRemoveUrl(index)} className="p-1 rounded-full text-red-500 hover:bg-red-100 ml-2" title="移除網址">
@@ -220,6 +267,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            document.body.classList.add('admin-modal-open');
             setInputMode('ai');
             setCurrentStep(0);
             setSelectedFiles([]);
@@ -227,8 +275,12 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
             setFormData(initialFormData);
         } else {
             document.body.style.overflow = 'unset';
+            document.body.classList.remove('admin-modal-open');
         }
-        return () => { document.body.style.overflow = 'unset'; };
+        return () => { 
+            document.body.style.overflow = 'unset';
+            document.body.classList.remove('admin-modal-open');
+        };
     }, [isOpen]);
 
     const handleSummaryChange = useCallback((content) => setFormData(prev => ({ ...prev, summary: content })), []);
@@ -457,15 +509,33 @@ ${text}`);
             if (announcementError) throw announcementError;
 
             if (uploadedFilesData.length > 0) {
-                const attachments = uploadedFilesData.map(fileInfo => ({
-                    announcement_id: announcement.id,
-                    file_name: fileInfo.originalName,
-                    stored_file_path: fileInfo.path,
-                    file_size: fileInfo.size,
-                    mime_type: fileInfo.mimeType,
-                }));
-                const { error: attachmentError } = await supabase.from('attachments').insert(attachments);
-                if (attachmentError) throw attachmentError;
+                const attachments = [];
+                let orderIndex = 0;
+                
+                // Map the original selectedFiles order to the uploaded metadata
+                // selectedFiles contains the user-defined order
+                for (const file of selectedFiles) {
+                    // Find the matching uploaded file metadata
+                    // Match by name and size to be reasonably unique without ID in metadata response
+                    const uploadedInfo = uploadedFilesData.find(u => u.originalName === file.name && u.size === file.size);
+                    
+                    if (uploadedInfo) {
+                        attachments.push({
+                            announcement_id: announcement.id,
+                            file_name: uploadedInfo.originalName,
+                            stored_file_path: uploadedInfo.path,
+                            file_size: uploadedInfo.size,
+                            mime_type: uploadedInfo.mimeType,
+                            display_order: orderIndex
+                        });
+                        orderIndex++;
+                    }
+                }
+
+                if (attachments.length > 0) {
+                    const { error: attachmentError } = await supabase.from('attachments').insert(attachments);
+                    if (attachmentError) throw attachmentError;
+                }
             }
 
             showToast("公告發布成功!", "success");
@@ -489,14 +559,14 @@ ${text}`);
                     <hr className="my-6 border-gray-200" />
                     {inputMode === 'ai' ? (
                         <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-gray-800">上傳檔案或提供網址</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 select-none">上傳檔案或提供網址</h3>
                             <FileUploadArea selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} disabled={isLoading} showToast={showToast} />
                             <UrlInputArea urls={urls} setUrls={setUrls} disabled={isLoading} showToast={showToast} />
                         </div>
                     ) : (
                         <div className="text-center text-gray-500 p-8 bg-gray-50/50 rounded-lg">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">手動輸入模式</h3>
-                            <p>請點擊「下一步」開始手動填寫公告內容。</p>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4 select-none">手動輸入模式</h3>
+                            <p className="select-none">請點擊「下一步」開始手動填寫公告內容。</p>
                         </div>
                     )}
                 </div>
@@ -506,28 +576,55 @@ ${text}`);
             return (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                     <Loader2 className="animate-spin h-12 w-12 text-indigo-600 mb-4" />
-                    <p className="text-lg font-semibold text-gray-900">{loadingText}</p>
-                    <p className="text-sm text-gray-500 mt-2">請稍候，AI 正在為您生成公告內容...</p>
+                    <p className="text-lg font-semibold text-gray-900 select-none">{loadingText}</p>
+                    <p className="text-sm text-gray-500 mt-2 select-none">請稍候，AI 正在為您生成公告內容...</p>
                 </div>
             );
         }
         if (currentStep === 2) {
             return (
-                <div className="space-y-6 max-w-4xl mx-auto">
-                    <div>
-                        <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                            公告標題 <span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <input type="text" id="title" name="title" className={inputStyles} value={formData.title} onChange={handleChange} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div><label htmlFor="is_active" className="block text-sm font-semibold text-gray-700 mb-1.5">公告狀態</label><select id="is_active" name="is_active" className={inputStyles} value={formData.is_active} onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}><option value={true}>上架</option><option value={false}>下架</option></select></div>
-                        <div><label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1.5">獎學金分類</label><select id="category" name="category" className={inputStyles} value={formData.category} onChange={handleChange}><option value="">請選擇</option><option value="A">A：各縣市政府獎學金</option><option value="B">B：縣市政府以外之各級公家機關及公營單位獎學金</option><option value="C">C：宗教及民間各項指定身分獎學金</option><option value="D">D：非公家機關或其他無法歸類的獎學金</option><option value="E">E：本校獲配推薦名額獎助學金</option><option value="F">F：校外獎助學金得獎公告</option><option value="G">G：校內獎助學金</option></select></div>
-                        <div><label htmlFor="application_start_date" className="block text-sm font-semibold text-gray-700 mb-1.5">申請開始日期</label><input type="date" id="application_start_date" name="application_start_date" className={inputStyles} value={formData.application_start_date} onChange={handleChange} /></div>
-                        <div><label htmlFor="application_end_date" className="block text-sm font-semibold text-gray-700 mb-1.5">公告結束日期</label><input type="date" id="application_end_date" name="application_end_date" className={inputStyles} value={formData.application_end_date} onChange={handleChange} /></div>
-                        <div><label htmlFor="submission_method" className="block text-sm font-semibold text-gray-700 mb-1.5">送件方式</label><input type="text" id="submission_method" name="submission_method" className={inputStyles} value={formData.submission_method} onChange={handleChange} /></div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full overflow-hidden">
+                    {/* Left Column: Basic Info - Scrollable */}
+                    <div className="lg:col-span-4 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
                         <div>
-                            <label htmlFor="application_limitations" className="block text-sm font-semibold text-gray-700 mb-1.5">兼領限制</label>
+                            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">
+                                公告標題 <span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <input type="text" id="title" name="title" className={inputStyles} value={formData.title} onChange={handleChange} />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="is_active" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">公告狀態</label>
+                                <select id="is_active" name="is_active" className={inputStyles} value={formData.is_active} onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}>
+                                    <option value={true}>上架</option>
+                                    <option value={false}>下架</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">獎學金分類</label>
+                                <select id="category" name="category" className={inputStyles} value={formData.category} onChange={handleChange}>
+                                    <option value="">請選擇</option>
+                                    <option value="A">A：各縣市政府獎學金</option>
+                                    <option value="B">B：縣市政府以外之各級公家機關及公營單位獎學金</option>
+                                    <option value="C">C：宗教及民間各項指定身分獎學金</option>
+                                    <option value="D">D：非公家機關或其他無法歸類的獎學金</option>
+                                    <option value="E">E：本校獲配推薦名額獎助學金</option>
+                                    <option value="F">F：校外獎助學金得獎公告</option>
+                                    <option value="G">G：校內獎助學金</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div><label htmlFor="application_start_date" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">申請開始日期</label><input type="date" id="application_start_date" name="application_start_date" className={inputStyles} value={formData.application_start_date} onChange={handleChange} /></div>
+                            <div><label htmlFor="application_end_date" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">公告結束日期</label><input type="date" id="application_end_date" name="application_end_date" className={inputStyles} value={formData.application_end_date} onChange={handleChange} /></div>
+                        </div>
+
+                        <div><label htmlFor="submission_method" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">送件方式</label><input type="text" id="submission_method" name="submission_method" className={inputStyles} value={formData.submission_method} onChange={handleChange} /></div>
+                        
+                        <div>
+                            <label htmlFor="application_limitations" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">兼領限制</label>
                             <select
                                 id="application_limitations"
                                 name="application_limitations"
@@ -540,36 +637,42 @@ ${text}`);
                                 <option value="N">不可兼領</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div className="flex flex-col min-h-[250px]">
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex-shrink-0">適用對象</label>
-                        <div className="relative flex-grow">
-                            <TinyMCE value={formData.target_audience} onChange={handleTargetAudienceChange} disabled={isLoading} />
+                        <div className="pt-4 border-t border-gray-100">
+                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-600 flex items-center gap-2 select-none"><LinkIcon size={16} />外部參考連結</label>
+                                {formData.external_urls.map((item, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <input type="url" className={inputStyles} value={item.url} onChange={(e) => handleUrlChange(index, e.target.value)} placeholder="https://example.com" />
+                                        {formData.external_urls.length > 1 && (<button type="button" onClick={() => removeUrlInput(index)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-full"><Trash2 size={16} /></button>)}
+                                    </div>
+                                ))}
+                                <Button type="button" variant="ghost" size="sm" onClick={addUrlInput} leftIcon={<PlusCircle size={16} />}>新增連結</Button>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col min-h-[400px]">
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex-shrink-0">
-                            公告摘要 <span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <div className="relative flex-grow">
-                            <TinyMCE value={formData.summary} onChange={handleSummaryChange} disabled={isLoading} />
+                    {/* Right Column: Rich Text & Attachments - Scrollable */}
+                    <div className="lg:col-span-8 space-y-6 overflow-y-auto pr-2 custom-scrollbar flex flex-col h-full">
+                         <div className="flex flex-col">
+                            <label htmlFor="summary" className="block text-sm font-semibold text-gray-700 mb-1.5 flex-shrink-0 select-none">
+                                公告摘要 <span className="text-red-500 ml-1">*</span>
+                            </label>
+                            <div className="relative">
+                                <TinyMCE value={formData.summary} onChange={handleSummaryChange} disabled={isLoading} />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="p-4 bg-slate-500/5 rounded-lg border">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">附件與連結</label>
-                        <FileUploadArea selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} disabled={isLoading} showToast={showToast} />
-                        <div className="mt-4 space-y-2">
-                            <label className="block text-sm font-medium text-gray-600 flex items-center gap-2"><LinkIcon size={16} />外部參考連結</label>
-                            {formData.external_urls.map((item, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                    <input type="url" className={inputStyles} value={item.url} onChange={(e) => handleUrlChange(index, e.target.value)} placeholder="https://example.com" />
-                                    {formData.external_urls.length > 1 && (<button type="button" onClick={() => removeUrlInput(index)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-full"><Trash2 size={16} /></button>)}
-                                </div>
-                            ))}
-                            <Button type="button" variant="ghost" size="sm" onClick={addUrlInput} leftIcon={<PlusCircle size={16} />}>新增連結</Button>
+                        <div className="flex flex-col">
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex-shrink-0 select-none">適用對象</label>
+                            <div className="relative">
+                                <TinyMCE value={formData.target_audience} onChange={handleTargetAudienceChange} disabled={isLoading} />
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-500/5 rounded-lg border">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2 select-none">附件管理 (拖曳可排序)</label>
+                            <FileUploadArea selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} disabled={isLoading} showToast={showToast} />
                         </div>
                     </div>
                 </div>
@@ -592,29 +695,29 @@ ${text}`);
             <AnimatePresence>
                 {isOpen && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-16">
-                        <motion.div
-                            initial={{ scale: 0.95, y: 50, opacity: 0 }}
-                            animate={{ scale: 1, y: 0, opacity: 1 }}
-                            exit={{ scale: 0.95, y: 50, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="relative bg-white/85 backdrop-blur-lg rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden border border-white/20"
-                            style={{ height: 'calc(100vh - 10rem)' }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="p-5 border-b border-black/10 flex justify-between items-center flex-shrink-0">
-                                <h2 className="text-lg font-bold text-gray-800">新增公告</h2>
-                                <button
-                                    onClick={() => {
-                                        if (window.confirm('確認關閉公告編輯模組嗎？如尚未儲存將丟失此編輯紀錄！')) {
-                                            onClose();
-                                        }
-                                    }}
-                                    disabled={isLoading}
-                                    className="text-gray-400 hover:text-gray-600 p-2 rounded-full"
-                                >
-                                    <X size={20} />
-                                </button>
+                                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex flex-col pt-[var(--header-height)]">
+                                            <motion.div
+                                                initial={{ x: '100%', opacity: 0 }}
+                                                animate={{ x: 0, opacity: 1 }}
+                                                exit={{ x: '100%', opacity: 0 }}
+                                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                                className="relative bg-white/95 backdrop-blur-lg shadow-2xl w-full flex-1 flex flex-col overflow-hidden"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >                            <div className="p-5 border-b border-black/10 flex justify-between items-center flex-shrink-0 bg-white/50">
+                                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2 select-none">
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm('確認關閉公告編輯模組嗎？如尚未儲存將丟失此編輯紀錄！')) {
+                                                onClose();
+                                            }
+                                        }}
+                                        disabled={isLoading}
+                                        className="text-gray-500 hover:text-gray-700 p-1 rounded-full mr-2"
+                                    >
+                                        <ArrowLeft size={24} />
+                                    </button>
+                                    新增公告
+                                </h2>
                             </div>
 
                             <div className="flex-grow p-6 overflow-y-auto">
@@ -630,7 +733,7 @@ ${text}`);
                                             disabled={isLoading}
                                             className={buttonStyles.secondary}
                                         >
-                                            返回上一步
+                                            <span className="select-none">返回上一步</span>
                                         </button>
                                     )}
                                 </div>
@@ -642,7 +745,7 @@ ${text}`);
                                             disabled={isLoading || (inputMode === 'ai' && selectedFiles.length === 0 && urls.length === 0)}
                                             className={buttonStyles.primary}
                                         >
-                                            {inputMode === 'ai' ? '開始 AI 分析' : '下一步'}
+                                            <span className="select-none">{inputMode === 'ai' ? '開始 AI 分析' : '下一步'}</span>
                                         </button>
                                     )}
 
@@ -658,7 +761,7 @@ ${text}`);
                                             ) : (
                                                 <Save size={16} />
                                             )}
-                                            <span>儲存並發布</span>
+                                            <span className="select-none">儲存並發布</span>
                                         </button>
                                     )}
                                 </div>
