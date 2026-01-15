@@ -206,7 +206,7 @@ export default function TermsAndPrivacyPage() {
     }, [sections]);
 
     return (
-        <div className="bg-slate-50 text-slate-700">
+        <div className="bg-slate-50 text-slate-700 select-none">
             <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
                 <div className="flex flex-col lg:flex-row justify-center gap-x-16">
                     <div className="w-full lg:w-64 lg:flex-shrink-0 mb-12 lg:mb-0">

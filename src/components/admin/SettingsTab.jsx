@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { authFetch } from '@/lib/authFetch';
 import Toast from '@/components/ui/Toast';
-import { Shield, Save, RefreshCw, Key, AlertCircle, CheckCircle, Database, Server } from 'lucide-react';
+import { Shield, Save, RefreshCw, Key, AlertCircle, Database, Server, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const SETTING_LABELS = {
     'GEMINI_API_KEY': 'Google Gemini API Key (Server-side)',
@@ -20,7 +21,7 @@ const SETTING_DESCRIPTIONS = {
 const StatusBadge = ({ isSet, source }) => {
     if (!isSet) {
         return (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 select-none border border-red-200">
                 <AlertCircle size={12} />
                 未設定
             </span>
@@ -28,18 +29,33 @@ const StatusBadge = ({ isSet, source }) => {
     }
     if (source === 'database') {
         return (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 select-none border border-emerald-200">
                 <Database size={12} />
                 使用資料庫設定
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 select-none border border-amber-200">
             <Server size={12} />
             使用環境變數
         </span>
     );
+};
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
 };
 
 export default function SettingsTab() {
@@ -114,8 +130,16 @@ export default function SettingsTab() {
     };
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-gray-200/80 shadow-sm">
+        <motion.div 
+            className="space-y-6 max-w-5xl mx-auto"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+        >
+            <motion.div 
+                variants={itemVariants}
+                className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-gray-200/80 shadow-sm select-none hover:shadow-md transition-all duration-300"
+            >
                 <div>
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <Shield className="text-indigo-600" />
@@ -128,26 +152,30 @@ export default function SettingsTab() {
                 <button 
                     onClick={fetchSettings} 
                     disabled={loading}
-                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200 transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 shadow-sm"
                 >
                     <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
                     重新整理
                 </button>
-            </div>
+            </motion.div>
 
             <div className="space-y-4">
                 {loading ? (
                     <div className="text-center p-12 bg-white rounded-xl border border-gray-200">
                         <RefreshCw className="h-8 w-8 animate-spin mx-auto text-indigo-500" />
-                        <p className="mt-3 text-gray-500">載入設定中...</p>
+                        <p className="mt-3 text-gray-500 select-none">載入設定中...</p>
                     </div>
                 ) : (
                     settings.map((setting) => (
-                        <div key={setting.key} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+                        <motion.div 
+                            key={setting.key} 
+                            variants={itemVariants}
+                            className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-300 hover:-translate-y-1 group"
+                        >
                             <div className="p-6">
-                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4 select-none">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 group-hover:text-indigo-700 transition-colors">
                                             <Key size={18} className="text-indigo-500" />
                                             {SETTING_LABELS[setting.key] || setting.key}
                                         </h3>
@@ -160,45 +188,46 @@ export default function SettingsTab() {
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                                <div className="bg-gray-50/50 rounded-xl p-1 border border-gray-100">
                                     {editingKey === setting.key ? (
-                                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center animate-in fade-in slide-in-from-top-2 duration-200">
-                                            <div className="flex-grow w-full">
+                                        <div className="flex flex-col sm:flex-row gap-2 items-center animate-in fade-in slide-in-from-top-2 duration-200 p-1">
+                                            <div className="flex-grow w-full relative">
                                                 <input 
                                                     type="text" 
                                                     value={editValue} 
                                                     onChange={(e) => setEditValue(e.target.value)}
                                                     placeholder="輸入新的 API Key..."
-                                                    className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all outline-none"
+                                                    className="w-full pl-4 pr-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all outline-none text-sm"
                                                     autoFocus
                                                 />
                                             </div>
-                                            <div className="flex gap-2 w-full sm:w-auto">
+                                            <div className="flex gap-2 w-full sm:w-auto flex-shrink-0">
                                                 <button 
                                                     onClick={() => handleSave(setting.key)} 
                                                     disabled={saving}
-                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors shadow-sm"
+                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-all duration-200 hover:shadow-md active:scale-95"
                                                 >
-                                                    {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                                                    {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                                                     儲存
                                                 </button>
                                                 <button 
                                                     onClick={handleCancel}
                                                     disabled={saving}
-                                                    className="flex-1 sm:flex-none px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 hover:shadow-md active:scale-95"
                                                 >
+                                                    <X size={14} />
                                                     取消
                                                 </button>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-                                            <div className="font-mono text-sm text-gray-600 bg-white px-3 py-1.5 rounded border border-gray-200 w-full sm:w-auto flex-grow truncate">
+                                        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 p-1">
+                                            <div className="font-mono text-sm text-gray-500 bg-white px-4 py-2 rounded-lg border border-gray-200 w-full sm:w-auto flex-grow truncate select-none shadow-sm">
                                                 {setting.value || '尚未設定'}
                                             </div>
                                             <button 
                                                 onClick={() => handleEdit(setting.key)}
-                                                className="w-full sm:w-auto px-4 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition-colors"
+                                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 rounded-lg border border-indigo-200 transition-all duration-200 hover:shadow-md active:scale-95 whitespace-nowrap"
                                             >
                                                 更新金鑰
                                             </button>
@@ -206,16 +235,16 @@ export default function SettingsTab() {
                                     )}
                                 </div>
                                 {setting.updatedAt && (
-                                    <p className="text-xs text-gray-400 mt-3 text-right">
+                                    <p className="text-xs text-gray-400 mt-3 text-right select-none">
                                         最後更新: {new Date(setting.updatedAt).toLocaleString()}
                                     </p>
                                 )}
                             </div>
-                        </div>
+                        </motion.div>
                     ))
                 )}
             </div>
             <Toast show={toast.show} message={toast.message} type={toast.type} onClose={hideToast} />
-        </div>
+        </motion.div>
     );
 }

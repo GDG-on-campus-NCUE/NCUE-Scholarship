@@ -189,7 +189,7 @@ export default function AnnouncementsTab() {
                                 <tr><td colSpan="7" className="text-center p-12 text-gray-500">找不到符合條件的公告。</td></tr>
                             ) : (
                                 paginatedAnnouncements.map((ann) => (
-                                    <tr key={ann.id} className="transform transition-all duration-300 hover:bg-violet-100/50 hover:shadow-xl z-0 hover:z-10 hover:scale-[1.02]">
+                                    <tr key={ann.id} className="group transition-all duration-300 ease-out border-b border-gray-50 last:border-0 relative hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] hover:-translate-y-1 hover:z-10">
                                         <td className="p-4 px-6 font-medium text-gray-800 break-words">{ann.title}</td>
                                         <td className="p-4 px-6 text-gray-600">{ann.category}</td>
                                         <td className="p-4 px-6 text-center text-gray-600 font-mono">
@@ -201,7 +201,7 @@ export default function AnnouncementsTab() {
                                         </td>
                                         <td className="p-4 px-6 text-gray-600">{new Date(ann.updated_at).toLocaleDateString()}</td>
                                         <td className="p-4 px-6">
-                                            <div className="flex items-center justify-center gap-1.5">
+                                            <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                                                 <button onClick={() => setEditing(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
                                                 <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
                                                 <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>

@@ -37,7 +37,7 @@ export default function Footer() {
                 }
             `}</style>
 
-            <footer className={`bg-[#1E2129] text-white py-16`}>
+            <footer className={`bg-[#1E2129] text-white py-16 select-none`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
 

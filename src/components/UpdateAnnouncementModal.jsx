@@ -340,7 +340,7 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
     };
 
     const handleSave = async () => {
-        if (!formData.title.trim() || !formData.summary.replace(/<[^>]*>?/gm, '').trim()) {
+        if (!formData.title.trim() || !formData.summary.replace(/<[^>]*>?/gm, '').trim() || !formData.application_end_date) {
             showToast('請填寫所有必填欄位', 'warning'); return;
         }
         setIsSaving(true);
@@ -513,7 +513,7 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div><label htmlFor="application_start_date" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">申請開始日期</label><input type="date" id="application_start_date" name="application_start_date" className={inputStyles} value={formData.application_start_date} onChange={handleChange} /></div>
-                                            <div><label htmlFor="application_end_date" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">申請截止日期</label><input type="date" id="application_end_date" name="application_end_date" className={inputStyles} value={formData.application_end_date} onChange={handleChange} /></div>
+                                            <div><label htmlFor="application_end_date" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">申請截止日期 <span className="text-red-500 ml-1">*</span></label><input type="date" id="application_end_date" name="application_end_date" className={inputStyles} value={formData.application_end_date} onChange={handleChange} /></div>
                                         </div>
                                         <div><label htmlFor="submission_method" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">送件方式</label><input type="text" id="submission_method" name="submission_method" className={inputStyles} value={formData.submission_method} onChange={handleChange} /></div>
 

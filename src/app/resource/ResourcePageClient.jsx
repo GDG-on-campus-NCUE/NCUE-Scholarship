@@ -298,7 +298,7 @@ export default function RelatedLinksPage() {
     };
 
     return (
-        <div className="w-full bg-slate-50 font-sans min-h-screen py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="w-full bg-slate-50 font-sans min-h-screen py-16 sm:py-24 px-4 sm:px-6 lg:px-8 select-none">
             <div className="max-w-7xl mx-auto">
                 {/* --- 頁面標題 --- */}
                 <motion.div

@@ -4,18 +4,20 @@ import { useState, useEffect, useRef, useContext, useCallback, Suspense } from "
 import { HeaderContext } from '@/components/Header';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { authFetch } from '@/lib/authFetch';
 import SettingsTab from '@/components/admin/SettingsTab';
 import AnnouncementsTab from '@/components/admin/AnnouncementsTab';
 import UsersTab from '@/components/admin/UsersTab';
-import UsageTab from '@/components/admin/UsageTab';
-import { Users, FileText, Settings, Loader2, Shield } from 'lucide-react';
+import ExportAndStatisticsTab from '@/components/admin/ExportAndStatisticsTab';
+import Toast from '@/components/ui/Toast';
+import { Users, FileText, Settings, Loader2, Shield, BarChart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
 const tabs = [
     { id: 'announcements', label: '公告管理', icon: FileText, component: <AnnouncementsTab /> },
     { id: 'users', label: '使用者管理', icon: Users, component: <UsersTab /> },
-    { id: 'usage', label: '相關連結', icon: Settings, component: <UsageTab /> },
+    { id: 'export-stats', label: '匯出與統計', icon: BarChart, component: <ExportAndStatisticsTab /> },
     { id: 'settings', label: '系統設定', icon: Shield, component: <SettingsTab /> },
 ];
 
@@ -45,7 +47,7 @@ const TabComponent = ({ activeTab, onTabClick, isOverDark = false, isFloating = 
                     className={`
                         relative z-10 flex items-center justify-center gap-2 whitespace-nowrap
                         h-10 py-2.5 px-3 sm:px-4
-                        font-medium text-sm transition-colors duration-300 rounded-full
+                        font-medium text-sm transition-colors duration-300 rounded-full select-none
                         focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500
                         ${activeTab === tab.id
                             ? (isOverDark ? 'text-purple-300 font-semibold' : 'text-purple-700 font-semibold')
@@ -87,6 +89,25 @@ function ManagePageContent() {
 
     const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'announcements');
     const { ref: triggerRef, inView: isContentTabsInView } = useInView({ threshold: 0.5 });
+    
+    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+    const showToast = (message, type) => setToast({ show: true, message, type });
+    const hideToast = () => setToast(prev => ({ ...prev, show: false }));
+
+    useEffect(() => {
+        const checkOverdue = async () => {
+             if (isAuthenticated && isAdmin) {
+                 try {
+                     const res = await authFetch('/api/admin/announcements/stats');
+                     const data = await res.json();
+                     if (data.overdueCount > 0) {
+                         showToast(`系統偵測到有 ${data.overdueCount} 筆公告已過期 (超過 2 年)，建議前往「匯出與統計」進行匯出並刪除。`, 'error');
+                     }
+                 } catch (e) { console.error('Failed to check overdue', e); }
+             }
+        };
+        checkOverdue();
+    }, [isAuthenticated, isAdmin]);
 
     const headerContext = useContext(HeaderContext);
     const isHeaderVisible = headerContext?.isHeaderVisible ?? true;
@@ -160,7 +181,7 @@ function ManagePageContent() {
             </motion.div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <header className="py-12 text-center">
+                <header className="py-12 text-center select-none">
                     <h1 className="text-4xl font-bold tracking-tight text-gray-900">管理後台</h1>
                     <p className="mt-3 text-lg text-gray-500">在這裡你可以針對 彰師生輔組 —— 校外獎助學金資訊平台的所有公告、使用者進行相關操作。</p>
                 </header>
@@ -173,6 +194,7 @@ function ManagePageContent() {
                     {ActiveComponent}
                 </main>
             </div>
+            <Toast show={toast.show} message={toast.message} type={toast.type} onClose={hideToast} />
         </div>
     );
 }
