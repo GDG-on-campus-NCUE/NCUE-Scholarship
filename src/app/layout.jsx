@@ -13,7 +13,11 @@ const notoSans = Noto_Sans_TC({
 })
 
 export const metadata = {
-	title: '彰師生輔組獎助學金資訊平台',
+	metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://scholarship.ncuesa.org.tw'),
+	title: {
+		template: '%s | 彰師生輔組獎助學金資訊平台',
+		default: '彰師生輔組獎助學金資訊平台',
+	},
 	description: '提供彰師學生校外獎助學金資訊的 AI 公告平台',
 	icons: {
 		icon: [
@@ -22,7 +26,29 @@ export const metadata = {
 		],
 		shortcut: '/favicon.ico',
 		apple: { url: '/logo.png', sizes: '180x180', type: 'image/png' }
-	}
+	},
+	openGraph: {
+		type: 'website',
+		locale: 'zh_TW',
+		url: '/',
+		siteName: '彰師生輔組獎助學金資訊平台',
+		title: '彰師生輔組獎助學金資訊平台',
+		description: '提供彰師學生校外獎助學金資訊的 AI 公告平台',
+		images: [
+			{
+				url: '/banner.jpg',
+				width: 1200,
+				height: 630,
+				alt: '彰師生輔組獎助學金資訊平台',
+			},
+		],
+	},
+	twitter: {
+		card: 'summary_large_image',
+		title: '彰師生輔組獎助學金資訊平台',
+		description: '提供彰師學生校外獎助學金資訊的 AI 公告平台',
+		images: ['/banner.jpg'],
+	},
 }
 
 export default function RootLayout({ children }) {

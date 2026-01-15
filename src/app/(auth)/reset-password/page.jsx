@@ -1,13 +1,10 @@
-"use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import ResetPasswordClient from './ResetPasswordClient';
+
+export const metadata = {
+  title: '重設密碼',
+  description: '請設定您的新密碼以確保帳號安全。',
+};
 
 export default function ResetPasswordPage() {
-    const router = useRouter();
-
-    useEffect(() => {
-        router.replace("/profile");
-    }, [router]);
-
-    return <p>正在重新導向...</p>;
+  return <ResetPasswordClient />;
 }

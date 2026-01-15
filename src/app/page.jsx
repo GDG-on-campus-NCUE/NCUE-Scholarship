@@ -1,39 +1,55 @@
-"use client";
-import Image from "next/image";
-import React from 'react';
-import AnnouncementList from "@/components/AnnouncementList";
-import { motion } from 'framer-motion';
+import { supabaseServer } from '@/lib/supabase/server';
+import HomePageClient from '@/components/HomePageClient';
+import JsonLd from '@/components/JsonLd';
 
-export default function Home() {
-    return (
-        <div className="w-full bg-slate-50 font-sans min-h-screen">
-            
-            <div className="relative w-full">
-                <Image
-                    src="/banner.jpg"
-                    alt="NCUE Banner"
-                    width={4000}
-                    height={862}
-                    priority
-                    className="w-full h-auto"
-                    onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/4000x862/e2e8f0/475569?text=Banner+Image'; }}
-                />
-            </div>
+export async function generateMetadata({ searchParams }) {
+  const { announcement_id } = await searchParams;
 
-            <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="w-full mt-16 mb-16">
-                    <motion.h2 
-                        className="text-3xl font-bold mb-8 text-center text-slate-800"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        獎助學金公告一覽表
-                    </motion.h2>
-                    <AnnouncementList />
-                </div>
-            </main>
-        </div>
-    );
+  if (!announcement_id) {
+    return {}; // Uses default from layout.jsx
+  }
+
+  const { data: announcement } = await supabaseServer
+    .from('announcements')
+    .select('title, summary')
+    .eq('id', announcement_id)
+    .single();
+
+  if (!announcement) {
+    return {};
+  }
+
+  const cleanSummary = announcement.summary
+    ? announcement.summary.replace(/<[^>]+>/g, '').substring(0, 160) + '...'
+    : '點擊查看公告詳情';
+
+  return {
+    title: `${announcement.title}`,
+    description: cleanSummary,
+    openGraph: {
+      title: announcement.title,
+      description: cleanSummary,
+    },
+  };
+}
+
+export default async function Home({ searchParams }) {
+  const { announcement_id } = await searchParams;
+  let announcement = null;
+
+  if (announcement_id) {
+    const { data } = await supabaseServer
+      .from('announcements')
+      .select('*')
+      .eq('id', announcement_id)
+      .single();
+    announcement = data;
+  }
+
+  return (
+    <>
+      {announcement && <JsonLd data={announcement} />}
+      <HomePageClient />
+    </>
+  );
 }
