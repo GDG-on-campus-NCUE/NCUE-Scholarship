@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { School, Globe, ChevronDown, HelpCircle, BookOpen } from 'lucide-react';
+import { School, Globe, ChevronDown, HelpCircle } from 'lucide-react';
 
 // --- 子元件區塊 ---
 
@@ -120,13 +120,6 @@ export default function RelatedLinksPage() {
         { icon: <School className="h-7 w-7 text-indigo-600" />, title: "彰師大獎助學金專區", description: "提供全校各單位之校內外獎助學金、揚鷹獎勵金之公告訊息，並有校園餐券及校內外急難扶助金等申請資訊！", href: "https://www.ncue.edu.tw/p/412-1000-1513.php?Lang=zh-tw", linkText: "前往瞭解" },
         { icon: <LineIcon className="h-7 w-7" />, title: "加入 LINE 官方社群", description: "歡迎加入生輔組 LINE「彰師多元關懷社群」，及時掌握獎助學金、獎勵金及學雜費減免等訊息！", href: "https://reurl.cc/L7jGQe", linkText: "立即加入" },
         { icon: <Globe className="h-7 w-7 text-indigo-600" />, title: "教育部圓夢助學網", description: "教育部提供的全國性獎學金資源查詢平台，彙整中央各部會及各大專校院的獎助學金資源。", href: "https://www.edu.tw/helpdreams/Default.aspx", linkText: "探索更多" },
-        {
-            icon: <BookOpen className="h-7 w-7 text-indigo-600" />,
-            title: "平台使用說明",
-            description: "關於本平台的注意事項，內容包含開發人員、管理員、一般使用者三種身分的使用說明。",
-            href: "https://docs.google.com/document/d/1ZI_vUtdQ2ushBS0C9viS1yZWzSkFEgvZ79NEJCmvptU/edit?usp=sharing",
-            linkText: "查看文件"
-        }
     ];
 
     const faqData = [
@@ -315,7 +308,7 @@ export default function RelatedLinksPage() {
 
                 {/* --- 連結卡片區塊 --- */}
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-24"
+                    className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-24"
                     initial="hidden"
                     animate="visible"
                     variants={{
@@ -355,6 +348,33 @@ export default function RelatedLinksPage() {
                                     {item.a()}
                                 </FaqItem>
                             ))}
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* --- 平台使用手冊區塊 (HackMD 嵌入) --- */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                    className="mt-24"
+                >
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold text-slate-800">平台使用手冊</h2>
+                            <p className="mt-2 text-slate-600">
+                                詳細的操作說明與功能介紹，幫助您快速上手本平台。
+                            </p>
+                        </div>
+                        <div className="w-full bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-slate-200/80 overflow-hidden" style={{ height: '800px' }}>
+                            <iframe
+                                src="https://hackmd.io/@mingchen/scholarship?theme=light"
+                                width="100%"
+                                height="100%"
+                                title="平台使用手冊"
+                                allowFullScreen
+                                className="w-full h-full"
+                            />
                         </div>
                     </div>
                 </motion.div>
