@@ -32,3 +32,6 @@ next-env.d.ts
 # uploaded announcement attachments
 public/storage/attachments/*
 !public/storage/attachments/.gitkeep
+
+# backups
+/backups/
