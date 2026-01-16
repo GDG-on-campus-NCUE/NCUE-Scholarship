@@ -19,6 +19,7 @@ export default function UsersTab() {
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // 新增 debounce 狀態
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -36,13 +37,27 @@ export default function UsersTab() {
     const showToast = (message, type = 'success') => setToast({ show: true, message, type });
     const hideToast = () => setToast(prev => ({ ...prev, show: false }));
 
+    // Debounce search term
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+            if (searchTerm !== debouncedSearchTerm) {
+                setCurrentPage(1);
+            }
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchTerm]);
+
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
                 page: currentPage,
                 limit: rowsPerPage,
-                search: searchTerm
+                search: debouncedSearchTerm // 使用 debouncedSearchTerm
             });
             const response = await authFetch(`/api/users?${params.toString()}`);
             const data = await response.json();
@@ -62,7 +77,7 @@ export default function UsersTab() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, rowsPerPage, searchTerm]);
+    }, [currentPage, rowsPerPage, debouncedSearchTerm]);
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -198,7 +213,7 @@ export default function UsersTab() {
                 <div className="lg:col-span-3 flex items-center gap-2">
                     <div className="relative flex-grow">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input type="text" placeholder="搜尋姓名、學號、信箱..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        <input type="text" placeholder="搜尋姓名、學號、信箱..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                                 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30" />
                     </div>
