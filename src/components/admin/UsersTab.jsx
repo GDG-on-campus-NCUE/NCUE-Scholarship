@@ -15,12 +15,14 @@ const NotifyIcon = () => (
 
 export default function UsersTab() {
     const { user: currentUser } = useAuth(); // 目前登入的使用者
-    const [allUsers, setAllUsers] = useState([]);
+    const [users, setUsers] = useState([]); // Renamed from allUsers
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
+    const [stats, setStats] = useState({ total: 0, admins: 0, users: 0 });
 
     // --- Modal 相關狀態 ---
     const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
@@ -37,21 +39,30 @@ export default function UsersTab() {
     const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await authFetch('/api/users');
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: rowsPerPage,
+                search: searchTerm
+            });
+            const response = await authFetch(`/api/users?${params.toString()}`);
             const data = await response.json();
             if (response.ok) {
-                setAllUsers(Array.isArray(data.users) ? data.users : []);
+                setUsers(Array.isArray(data.users) ? data.users : []);
+                setTotalCount(data.total || 0);
+                if (data.stats) {
+                    setStats(data.stats);
+                }
             } else {
                 showToast(data.error || '獲取用戶資料失敗', 'error');
-                setAllUsers([]);
+                setUsers([]);
             }
         } catch (error) {
             showToast('獲取用戶資料時發生錯誤', 'error');
-            setAllUsers([]);
+            setUsers([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [currentPage, rowsPerPage, searchTerm]);
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -113,19 +124,9 @@ export default function UsersTab() {
             
             let apiPayload;
             if (isBulkSend) {
-                let targets = allUsers;
-                if (bulkTargetRole === 'user') targets = allUsers.filter(u => u.role === 'user');
-                if (bulkTargetRole === 'admin') targets = allUsers.filter(u => u.role === 'admin');
-
-                if (targets.length === 0) {
-                     showToast('沒有符合條件的收件者', 'error');
-                     setIsSending(false);
-                     return;
-                }
-
-                const targetEmails = targets.map(u => u.emailFull);
+                // Use new server-side role targeting
                 apiPayload = {
-                    bcc: targetEmails,
+                    targetRole: bulkTargetRole, // 'all', 'user', 'admin'
                     subject: subject,
                     body: htmlContent
                 };
@@ -163,31 +164,7 @@ export default function UsersTab() {
         }
     };
 
-    const processedUsers = useMemo(() => {
-        if (!Array.isArray(allUsers)) return [];
-        let filtered = [...allUsers];
-        if (searchTerm) {
-            const lowercasedTerm = searchTerm.toLowerCase();
-            filtered = filtered.filter(user =>
-                (user.name?.toLowerCase() || '').includes(lowercasedTerm) ||
-                (user.studentId?.toLowerCase() || '').includes(lowercasedTerm) ||
-                (user.email?.toLowerCase() || '').includes(lowercasedTerm)
-            );
-        }
-        return filtered;
-    }, [allUsers, searchTerm]);
-
-    const paginatedUsers = useMemo(() => {
-        return processedUsers.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-    }, [processedUsers, currentPage, rowsPerPage]);
-
-    const totalPages = Math.ceil(processedUsers.length / rowsPerPage);
-
-    const stats = useMemo(() => ({
-        total: allUsers.length,
-        admins: allUsers.filter(u => u.role === 'admin').length,
-        users: allUsers.filter(u => u.role === 'user').length,
-    }), [allUsers]);
+    const totalPages = Math.ceil(totalCount / rowsPerPage);
 
     // 計算群發的目標數量與標籤
     const bulkTargetInfo = useMemo(() => {
@@ -200,7 +177,7 @@ export default function UsersTab() {
             count = stats.admins;
             label = '管理員';
         } else {
-            count = stats.total;
+            count = stats.total; // or stats.admins + stats.users
             label = '所有使用者';
         }
         return { count, label };
@@ -275,8 +252,8 @@ export default function UsersTab() {
                             <th className="p-4 px-6 font-semibold text-gray-500">學號</th><th className="p-4 px-6 font-semibold text-gray-500">姓名</th><th className="p-4 px-6 font-semibold text-gray-500">電子信箱</th><th className="p-4 px-6 font-semibold text-gray-500">權限</th><th className="p-4 px-6 font-semibold text-gray-500 text-center">操作</th>
                         </tr></thead>
                         <tbody className="divide-y divide-gray-100">
-                            {loading ? (<tr><td colSpan="5" className="text-center p-12"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></td></tr>) : paginatedUsers.length === 0 ? (<tr><td colSpan="5" className="text-center p-12 text-gray-500">找不到符合條件的使用者。</td></tr>) : (
-                                paginatedUsers.map((user) => (
+                            {loading ? (<tr><td colSpan="5" className="text-center p-12"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></td></tr>) : users.length === 0 ? (<tr><td colSpan="5" className="text-center p-12 text-gray-500">找不到符合條件的使用者。</td></tr>) : (
+                                users.map((user) => (
                                     <tr key={user.id} className="group transition-all duration-300 ease-out border-b border-gray-50 last:border-0 relative hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] hover:-translate-y-1 hover:z-10">
                                         <td className="p-4 px-6 font-mono">{user.studentId || '-'}</td>
                                         <td className="p-4 px-6 font-medium text-gray-800">{user.name || '-'}</td>
@@ -295,8 +272,8 @@ export default function UsersTab() {
                     </table>
                 </div>
                 <div className="md:hidden divide-y divide-gray-100">
-                    {loading ? (<div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>) : paginatedUsers.length === 0 ? (<div className="text-center p-8 text-gray-500">找不到符合條件的使用者。</div>) : (
-                        paginatedUsers.map(user => (
+                    {loading ? (<div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>) : users.length === 0 ? (<div className="text-center p-8 text-gray-500">找不到符合條件的使用者。</div>) : (
+                        users.map(user => (
                             <div key={user.id} className="p-4 space-y-3">
                                 <div className="flex justify-between items-start">
                                     <h3 className="font-bold text-base text-gray-900 flex-1 pr-4">{user.name || '-'}</h3>
@@ -317,7 +294,7 @@ export default function UsersTab() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-gray-600">共 {processedUsers.length} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
+                <div className="text-sm text-gray-600">共 {totalCount} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
                 <div className="flex items-center gap-2">
                     <div className="relative"><select value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                         className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm

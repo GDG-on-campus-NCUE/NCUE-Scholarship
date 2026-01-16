@@ -23,14 +23,25 @@ export async function GET(request) {
     }
 
     // Fetch from DB
-    const { data: dbSettings, error } = await supabaseServer
-      .from('system_settings')
-      .select('*');
+    let safeDbSettings = [];
+    try {
+        const { data: dbSettings, error } = await supabaseServer
+          .from('system_settings')
+          .select('*');
 
-    if (error) throw error;
+        if (error) {
+            console.error('Error fetching system_settings:', error);
+            // Fallback to empty array to allow UI to render (e.g. with Env vars)
+        } else {
+            safeDbSettings = dbSettings || [];
+        }
+    } catch (dbError) {
+        console.error('Exception fetching system_settings:', dbError);
+        // Continue with empty DB settings
+    }
 
     const result = ALLOWED_KEYS.map(key => {
-      const dbItem = dbSettings.find(item => item.key === key);
+      const dbItem = safeDbSettings.find(item => item.key === key);
       
       if (dbItem && dbItem.value) {
         return {

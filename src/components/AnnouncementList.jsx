@@ -84,7 +84,12 @@ function AnnouncementListContent() {
 
     const fetchAnnouncementsList = useCallback(async () => {
         setSortLoading(true);
-        let query = supabase.from('announcements').select('*, attachments(*)', { count: 'exact' }).eq('is_active', true);
+        // Optimization: Select only necessary columns for the list view.
+        // We exclude 'attachments', 'summary', 'external_urls' to reduce payload size.
+        // These will be fetched on demand when the detail modal is opened.
+        let query = supabase.from('announcements')
+            .select('id, title, category, application_start_date, application_end_date, target_audience, application_limitations, submission_method, is_active', { count: 'exact' })
+            .eq('is_active', true);
 
         if (search) {
             query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%,target_audience.ilike.%${search}%`);

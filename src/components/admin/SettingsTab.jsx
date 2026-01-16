@@ -167,9 +167,8 @@ export default function SettingsTab() {
                     </div>
                 ) : (
                     settings.map((setting) => (
-                        <motion.div 
+                        <div 
                             key={setting.key} 
-                            variants={itemVariants}
                             className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-indigo-300 hover:-translate-y-1 group"
                         >
                             <div className="p-6">
@@ -240,7 +239,7 @@ export default function SettingsTab() {
                                     </p>
                                 )}
                             </div>
-                        </motion.div>
+                        </div>
                     ))
                 )}
             </div>

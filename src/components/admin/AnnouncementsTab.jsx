@@ -7,7 +7,7 @@ import UpdateAnnouncementModal from '@/components/UpdateAnnouncementModal';
 import DeleteAnnouncementModal from '@/components/DeleteAnnouncementModal';
 import AnnouncementPreviewModal from '@/components/AnnouncementPreviewModal';
 import Toast from '@/components/ui/Toast';
-import { Plus, Search, ChevronsUpDown, ArrowDown, ArrowUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ChevronDown, Link, Eye } from 'lucide-react';
+import { Plus, Search, ChevronsUpDown, ArrowDown, ArrowUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ChevronDown, Link, Eye, Loader2 } from 'lucide-react';
 import { authFetch } from '@/lib/authFetch';
 import { motion, AnimatePresence } from 'framer-motion';
 import DownloadPDFButton from './DownloadPDFButton';
@@ -46,7 +46,7 @@ const sendLineBroadcast = async (id, showToast) => {
 
 export default function AnnouncementsTab() {
     const [expandedId, setExpandedId] = useState(null);
-    const [allAnnouncements, setAllAnnouncements] = useState([]);
+    const [announcements, setAnnouncements] = useState([]); // Renamed from allAnnouncements
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -55,9 +55,10 @@ export default function AnnouncementsTab() {
     const [preview, setPreview] = useState({ open: false, type: '', html: '', text: '', id: null });
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [sort, setSort] = useState({ column: 'application_end_date', direction: 'desc' });
+    const [sort, setSort] = useState({ column: 'created_at', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
 
     const showToast = (message, type = 'success') => setToast({ show: true, message, type });
     const hideToast = () => setToast(prev => ({ ...prev, show: false }));
@@ -65,38 +66,42 @@ export default function AnnouncementsTab() {
     const fetchAnnouncements = useCallback(async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+            // Select limited columns for the list to improve performance
+            let query = supabase.from('announcements')
+                .select('id, title, category, view_count, application_end_date, is_active, updated_at', { count: 'exact' });
+
+            if (searchTerm) {
+                // Server-side search
+                query = query.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+            }
+
+            // Server-side sorting
+            query = query.order(sort.column, { ascending: sort.direction === 'asc' });
+
+            // Server-side pagination
+            const from = (currentPage - 1) * rowsPerPage;
+            const to = from + rowsPerPage - 1;
+            query = query.range(from, to);
+
+            const { data, error, count } = await query;
+            
             if (error) throw error;
-            setAllAnnouncements(data || []);
-        } catch (error) { showToast('無法載入公告列表，請稍後再試', 'error'); }
-        finally { setLoading(false); }
-    }, []);
+            
+            setAnnouncements(data || []);
+            setTotalCount(count || 0);
+        } catch (error) { 
+            console.error("Error fetching announcements:", error);
+            showToast('無法載入公告列表，請稍後再試', 'error'); 
+        } finally { 
+            setLoading(false); 
+        }
+    }, [currentPage, rowsPerPage, searchTerm, sort]);
 
     useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
 
-    const processedAnnouncements = useMemo(() => {
-        let filtered = [...allAnnouncements];
-        if (searchTerm) {
-            const lowercasedTerm = searchTerm.toLowerCase();
-            filtered = filtered.filter(ann => ann.title.toLowerCase().includes(lowercasedTerm) || (ann.category && ann.category.toLowerCase().includes(lowercasedTerm)));
-        }
-        if (sort.column) {
-            filtered.sort((a, b) => {
-                const aValue = a[sort.column]; const bValue = b[sort.column];
-                if (aValue < bValue) return sort.direction === 'asc' ? -1 : 1;
-                if (aValue > bValue) return sort.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-        }
-        return filtered;
-    }, [allAnnouncements, searchTerm, sort]);
+    // Client-side calculations removed. We use server-side data directly.
 
-    const paginatedAnnouncements = useMemo(() => {
-        const startIndex = (currentPage - 1) * rowsPerPage;
-        return processedAnnouncements.slice(startIndex, startIndex + rowsPerPage);
-    }, [processedAnnouncements, currentPage, rowsPerPage]);
-
-    const totalPages = Math.ceil(processedAnnouncements.length / rowsPerPage);
+    const totalPages = Math.ceil(totalCount / rowsPerPage);
 
     const handleSort = (column) => {
         setSort(prev => ({ column, direction: prev.column === column && prev.direction === 'desc' ? 'asc' : 'desc' }));
@@ -108,12 +113,45 @@ export default function AnnouncementsTab() {
         return sort.direction === 'asc' ? <ArrowUp className="h-4 w-4 ml-1 text-indigo-600" /> : <ArrowDown className="h-4 w-4 ml-1 text-indigo-600" />;
     };
 
+    const handleEditClick = async (partialAnn) => {
+        try {
+            // Fetch full details before opening the edit modal
+            const { data, error } = await supabase
+                .from('announcements')
+                .select('*, attachments(*)')
+                .eq('id', partialAnn.id)
+                .single();
+            
+            if (error) throw error;
+            setEditing(data);
+        } catch (error) {
+            console.error("Error fetching full announcement for edit:", error);
+            showToast("無法載入公告詳細資料", "error");
+        }
+    };
+
     // --- 開啟預覽視窗 ---
-    const openPreview = (type, ann) => {
+    const openPreview = async (type, ann) => {
+        // Preview might need full details too? 
+        // Currently PreviewModal takes 'announcement' object.
+        // It likely renders summary/target_audience.
+        // So we should fetch full details if missing.
+        let fullAnn = ann;
+        if (!ann.target_audience || !ann.summary) {
+             try {
+                const { data, error } = await supabase
+                    .from('announcements')
+                    .select('*, attachments(*)')
+                    .eq('id', ann.id)
+                    .single();
+                if (data && !error) fullAnn = data;
+             } catch(e) { console.error(e); }
+        }
+
         setPreview({
             open: true,
             type: type,
-            announcement: ann,
+            announcement: fullAnn,
             id: ann.id
         });
     };
@@ -184,11 +222,11 @@ export default function AnnouncementsTab() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr><td colSpan="7" className="text-center p-12 text-gray-500">載入中...</td></tr>
-                            ) : paginatedAnnouncements.length === 0 ? (
+                                <tr><td colSpan="7" className="text-center p-12 text-gray-500"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />載入中...</td></tr>
+                            ) : announcements.length === 0 ? (
                                 <tr><td colSpan="7" className="text-center p-12 text-gray-500">找不到符合條件的公告。</td></tr>
                             ) : (
-                                paginatedAnnouncements.map((ann) => (
+                                announcements.map((ann) => (
                                     <tr key={ann.id} className="group transition-all duration-300 ease-out border-b border-gray-50 last:border-0 relative hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] hover:-translate-y-1 hover:z-10">
                                         <td className="p-4 px-6 font-medium text-gray-800 break-words">{ann.title}</td>
                                         <td className="p-4 px-6 text-gray-600">{ann.category}</td>
@@ -202,7 +240,7 @@ export default function AnnouncementsTab() {
                                         <td className="p-4 px-6 text-gray-600">{new Date(ann.updated_at).toLocaleDateString()}</td>
                                         <td className="p-4 px-6">
                                             <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                                                <button onClick={() => setEditing(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
+                                                <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
                                                 <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
                                                 <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
                                                 <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
@@ -219,11 +257,11 @@ export default function AnnouncementsTab() {
                 {/* --- MOBILE VIEW --- */}
                 <div className="md:hidden px-2 py-4 flex flex-col gap-3">
                     {loading ? (
-                        <div className="text-center p-8 text-gray-500">載入中...</div>
-                    ) : paginatedAnnouncements.length === 0 ? (
+                        <div className="text-center p-8 text-gray-500"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />載入中...</div>
+                    ) : announcements.length === 0 ? (
                         <div className="text-center p-8 text-gray-500">找不到符合條件的公告。</div>
                     ) : (
-                        paginatedAnnouncements.map(ann => {
+                        announcements.map(ann => {
                             const isExpanded = expandedId === ann.id;
                             return (
                                 <div key={ann.id}
@@ -282,7 +320,7 @@ export default function AnnouncementsTab() {
 
                                                     {/* Action Buttons */}
                                                     <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-gray-200">
-                                                        <button onClick={() => setEditing(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
+                                                        <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
                                                         <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
                                                         <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
                                                         <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
@@ -301,7 +339,7 @@ export default function AnnouncementsTab() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-gray-600">共 {processedAnnouncements.length} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
+                <div className="text-sm text-gray-600">共 {totalCount} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <select

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Paperclip, Link as LinkIcon, Calendar, Users, Send as SendIcon, Download, Info, ExternalLink, Eye, Mail } from 'lucide-react';
+import { X, Paperclip, Link as LinkIcon, Calendar, Users, Send as SendIcon, Download, Info, ExternalLink, Eye, Mail, Loader2 } from 'lucide-react';
 import DownloadPDFButton from '@/components/admin/DownloadPDFButton';
 import { useAuth } from '@/hooks/useAuth';
 import { authFetch } from '@/lib/authFetch';
+import { supabase } from '@/lib/supabase/client';
 import Toast from '@/components/ui/Toast';
 
 const categoryStyles = {
@@ -43,11 +44,37 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
     const { user } = useAuth();
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [fullAnnouncement, setFullAnnouncement] = useState(announcement);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
     const showToast = (message, type = 'success') => setToast({ show: true, message, type });
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && announcement) {
+            setFullAnnouncement(announcement);
+            
+            // If attachments are missing, it means we have partial data and need to fetch the full record.
+            if (!announcement.attachments) {
+                setIsLoadingDetails(true);
+                const fetchDetails = async () => {
+                    const { data, error } = await supabase
+                        .from('announcements')
+                        .select('*, attachments(*)')
+                        .eq('id', announcement.id)
+                        .single();
+                    
+                    if (!error && data) {
+                         // Preserve semester which might have been calculated in the list
+                         setFullAnnouncement(prev => ({ ...prev, ...data }));
+                    } else {
+                        console.error("Error fetching announcement details:", error);
+                        showToast("無法載入詳細內容", "error");
+                    }
+                    setIsLoadingDetails(false);
+                };
+                fetchDetails();
+            }
+
             document.body.classList.add('modal-open');
             
             // Fetch and increment view count
@@ -84,7 +111,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
         try {
             const response = await authFetch('/api/announcements/send-to-email', {
                 method: 'POST',
-                body: JSON.stringify({ announcement })
+                body: JSON.stringify({ announcement: fullAnnouncement })
             });
             const data = await response.json();
             if (response.ok) {
@@ -100,28 +127,28 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
     };
 
     const parsedUrls = useMemo(() => {
-        if (!announcement?.external_urls) return [];
+        if (!fullAnnouncement?.external_urls) return [];
         try {
-            const parsed = JSON.parse(announcement.external_urls);
+            const parsed = JSON.parse(fullAnnouncement.external_urls);
             if (Array.isArray(parsed)) {
                 return parsed.filter(item => item.url && typeof item.url === 'string');
             }
         } catch (e) {
-            if (typeof announcement.external_urls === 'string' && announcement.external_urls.startsWith('http')) {
-                return [{ url: announcement.external_urls }];
+            if (typeof fullAnnouncement.external_urls === 'string' && fullAnnouncement.external_urls.startsWith('http')) {
+                return [{ url: fullAnnouncement.external_urls }];
             }
         }
         return [];
-    }, [announcement]);
+    }, [fullAnnouncement]);
 
     const dateInfo = useMemo(() => {
-        if (!announcement) return { displayString: '未指定', colorClass: 'text-gray-600' };
+        if (!fullAnnouncement) return { displayString: '未指定', colorClass: 'text-gray-600' };
 
         // Logic from AnnouncementList.jsx for consistent date status coloring
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const endDate = announcement.application_end_date ? new Date(announcement.application_end_date) : null;
-        const startDate = announcement.application_start_date ? new Date(announcement.application_start_date) : null;
+        const endDate = fullAnnouncement.application_end_date ? new Date(fullAnnouncement.application_end_date) : null;
+        const startDate = fullAnnouncement.application_start_date ? new Date(fullAnnouncement.application_start_date) : null;
 
         let colorClass = 'text-green-600';
         if (endDate === null) {
@@ -132,11 +159,11 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
             colorClass = 'text-red-600';
         }
 
-        const formattedStartDate = announcement.application_start_date 
-            ? new Date(announcement.application_start_date).toLocaleDateString('en-CA') 
+        const formattedStartDate = fullAnnouncement.application_start_date 
+            ? new Date(fullAnnouncement.application_start_date).toLocaleDateString('en-CA') 
             : null;
-        const formattedEndDate = announcement.application_end_date 
-            ? new Date(announcement.application_end_date).toLocaleDateString('en-CA') 
+        const formattedEndDate = fullAnnouncement.application_end_date 
+            ? new Date(fullAnnouncement.application_end_date).toLocaleDateString('en-CA') 
             : '無期限';
 
         const displayString = formattedStartDate
@@ -144,24 +171,24 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
             : formattedEndDate || '未指定';
 
         return { displayString, colorClass };
-    }, [announcement]);
+    }, [fullAnnouncement]);
 
     const targetAudienceHtml = useMemo(() => {
-        if (!announcement?.target_audience) return '未指定';
-        return wrapTables(announcement.target_audience);
-    }, [announcement]);
+        if (!fullAnnouncement?.target_audience) return '未指定';
+        return wrapTables(fullAnnouncement.target_audience);
+    }, [fullAnnouncement]);
 
     const finalContent = useMemo(() => {
-        if (!announcement) return '無詳細內容';
-        return wrapTables(announcement.summary || '無詳細內容');
-    }, [announcement]);
+        if (!fullAnnouncement) return '無詳細內容';
+        return wrapTables(fullAnnouncement.summary || '無詳細內容');
+    }, [fullAnnouncement]);
 
     const sortedAttachments = useMemo(() => {
-        if (!announcement?.attachments) return [];
-        return [...announcement.attachments].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-    }, [announcement]);
+        if (!fullAnnouncement?.attachments) return [];
+        return [...fullAnnouncement.attachments].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    }, [fullAnnouncement]);
 
-    if (!isOpen || !announcement) return null;
+    if (!isOpen || !fullAnnouncement) return null;
 
     return (
         <>
@@ -229,10 +256,10 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                         >
                             <div className="p-5 border-b border-black/10 flex justify-between items-center gap-4 flex-shrink-0">
                                 <div className="flex items-center gap-3">
-                                    <span className={`flex-shrink-0 inline-flex items-center justify-center h-8 w-8 rounded-lg text-sm font-bold ${getCategoryStyle(announcement.category).bg} ${getCategoryStyle(announcement.category).text}`}>
-                                        {announcement.category}
+                                    <span className={`flex-shrink-0 inline-flex items-center justify-center h-8 w-8 rounded-lg text-sm font-bold ${getCategoryStyle(fullAnnouncement.category).bg} ${getCategoryStyle(fullAnnouncement.category).text}`}>
+                                        {fullAnnouncement.category}
                                     </span>
-                                    <h2 className="text-base md:text-xl font-bold text-gray-800">{announcement.title}</h2>
+                                    <h2 className="text-base md:text-xl font-bold text-gray-800">{fullAnnouncement.title}</h2>
                                 </div>
 
                                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -256,7 +283,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                             <SendIcon className="h-5 w-5 text-indigo-500 mt-0.5 flex-shrink-0" />
                                             <div>
                                                 <p className="font-semibold text-gray-500">送件方式</p>
-                                                <p className="text-gray-800">{announcement.submission_method || '未指定'}</p>
+                                                <p className="text-gray-800">{fullAnnouncement.submission_method || '未指定'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -267,7 +294,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                             <p className="font-semibold text-gray-500">適用對象</p>
                                             <div
                                                 className="text-gray-800 rich-text-content"
-                                                dangerouslySetInnerHTML={{ __html: announcement.target_audience || '未指定' }}
+                                                dangerouslySetInnerHTML={{ __html: fullAnnouncement.target_audience || '未指定' }}
                                             />
                                         </div>
                                     </div>
@@ -277,8 +304,15 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
 
                                 <div>
                                     <h3 className="text-base font-semibold text-indigo-700 border-l-4 border-indigo-500 pl-3 mb-3">詳細內容</h3>
-                                    <div className="rich-text-content"
-                                        dangerouslySetInnerHTML={{ __html: finalContent }} />
+                                    {isLoadingDetails ? (
+                                        <div className="flex items-center gap-2 text-slate-500 py-4">
+                                            <Loader2 className="animate-spin h-5 w-5" />
+                                            載入詳細內容中...
+                                        </div>
+                                    ) : (
+                                        <div className="rich-text-content"
+                                            dangerouslySetInnerHTML={{ __html: finalContent }} />
+                                    )}
                                 </div>
 
                                 {sortedAttachments.length > 0 && (
@@ -326,7 +360,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                     {user && (
                                         <button
                                             onClick={handleSendToEmail}
-                                            disabled={isSendingEmail}
+                                            disabled={isSendingEmail || isLoadingDetails}
                                             className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all duration-200 border border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="傳送公告詳情至我的電子信箱"
                                         >
@@ -335,7 +369,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                         </button>
                                     )}
                                     <DownloadPDFButton
-                                        announcement={announcement}
+                                        announcement={fullAnnouncement}
                                         className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-100"
                                     />
                                 </div>
