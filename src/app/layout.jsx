@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
 import ScrollToTop from "@/components/ScrollToTop";
+import AndroidInstallPrompt from "@/components/AndroidInstallPrompt";
 
 const notoSans = Noto_Sans_TC({
 	subsets: ['latin'],
@@ -64,7 +65,23 @@ export default function RootLayout({ children }) {
 						<Footer />
 					</div>
 					<ScrollToTop />
+					<AndroidInstallPrompt />
 				</ClientProviders>
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `
+							if ('serviceWorker' in navigator) {
+								window.addEventListener('load', function() {
+									navigator.serviceWorker.register('/sw.js').then(function(registration) {
+										console.log('ServiceWorker registration successful');
+									}, function(err) {
+										console.log('ServiceWorker registration failed: ', err);
+									});
+								});
+							}
+						`,
+					}}
+				/>
 			</body>
 		</html>
 	);

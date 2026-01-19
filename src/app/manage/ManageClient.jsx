@@ -10,6 +10,7 @@ import AnnouncementsTab from '@/components/admin/AnnouncementsTab';
 import UsersTab from '@/components/admin/UsersTab';
 import ExportAndStatisticsTab from '@/components/admin/ExportAndStatisticsTab';
 import Toast from '@/components/ui/Toast';
+import SystemUpdateModal from '@/components/admin/SystemUpdateModal';
 import { Users, FileText, Settings, Loader2, Shield, BarChart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
@@ -93,6 +94,15 @@ function ManagePageContent() {
     const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
     const showToast = (message, type) => setToast({ show: true, message, type });
     const hideToast = () => setToast(prev => ({ ...prev, show: false }));
+
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+    useEffect(() => {
+        const hasSeenUpdate = localStorage.getItem('system_update_v2_0_1_read');
+        if (!hasSeenUpdate) {
+            setShowUpdateModal(true);
+        }
+    }, []);
 
     useEffect(() => {
         const checkOverdue = async () => {
@@ -194,6 +204,7 @@ function ManagePageContent() {
                     {ActiveComponent}
                 </main>
             </div>
+            <SystemUpdateModal isOpen={showUpdateModal} onClose={() => setShowUpdateModal(false)} />
             <Toast show={toast.show} message={toast.message} type={toast.type} onClose={hideToast} />
         </div>
     );

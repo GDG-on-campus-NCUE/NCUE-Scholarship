@@ -17,9 +17,7 @@ const Header = forwardRef((props, ref) => {
 	const mobileMenuRef = useRef(null);
 	const userMenuRef = useRef(null);
 
-	const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-	const scrollPosition = useRef(0);
-	const scrollingDownDelta = useRef(0);
+	const isHeaderVisible = true;
 
 	const { user, loading, signOut, isAuthenticated, isAdmin } = useAuth();
 	const [userIp, setUserIp] = useState("");
@@ -56,35 +54,6 @@ const Header = forwardRef((props, ref) => {
 			closeMenu();
 		}
 	};
-
-	useEffect(() => {
-		const SCROLL_DOWN_THRESHOLD = 150;
-		const TOP_OFFSET = 100;
-
-		const handleScroll = () => {
-			const currentPosition = window.scrollY;
-			if (isMenuOpen || pathname === '/manage') {
-				setIsHeaderVisible(true);
-				return;
-			}
-			const direction = currentPosition > scrollPosition.current ? 'down' : 'up';
-			if (direction === 'up' || currentPosition < TOP_OFFSET) {
-				setIsHeaderVisible(true);
-				scrollingDownDelta.current = 0;
-			} else {
-				scrollingDownDelta.current += (currentPosition - scrollPosition.current);
-				if (scrollingDownDelta.current > SCROLL_DOWN_THRESHOLD) {
-					setIsHeaderVisible(false);
-				}
-			}
-			scrollPosition.current = currentPosition;
-		};
-
-		window.addEventListener('scroll', handleScroll, { passive: true });
-		return () => {
-			window.removeEventListener('scroll', handleScroll);
-		};
-	}, [isMenuOpen]);
 
 	useEffect(() => {
 		if (!isMenuOpen) return;
@@ -169,7 +138,7 @@ const Header = forwardRef((props, ref) => {
 	return (
 		<HeaderContext.Provider value={{ isHeaderVisible }}>
 			<header
-				className={`header-fixed ${isHeaderVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${isMenuOpen ? 'menu-open' : ''}`}
+				className={`header-fixed opacity-100 ${isMenuOpen ? 'menu-open' : ''}`}
 				ref={ref}
 				onKeyDown={handleKeyDown}
 			>

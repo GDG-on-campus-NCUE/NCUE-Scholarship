@@ -220,12 +220,12 @@ function AnnouncementListContent() {
     const totalPages = Math.ceil(totalCount / rowsPerPage);
 
     return (
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <div className="bg-white/80 backdrop-blur-lg border border-slate-200/80 rounded-2xl p-6 mb-8 shadow-sm">
-                <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <div className="w-full sm:p-2 lg:p-4">
+            <div className="bg-white/80 backdrop-blur-lg border border-slate-200/80 rounded-2xl p-4 sm:p-6 mb-6 shadow-sm">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Award size={22} className="text-indigo-500" />獎助學金分類代碼定義
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-slate-600">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm sm:text-base text-slate-600">
                     <p><strong className="font-semibold text-red-600">A：</strong>各縣市政府獎助學金</p>
                     <p><strong className="font-semibold text-orange-500">B：</strong>縣市政府以外之各級公家機關及公營單位獎助學金</p>
                     <p><strong className="font-semibold text-yellow-500">C：</strong>宗教及民間各項指定身分獎助學金</p>
@@ -325,7 +325,11 @@ function AnnouncementListContent() {
                                                 <span className={`inline-flex items-center justify-center h-7 w-7 rounded-md text-xs font-bold ${style.bg} ${style.text} ${isRead ? 'opacity-60' : ''}`}>{item.category}</span>
                                                 <span className="text-xs font-medium">{`學期 ${item.semester}`}</span>
                                             </div>
-                                            <h3 className={`font-bold text-base ${isRead ? '' : 'text-gray-800'}`}>{item.title}</h3>
+                                            <h3 className={`font-bold text-base ${isRead ? '' : 'text-gray-800'} mb-1.5`}>{item.title}</h3>
+                                            <div className={`text-xs font-bold flex items-center gap-1 ${getDateColorClass(item)}`}>
+                                                <span>期限:</span>
+                                                <DateDisplay item={item} className="" />
+                                            </div>
                                         </div>
                                         <ChevronDown className={`h-5 w-5 text-gray-400 mt-1 flex-shrink-0 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                     </div>
@@ -333,10 +337,6 @@ function AnnouncementListContent() {
                                 <AnimatePresence>{isExpanded && (
                                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="overflow-hidden">
                                         <div className="pt-2 pb-4 px-4 border-t border-gray-200 space-y-3 text-sm">
-                                            <div>
-                                                <div className="font-semibold text-gray-500 mb-1">申請期限</div>
-                                                <DateDisplay item={item} className={`font-bold ${getDateColorClass(item)}`} />
-                                            </div>
                                             <div><div className="font-semibold text-gray-500 mb-1">適用對象</div><div className="line-clamp-3 text-gray-700" dangerouslySetInnerHTML={{ __html: item.target_audience }} /></div>
                                             <div>
                                                 <div className="font-semibold text-gray-500 mb-1">兼領限制</div>
