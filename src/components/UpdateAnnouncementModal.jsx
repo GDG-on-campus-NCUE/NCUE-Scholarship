@@ -230,7 +230,8 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
         title: '', summary: '', is_active: false, category: '',
         application_start_date: '', application_end_date: '',
         target_audience: '', application_limitations: '',
-        submission_method: '', external_urls: [{ url: '' }]
+        submission_method: '', external_urls: [{ url: '' }],
+        internal_id: ''
     });
 
     const inputStyles = "w-full px-3 py-2 bg-white/70 border border-gray-300 rounded-md shadow-sm transition-all duration-300 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30";
@@ -259,7 +260,8 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                 target_audience: announcement.target_audience || '',
                 application_limitations: announcement.application_limitations || '',
                 submission_method: announcement.submission_method || '',
-                external_urls: urls
+                external_urls: urls,
+                internal_id: announcement.internal_id || '',
             });
 
             loadExistingAttachments(announcement.id);
@@ -343,6 +345,13 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
         if (!formData.title.trim() || !formData.summary.replace(/<[^>]*>?/gm, '').trim() || !formData.application_end_date) {
             showToast('請填寫所有必填欄位', 'warning'); return;
         }
+
+        if (!formData.internal_id || formData.internal_id.trim() === '') {
+            if (!window.confirm('您未填寫「內部辨識名」。\n此欄位用於內部申請作業流程自動化。\n\n確定此公告不須該內部辨識名嗎？')) {
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
             const finalUrls = formData.external_urls.filter(item => item.url.trim() !== '');
@@ -359,6 +368,7 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                 submission_method: formData.submission_method,
                 external_urls: JSON.stringify(finalUrls),
                 updated_at: new Date().toISOString(),
+                internal_id: formData.internal_id,
             }).eq('id', announcement.id).select().single();
             if (error) throw error;
 
@@ -507,6 +517,23 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                                             </label>
                                             <input type="text" id="title" name="title" className={inputStyles} value={formData.title} onChange={handleChange} />
                                         </div>
+
+                                        <div>
+                                            <label htmlFor="internal_id" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">
+                                                內部辨識名 (選填)
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                id="internal_id" 
+                                                name="internal_id" 
+                                                className={inputStyles} 
+                                                value={formData.internal_id} 
+                                                onChange={handleChange} 
+                                                maxLength={5}
+                                                placeholder="最多5字，用於申請流程自動化"
+                                            />
+                                        </div>
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div><label htmlFor="is_active" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">公告狀態</label><select id="is_active" name="is_active" className={inputStyles} value={formData.is_active} onChange={e => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}><option value={false}>下架</option><option value={true}>上架</option></select></div>
                                             <div><label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">獎學金分類</label><select id="category" name="category" className={inputStyles} value={formData.category} onChange={handleChange}><option value="">請選擇</option><option value="A">A：各縣市政府獎學金</option><option value="B">B：縣市政府以外之各級公家機關及公營單位獎學金</option><option value="C">C：宗教及民間各項指定身分獎學金</option><option value="D">D：非公家機關或其他無法歸類的獎學金</option><option value="E">E：本校獲配推薦名額獎助學金</option><option value="F">F：校外獎助學金得獎公告</option><option value="G">G：校內獎助學金</option></select></div>

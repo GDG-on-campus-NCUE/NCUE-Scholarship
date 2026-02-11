@@ -105,8 +105,17 @@ export default function Footer() {
                                 <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-8 pt-2">
                                     <div>
                                         <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 mb-1">Especially thanks to</p>
-                                        <p className="text-sm text-gray-400 font-medium">
-                                            陳泰銘 <span className="mx-1 text-gray-700">|</span> 楊敦傑
+                                        <p className="text-sm text-gray-400 font-medium flex items-center gap-1">
+                                            <Link 
+                                                href="https://mingchen.dev" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="hover:text-amber-400 transition-colors duration-300"
+                                            >
+                                                陳泰銘
+                                            </Link>
+                                            <span className="text-gray-700">|</span> 
+                                            <span>楊敦傑</span>
                                         </p>
                                     </div>
                                     <Link href="https://forms.gle/GmPVHsdV7mLeGyhx7" className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300" target="_blank" rel="noopener noreferrer">

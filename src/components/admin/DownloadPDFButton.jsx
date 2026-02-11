@@ -119,7 +119,7 @@ const DownloadPDFButton = ({ announcement, className }) => {
             className={`${className} whitespace-nowrap`}
             disabled={isLoading}
         >
-            {isLoading ? '生成中...' : '下載'}
+            {isLoading ? '生成中...' : '下載 PDF'}
         </button>
     );
 };

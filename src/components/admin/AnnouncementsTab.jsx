@@ -68,11 +68,11 @@ export default function AnnouncementsTab() {
         try {
             // Select limited columns for the list to improve performance
             let query = supabase.from('announcements')
-                .select('id, title, category, view_count, application_end_date, is_active, updated_at', { count: 'exact' });
+                .select('id, title, category, view_count, application_end_date, is_active, updated_at, internal_id', { count: 'exact' });
 
             if (searchTerm) {
                 // Server-side search
-                query = query.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+                query = query.or(`title.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,internal_id.ilike.%${searchTerm}%`);
             }
 
             // Server-side sorting
@@ -189,7 +189,7 @@ export default function AnnouncementsTab() {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="relative w-full flex-grow">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input type="text" placeholder="搜尋標題、分類..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    <input type="text" placeholder="搜尋標題、分類、內部辨識名..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                         className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                             focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
                     />

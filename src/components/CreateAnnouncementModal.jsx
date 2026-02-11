@@ -254,6 +254,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
         application_end_date: '', target_audience: '', application_limitations: '',
         submission_method: '', external_urls: [{ url: '' }],
         is_active: true,
+        internal_id: '',
     };
     const [formData, setFormData] = useState(initialFormData);
 
@@ -446,6 +447,13 @@ ${text}`);
             showToast("請填寫所有必填欄位", "warning");
             return;
         }
+
+        if (!formData.internal_id || formData.internal_id.trim() === '') {
+            if (!window.confirm('您未填寫「內部辨識名」。\n此欄位用於內部申請作業流程自動化。\n\n確定此公告不須該內部辨識名嗎？')) {
+                return;
+            }
+        }
+
         setIsLoading(true);
         setLoadingText("儲存中...");
         try {
@@ -500,6 +508,7 @@ ${text}`);
                 submission_method: formData.submission_method,
                 external_urls: JSON.stringify(finalUrls),
                 is_active: formData.is_active,
+                internal_id: formData.internal_id,
             };
 
             const { data: announcement, error: announcementError } = await supabase
@@ -591,6 +600,22 @@ ${text}`);
                                 公告標題 <span className="text-red-500 ml-1">*</span>
                             </label>
                             <input type="text" id="title" name="title" className={inputStyles} value={formData.title} onChange={handleChange} />
+                        </div>
+
+                        <div>
+                            <label htmlFor="internal_id" className="block text-sm font-semibold text-gray-700 mb-1.5 select-none">
+                                內部辨識名 (選填)
+                            </label>
+                            <input 
+                                type="text" 
+                                id="internal_id" 
+                                name="internal_id" 
+                                className={inputStyles} 
+                                value={formData.internal_id} 
+                                onChange={handleChange} 
+                                maxLength={5}
+                                placeholder="最多5字，用於申請流程自動化"
+                            />
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">

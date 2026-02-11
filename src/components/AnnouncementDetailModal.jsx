@@ -357,21 +357,31 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                     <span className="tabular-nums">瀏覽數：{viewCount !== null ? viewCount : '...'} 次</span>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
+                                    <DownloadPDFButton
+                                        announcement={fullAnnouncement}
+                                        className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                    />
+                                    {fullAnnouncement.internal_id && (
+                                        <a
+                                            href={`https://docs.google.com/forms/d/e/1FAIpQLSct6GjpISj20foOtBK4TVcMCpSfULcagZTTN4_YkFTNK1DQbQ/viewform?usp=pp_url&entry.40872308=${fullAnnouncement.internal_id}${user ? `&entry.146368827=${encodeURIComponent(user.user_metadata?.name || user.profile?.username || '')}&entry.609200579=${encodeURIComponent((user.user_metadata?.student_id || user.profile?.student_id || '').toUpperCase())}` : ''}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all duration-200 border border-orange-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                            title="前往申請"
+                                        >
+                                            <span>提交申請</span>
+                                        </a>
+                                    )}
                                     {user && (
                                         <button
                                             onClick={handleSendToEmail}
                                             disabled={isSendingEmail || isLoadingDetails}
-                                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all duration-200 border border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-all duration-200 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                             title="傳送公告詳情至我的電子信箱"
                                         >
-                                            <Mail size={16} className={isSendingEmail ? "animate-pulse" : ""} />
-                                            <span>{isSendingEmail ? "傳送中..." : "傳送至我的 mail"}</span>
+                                            <span>{isSendingEmail ? "傳送中..." : "寄送至 mail"}</span>
                                         </button>
                                     )}
-                                    <DownloadPDFButton
-                                        announcement={fullAnnouncement}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-100"
-                                    />
                                 </div>
                             </div>
                         </motion.div>
