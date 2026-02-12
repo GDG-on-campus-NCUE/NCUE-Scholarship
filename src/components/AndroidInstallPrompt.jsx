@@ -21,24 +21,25 @@ export default function AndroidInstallPrompt() {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         if (isStandalone) return;
 
-        // 3. Check if dismissed previously
-        const isDismissed = localStorage.getItem('android-install-prompt-dismissed');
-        if (isDismissed) {
-             return;
-        }
+        // 3. Check if already shown in this session
+        if (sessionStorage.getItem('android-install-prompt-dismissed')) return;
 
         // 4. Listen for beforeinstallprompt
         const handleBeforeInstallPrompt = (e) => {
+            if (sessionStorage.getItem('android-install-prompt-dismissed')) return;
             e.preventDefault();
             setDeferredPrompt(e);
             setShowPrompt(true);
+            sessionStorage.setItem('android-install-prompt-dismissed', 'true');
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
         // Fallback: Show prompt after 5 seconds to guide manual installation if beforeinstallprompt doesn't fire
         const timer = setTimeout(() => {
+            if (sessionStorage.getItem('android-install-prompt-dismissed')) return;
             setShowPrompt(true);
+            sessionStorage.setItem('android-install-prompt-dismissed', 'true');
         }, 5000);
 
         return () => {
@@ -54,15 +55,17 @@ export default function AndroidInstallPrompt() {
             if (outcome === 'accepted') {
                 setDeferredPrompt(null);
                 setShowPrompt(false);
+                sessionStorage.setItem('android-install-prompt-dismissed', 'true');
             }
         } else {
             alert('請點擊瀏覽器選單 (⋮) 並選擇「安裝應用程式」或「加到主畫面」。');
+            sessionStorage.setItem('android-install-prompt-dismissed', 'true');
         }
     };
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        localStorage.setItem('android-install-prompt-dismissed', 'true');
+        sessionStorage.setItem('android-install-prompt-dismissed', 'true');
     };
 
     return (

@@ -229,7 +229,7 @@ export default function TermsAndPrivacyPage() {
                             
                             <motion.div variants={itemVariants} className="mt-6 space-y-4 text-base leading-relaxed text-slate-600">
                                 <p>
-                                    歡迎您使用由 <strong>國立彰化師範大學學生事務處生活輔導組</strong>（以下簡稱「本組」）委託，並由 <strong>Tai Ming Chen</strong> 與 <strong>Grason Yang</strong> 代表 <strong>Google Developer Group On Campus NCUE</strong>（以下簡稱「開發團隊」）所開發與維護之「校外獎學金平台」（以下簡稱「本平台」）。
+                                    歡迎您使用由 <strong>國立彰化師範大學學生事務處生活輔導組</strong>（以下簡稱「本組」）委託，並由 <strong>陳泰銘</strong> 代表 <strong>Google Developer Group On Campus NCUE</strong>（以下簡稱「開發團隊」）所開發與維護之「校外獎學金平台」（以下簡稱「本平台」）。
                                 </p>
                                 <p>
                                     本平台致力於運用先進資訊技術，協助學生更便捷地獲取獎學金資訊。為保障您的權益，請於註冊及使用本平台服務前，詳細閱讀以下條款。當您完成註冊程序或開始使用本平台服務時，即視為您已<strong>閱讀、理解並完全同意</strong>接受本服務條款暨隱私權政策（以下合稱「本條款」）之所有內容。

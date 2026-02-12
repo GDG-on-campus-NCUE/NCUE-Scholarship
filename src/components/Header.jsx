@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Download, Smartphone } from 'lucide-react';
 import { useState, forwardRef, useEffect, useRef, createContext } from "react";
 import { usePathname } from 'next/navigation';
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +23,41 @@ const Header = forwardRef((props, ref) => {
 	const { user, loading, signOut, isAuthenticated, isAdmin } = useAuth();
 	const [userIp, setUserIp] = useState("");
 	const pathname = usePathname();
+
+    // Android Install Logic
+    const [isAndroid, setIsAndroid] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+    const [isStandalone, setIsStandalone] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const checkAndroid = /Android/i.test(navigator.userAgent);
+        setIsAndroid(checkAndroid);
+
+        const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        setIsStandalone(checkStandalone);
+
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }, []);
+
+    const handleInstallApp = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+            }
+        } else {
+            alert('請點擊瀏覽器選單 (⋮) 並選擇「安裝應用程式」或「加到主畫面」。');
+        }
+    };
 
 	const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 	const closeMenu = () => {
@@ -252,6 +288,19 @@ const Header = forwardRef((props, ref) => {
 								</button>
 							</div>
 						)}
+
+                        {/* Android Install Button (Mobile Only) */}
+                        {isAndroid && !isStandalone && (
+                            <div className="pt-4 mt-4 border-t border-gray-200/50 flex justify-center pb-6">
+                                <button
+                                    onClick={handleInstallApp}
+                                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full font-bold shadow-lg active:scale-95 transition-all duration-200 hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 w-[90%] justify-center"
+                                >
+                                    <Download size={20} />
+                                    <span>下載應用程式</span>
+                                </button>
+                            </div>
+                        )}
 					</div>
 				</div>
 			</header>

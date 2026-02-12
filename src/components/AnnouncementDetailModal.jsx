@@ -351,12 +351,12 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                             </div>
 
                             {/* Footer - Synchronized with Header style */}
-                            <div className="p-5 border-t border-black/10 flex justify-between items-center gap-4 flex-shrink-0">
+                            <div className="p-5 border-t border-black/10 flex flex-col sm:flex-row justify-between items-center gap-4 flex-shrink-0">
                                 <div className="flex items-center text-slate-500 text-sm font-medium gap-1.5 px-3">
                                     <Eye className="w-4 h-4 text-slate-400" />
                                     <span className="tabular-nums">瀏覽數：{viewCount !== null ? viewCount : '...'} 次</span>
                                 </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="flex items-center justify-center sm:justify-end gap-2 flex-wrap w-full sm:w-auto">
                                     <DownloadPDFButton
                                         announcement={fullAnnouncement}
                                         className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"

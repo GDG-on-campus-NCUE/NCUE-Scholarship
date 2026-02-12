@@ -103,9 +103,9 @@ export default function Footer() {
                                 </a>
                                 
                                 <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-8 pt-2">
-                                    <div>
+                                    <div className="text-center sm:text-left">
                                         <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 mb-1">Especially thanks to</p>
-                                        <p className="text-sm text-gray-400 font-medium flex items-center gap-1">
+                                        <p className="text-sm text-gray-400 font-medium flex items-center justify-center sm:justify-start gap-1">
                                             <Link 
                                                 href="https://mingchen.dev" 
                                                 target="_blank" 
