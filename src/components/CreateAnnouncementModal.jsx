@@ -517,6 +517,17 @@ ${text}`);
                 .select().single();
             if (announcementError) throw announcementError;
 
+            // --- 自動同步到 Dify 知識庫 ---
+            try {
+                await authFetch('/api/admin/announcements/sync-dify', {
+                    method: 'POST',
+                    body: JSON.stringify({ id: announcement.id, action: 'sync' })
+                });
+            } catch (difyError) {
+                console.error('[DifySync] 初始同步失敗:', difyError);
+                // 不阻斷主流程，僅記錄錯誤
+            }
+
             if (uploadedFilesData.length > 0) {
                 const attachments = [];
                 let orderIndex = 0;

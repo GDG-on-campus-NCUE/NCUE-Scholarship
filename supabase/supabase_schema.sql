@@ -24,6 +24,8 @@ CREATE TABLE public.announcements (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   view_count integer NOT NULL DEFAULT 0,
+  internal_id character varying,
+  dify_document_id text,
   CONSTRAINT announcements_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.attachments (

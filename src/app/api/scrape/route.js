@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 export async function POST(request) {
     try {
@@ -25,7 +25,7 @@ export async function POST(request) {
         const html = await response.text();
 
         // 使用 Cheerio 載入 HTML
-        const $ = cheerio.load(html);
+        const $ = load(html);
 
         // 移除不需要的標籤
         $('script, style, noscript, iframe, header, footer, nav, aside').remove();

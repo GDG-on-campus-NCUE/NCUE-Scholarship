@@ -303,7 +303,7 @@ const AnnouncementPDF = ({ announcement }) => {
                 <View style={styles.footer} fixed>
                     <View style={styles.footerColumn}>
                         <Text>聯繫 獎學金承辦人員: <Link src="mailto:act5718@gmail.com" style={styles.footerLink}>何淑芬 (act5718@gmail.com)</Link></Text>
-                        <Text>聯繫 系統開發者: <Link src="mailto:3526ming@gmail.com" style={styles.footerLink}>Tai Ming Chen (3526ming@gmail.com)</Link></Text>
+                        <Text>聯繫 系統開發者: <Link src="mailto:contact@mingchen.dev" style={styles.footerLink}>陳泰銘 (contact@mingchen.dev)</Link></Text>
                     </View>
                     <View style={styles.footerColumn}>
                         <Link src={homepageUrl} style={styles.footerLink}>前往彰師生輔組獎學金資訊平台</Link>

@@ -372,6 +372,16 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
             }).eq('id', announcement.id).select().single();
             if (error) throw error;
 
+            // --- 自動同步到 Dify 知識庫 ---
+            try {
+                await authFetch('/api/admin/announcements/sync-dify', {
+                    method: 'POST',
+                    body: JSON.stringify({ id: updated.id, action: 'sync' })
+                });
+            } catch (difyError) {
+                console.error('[DifySync] 更新同步失敗:', difyError);
+            }
+
             if (filesToRemove.length > 0) {
                 const pathsToRemove = filesToRemove.map(f => f.path);
                 const idsToRemove = filesToRemove.map(f => f.id);

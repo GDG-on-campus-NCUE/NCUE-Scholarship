@@ -56,7 +56,17 @@ export default function DeleteAnnouncementModal({ isOpen, onClose, announcementI
                 }
             }
 
-            // 步驟 3: 刪除公告的資料庫紀錄
+            // 步驟 3: 從 Dify 知識庫中刪除 (必須在資料庫紀錄刪除前執行)
+            try {
+                await authFetch('/api/admin/announcements/sync-dify', {
+                    method: 'POST',
+                    body: JSON.stringify({ id: announcementId, action: 'delete' }),
+                });
+            } catch (difyError) {
+                console.error('[DifySync] 刪除同步失敗:', difyError);
+            }
+
+            // 步驟 4: 刪除公告的資料庫紀錄
             const { error: deleteError } = await supabase
                 .from('announcements')
                 .delete()
