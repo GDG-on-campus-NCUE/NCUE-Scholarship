@@ -39,15 +39,58 @@ const StatCard = ({ title, value, icon: Icon, color = "indigo", subtext }) => {
 const SimpleLineChart = ({ data, granularity }) => {
     const [hoveredPoint, setHoveredPoint] = useState(null);
 
-    if (!data || data.length === 0) {
-        return <div className="h-64 flex items-center justify-center text-gray-400 select-none">無圖表資料</div>;
-    }
-
     const padding = 40;
     const width = 800;
     const height = 300;
     const chartWidth = width - padding * 2;
     const chartHeight = height - padding * 2;
+
+    // Calculate visible labels indices to prevent overlapping
+    const visibleLabelIndices = useMemo(() => {
+        if (!data || data.length === 0) return [];
+        
+        const indices = [];
+        const minGap = 85; // Minimum pixels between labels to prevent overlap (for YYYY-MM-DD format)
+        let lastX = -1000;
+
+        for (let i = 0; i < data.length; i++) {
+            const x = padding + (i / (data.length - 1 || 1)) * chartWidth;
+            
+            // Always show the first label
+            if (i === 0) {
+                indices.push(i);
+                lastX = x;
+                continue;
+            }
+
+            // For the last label, we want to ensure it's always visible
+            if (i === data.length - 1) {
+                if (x - lastX < minGap && indices.length > 1) {
+                    // If too close to the previous label, replace the previous one
+                    indices[indices.length - 1] = i;
+                } else if (x - lastX >= minGap) {
+                    indices.push(i);
+                }
+                continue;
+            }
+
+            // Standard logic for middle labels: respect minGap and a basic density check
+            const skip = Math.ceil(data.length / 10);
+            if (i % skip === 0 && (x - lastX >= minGap)) {
+                // Also check distance to the VERY LAST point to avoid crowding the end
+                const lastPointX = padding + chartWidth;
+                if (lastPointX - x >= minGap * 0.8) {
+                    indices.push(i);
+                    lastX = x;
+                }
+            }
+        }
+        return indices;
+    }, [data, chartWidth]);
+
+    if (!data || data.length === 0) {
+        return <div className="h-64 flex items-center justify-center text-gray-400 select-none">無圖表資料</div>;
+    }
 
     const maxCount = Math.max(...data.map(d => d.count), 5); // Ensure at least 5 for scale
     const points = data.map((d, i) => {
@@ -116,10 +159,7 @@ const SimpleLineChart = ({ data, granularity }) => {
 
                     {/* X Axis Labels */}
                     {points.map((p, i) => {
-                        // Adaptive label skipping based on data density
-                        const labelCount = 10;
-                        const skip = Math.ceil(data.length / labelCount);
-                        const showLabel = i % skip === 0 || i === data.length - 1;
+                        const showLabel = visibleLabelIndices.includes(i);
 
                         return showLabel ? (
                             <text key={i} x={p.x} y={height - padding + 20} textAnchor="middle" className="text-[10px] fill-gray-500 font-sans font-medium">
@@ -179,6 +219,7 @@ const SimpleLineChart = ({ data, granularity }) => {
         </div>
     );
 };
+
 
 export default function ExportAndStatisticsTab() {
     const [loading, setLoading] = useState(true);

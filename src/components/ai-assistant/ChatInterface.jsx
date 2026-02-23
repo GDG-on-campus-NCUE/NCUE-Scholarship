@@ -18,10 +18,9 @@ const ChatInterface = () => {
     const messagesEndRef = useRef(null);
     const [sessionId, setSessionId] = useState(null);
 
-    // 手動管理 input 狀態
+    // ✅ v6 官方規定：必須手動管理 input 狀態
     const [input, setInput] = useState('');
 
-    // useChat 配置
     const { 
         messages, 
         sendMessage, 
@@ -29,16 +28,36 @@ const ChatInterface = () => {
         isLoading 
     } = useChat({
         api: '/api/chat',
-        // 💡 基礎 fetch 攔截器，用於確保 SDK 內部的自動請求也帶有 Token
-        fetch: async (url, options) => {
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-            const newHeaders = new Headers(options.headers || {});
-            if (token) newHeaders.set('Authorization', `Bearer ${token}`);
-            return fetch(url, { ...options, headers: newHeaders });
-        },
         body: {
             sessionId: sessionId
+        },
+        // ✅ 修正後的防彈攔截器：確保 Headers 正確合併，且 Token 絕對帶上
+        fetch: async (url, options) => {
+            // 1. 抓取最新 Token
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            if (!token) {
+                console.error('[Chat API] No access token found. User might be logged out.');
+            }
+
+            // 2. 使用 Headers API 進行處理，這能完美相容 Headers 物件與純物件
+            const headers = new Headers(options.headers || {});
+            
+            // 3. 強制注入 Authorization
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+
+            // 4. 確保 Content-Type (雖然 SDK 通常會帶，但我們保險起見)
+            if (!headers.has('Content-Type')) {
+                headers.set('Content-Type', 'application/json');
+            }
+
+            return fetch(url, { 
+                ...options, 
+                headers 
+            });
         },
         onError: (error) => {
             console.error('AI SDK Error:', error);
@@ -47,31 +66,24 @@ const ChatInterface = () => {
         }
     });
 
+    // 手動處理輸入
     const handleInputChange = (e) => {
         setInput(e.target.value);
     };
 
+    // 手動處理送出
     const onChatSubmit = async (e) => {
         e?.preventDefault();
         const content = input.trim();
         if (!content || isLoading) return;
         
-        setInput(''); 
+        setInput(''); // 瞬間清空，優化體驗
 
         try {
-            // ✅ v5 強化版傳遞方式：在 sendMessage 時顯式提供 headers
-            // 這是為了防止 fetch 攔截器在某些 SDK 內部邏輯中被繞過
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-
-            await sendMessage({ text: content }, {
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : ''
-                }
-            });
+            await sendMessage({ text: content });
         } catch (error) {
             console.error('Submit error:', error);
-            setInput(content); 
+            setInput(content); // 失敗才退回文字
         }
     };
 
@@ -87,16 +99,13 @@ const ChatInterface = () => {
         if (!user) {
             setIsHistoryLoading(false);
             return;
-        };
-
+        }
         setIsHistoryLoading(true);
         try {
             const response = await authFetch(`/api/chat-history`);
             const data = await response.json();
             if (data.success && data.data.length > 0) {
-                if (data.data[0]?.session_id) {
-                    setSessionId(data.data[0].session_id);
-                }
+                if (data.data[0]?.session_id) setSessionId(data.data[0].session_id);
 
                 setMessages(data.data.map(msg => ({
                     id: msg.id || crypto.randomUUID(),
@@ -112,15 +121,8 @@ const ChatInterface = () => {
         }
     }, [user, setMessages]);
 
-    useEffect(() => {
-        loadChatHistory();
-    }, [loadChatHistory]);
-
-    useEffect(() => {
-        if (messages.length > 0) {
-            scrollToBottom();
-        }
-    }, [messages, isLoading, scrollToBottom]);
+    useEffect(() => { loadChatHistory(); }, [loadChatHistory]);
+    useEffect(() => { if (messages.length > 0) scrollToBottom(); }, [messages, isLoading, scrollToBottom]);
 
     const handleClearHistory = async () => {
         if (isLoading) return;
@@ -139,10 +141,8 @@ const ChatInterface = () => {
 
     const handleRequestHumanSupport = async () => {
         if (isLoading) return;
-        if (messages.length === 0) {
-            setToast({ message: "請先開始對話，才能尋求支援喔！", type: 'warning' });
-            return;
-        }
+        if (messages.length === 0) return setToast({ message: "請先開始對話，才能尋求支援喔！", type: 'warning' });
+        
         if (window.confirm('您確定要將目前的對話紀錄傳送給獎學金承辦人員嗎？')) {
             try {
                 const response = await authFetch('/api/send-support-email', {
@@ -174,17 +174,17 @@ const ChatInterface = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left mb-12">
-                <div className="p-5 bg-white border border-indigo-50/50 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="p-5 bg-white border border-indigo-50/50 rounded-xl shadow-sm">
                     <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-3"><Database size={20} className="text-indigo-600" /></div>
                     <h4 className="font-bold text-gray-800 mb-1">精準檢索</h4>
                     <p className="text-sm text-gray-600 leading-snug">優先搜尋校內獎學金資料庫，提供最相關的公告資訊。</p>
                 </div>
-                <div className="p-5 bg-white border border-green-50/50 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="p-5 bg-white border border-green-50/50 rounded-xl shadow-sm">
                     <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3"><Globe size={20} className="text-green-600" /></div>
                     <h4 className="font-bold text-gray-800 mb-1">廣泛搜尋</h4>
                     <p className="text-sm text-gray-600 leading-snug">若內部資訊不足，自動擴大搜尋網路公開資訊。</p>
                 </div>
-                <div className="p-5 bg-white border border-amber-50/50 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="p-5 bg-white border border-amber-50/50 rounded-xl shadow-sm">
                     <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center mb-3"><MessageSquare size={20} className="text-amber-600" /></div>
                     <h4 className="font-bold text-gray-800 mb-1">智慧摘要</h4>
                     <p className="text-sm text-gray-600 leading-snug">彙整多方資訊，生成條理分明的客觀答覆與建議。</p>

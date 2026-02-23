@@ -11,9 +11,78 @@ import UsersTab from '@/components/admin/UsersTab';
 import ExportAndStatisticsTab from '@/components/admin/ExportAndStatisticsTab';
 import Toast from '@/components/ui/Toast';
 import SystemUpdateModal from '@/components/admin/SystemUpdateModal';
-import { Users, FileText, Settings, Loader2, Shield, BarChart } from 'lucide-react';
+import { Users, FileText, Settings, Loader2, Shield, BarChart, Sparkles, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+
+const ADMIN_NOTICES_CONFIG = [
+    {
+        id: 'updates',
+        title: '近期更新公告',
+        titleColor: 'text-red-600',
+        contentColor: 'text-red-700',
+        dotColor: 'bg-red-600',
+        pingColor: 'bg-red-400',
+        showPing: true,
+        icon: Info,
+        items: [
+            "已修復「複製公告」功能附件無法穩定複製的問題，煩請確認 2/23 透過該功能上傳之公告的附檔能正確顯示。"
+        ]
+    },
+    {
+        id: 'suggestions',
+        title: '系統管理公告',
+        titleColor: 'text-purple-700',
+        contentColor: 'text-purple-800/70',
+        dotColor: 'bg-purple-400',
+        showPing: false,
+        icon: Sparkles,
+        items: [
+            "請務必在上傳附件前先「修改檔名」，以利學生辨識內容。",
+            "系統偵測過期公告（超過 2 年）時會跳出提示，請務必定期清理。"
+        ]
+    }
+];
+
+// 管理員公告區塊組件
+const AdminNotice = () => {
+    return (
+        <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col sm:flex-row gap-6 md:gap-12"
+        >
+            {ADMIN_NOTICES_CONFIG.map((section) => (
+                <div key={section.id} className="space-y-2">
+                    {/* 標題列 */}
+                    <div className={`flex items-center gap-1.5 ${section.titleColor} font-bold text-[10px] uppercase tracking-[0.2em]`}>
+                        {section.showPing ? (
+                            <span className="relative flex h-2 w-2">
+                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${section.pingColor} opacity-75`}></span>
+                                <span className={`relative inline-flex rounded-full h-2 w-2 ${section.dotColor}`}></span>
+                            </span>
+                        ) : (
+                            <section.icon className="h-3.5 w-3.5" />
+                        )}
+                        {section.title}
+                    </div>
+
+                    {/* 內容列表 */}
+                    <ul className="space-y-1.5">
+                        {section.items.map((item, idx) => (
+                            <li key={idx} className="flex items-start gap-2 group">
+                                <span className={`mt-1.5 w-1 h-1 rounded-full ${section.dotColor} opacity-40 shrink-0`} />
+                                <p className={`text-sm ${section.contentColor} font-medium leading-relaxed max-w-xs`}>
+                                    {item}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ))}
+        </motion.div>
+    );
+};
 
 const tabs = [
     { id: 'announcements', label: '公告管理', icon: FileText, component: <AnnouncementsTab /> },
@@ -191,9 +260,25 @@ function ManagePageContent() {
             </motion.div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <header className="py-12 text-center select-none">
-                    <h1 className="text-4xl font-bold tracking-tight text-gray-900">管理後台</h1>
-                    <p className="mt-3 text-lg text-gray-500">在這裡你可以針對 彰師生輔組 —— 校外獎助學金資訊平台的所有公告、使用者進行相關操作。</p>
+                <header className="pt-16 pb-12 select-none">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                        <div>
+                            <motion.div 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex items-center gap-2 mb-2"
+                            >
+                                <div className="h-1 w-8 bg-purple-600 rounded-full" />
+                                <span className="text-sm font-bold text-purple-600 uppercase tracking-widest">Admin Dashboard</span>
+                            </motion.div>
+                            <h1 className="text-5xl font-black tracking-tight text-gray-900">管理後台</h1>
+                        </div>
+                        
+                        <div className="w-full md:w-auto">
+                            <AdminNotice />
+                        </div>
+                    </div>
+                    <div className="h-px w-full bg-linear-to-r from-transparent via-gray-200 to-transparent" />
                 </header>
 
                 <div ref={triggerRef} className="flex justify-center mb-10 w-full max-w-md mx-auto sm:max-w-none">

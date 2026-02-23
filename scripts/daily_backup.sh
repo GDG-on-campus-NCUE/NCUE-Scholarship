@@ -69,4 +69,19 @@ log "Cleaning up backups older than $RETENTION_DAYS days..."
 find "$BACKUP_DIR" -name "*.gz" -type f -mtime +$RETENTION_DAYS -delete
 log "Cleanup complete."
 
+# 4. Sync Dify Knowledge Base
+log "Starting Dify Knowledge Base Full Synchronization..."
+NODE_BIN="/home/mingchen4865/.nvm/versions/node/v22.18.0/bin/node"
+
+# Check if node exists at the specified path, fallback to system node if not
+if [ ! -f "$NODE_BIN" ]; then
+    NODE_BIN=$(which node)
+fi
+
+if $NODE_BIN "${PROJECT_ROOT}/scripts/sync-dify-knowledge.js" >> "$LOG_FILE" 2>&1; then
+    log "Dify Synchronization successful."
+else
+    log "Error: Dify Synchronization failed. Check logs for details."
+fi
+
 log "Backup process finished."

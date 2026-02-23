@@ -86,14 +86,14 @@ const ChatInput = ({
                 <textarea
                     value={input}
                     onChange={(e) => {
-                        // ✅ 安全呼叫 handleInputChange
+                        // 安全呼叫 handleInputChange
                         if (typeof handleInputChange === 'function') {
                             handleInputChange(e);
                         }
                         adjustHeight(e.target);
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="輸入您的問題，例如：「我想找清寒獎學金...」"
+                    placeholder="請輸入您的問題..."
                     disabled={isLoading}
                     rows={1}
                     className="w-full max-h-32 bg-transparent border-0 py-3 px-2 text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none outline-none resize-none custom-scrollbar leading-relaxed"

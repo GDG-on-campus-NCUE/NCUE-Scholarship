@@ -1,3 +1,6 @@
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server'
 import { verifyUserAuth, checkRateLimit, handleApiError } from '@/lib/apiMiddleware'
 import { supabaseServer as supabase } from '@/lib/supabase/server'
@@ -17,26 +20,23 @@ async function saveHistory(userId, sessionId, userMessage, aiResponse) {
 }
 
 export async function POST(request) {
-    // 💡 診斷日誌：列出所有 Header
-    const headersObj = {};
-    request.headers.forEach((value, key) => { headersObj[key] = key === 'authorization' ? 'PRESENT (HIDDEN)' : value; });
-    console.log('[Chat API] Incoming Headers:', headersObj);
-
     try {
         const rateLimitCheck = checkRateLimit(request, 'chat', 30, 60000);
         if (!rateLimitCheck.success) return rateLimitCheck.error;
 
         const authCheck = await verifyUserAuth(request, { requireAuth: true });
-        if (!authCheck.success) {
-            console.error('[Chat API] Auth Check Failed:', authCheck.error);
-            return authCheck.error;
-        }
+        if (!authCheck.success) return authCheck.error;
 
         const body = await request.json();
         const { messages, sessionId: providedSessionId, dify_conversation_id } = body;
         
+        // 強化相容性：擷取 user 最新文字，通吃各種 SDK 結構
         const lastMessage = messages?.[messages.length - 1];
-        const userMessage = lastMessage?.parts?.find(p => p.type === 'text')?.text || lastMessage?.content || body.text || '';
+        let userMessage = '';
+        if (typeof lastMessage?.content === 'string') userMessage = lastMessage.content;
+        else if (Array.isArray(lastMessage?.content)) userMessage = lastMessage.content.find(p => p.type === 'text')?.text || '';
+        else if (Array.isArray(lastMessage?.parts)) userMessage = lastMessage.parts.find(p => p.type === 'text')?.text || '';
+        else userMessage = body.text || '';
 
         if (!userMessage) return NextResponse.json({ error: 'No user message provided' }, { status: 400 });
 
@@ -68,6 +68,7 @@ export async function POST(request) {
                 const reader = response.body.getReader();
                 let buffer = "";
                 let fullText = "";
+                let lastThought = ""; // 記錄上一次的思考進度，用於差值計算
 
                 try {
                     while (true) {
@@ -86,11 +87,21 @@ export async function POST(request) {
                             try {
                                 const data = JSON.parse(dataStr);
 
-                                // 💡 確保 agent_thought 被捕獲
+                                // 提取 Dify 思考過程的「差值 (Delta)」
                                 if (data.event === 'agent_thought' && data.thought) {
-                                    controller.enqueue(encoder.encode(`8:${JSON.stringify(data.thought)}\n`));
+                                    const currentThought = data.thought;
+                                    const delta = currentThought.startsWith(lastThought) 
+                                        ? currentThought.slice(lastThought.length) 
+                                        : currentThought;
+                                    
+                                    if (delta) {
+                                        // 使用 Prefix 8 傳送給前端的 message.reasoning
+                                        controller.enqueue(encoder.encode(`8:${JSON.stringify(delta)}\n`));
+                                    }
+                                    lastThought = currentThought;
                                 }
 
+                                // 處理正式回覆
                                 if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
                                     fullText += data.answer;
                                     controller.enqueue(encoder.encode(`0:${JSON.stringify(data.answer)}\n`));
@@ -99,7 +110,7 @@ export async function POST(request) {
                         }
                     }
                     
-                    const disclaimer = "\n\n(此內容由 AI 助手生成，請以平台公告原文為準。)";
+                    const disclaimer = "\n\n(此內容由 AI 獎學金助理生成，請以平台公告原文為準，並自負查證責任。)";
                     controller.enqueue(encoder.encode(`0:${JSON.stringify(disclaimer)}\n`));
 
                     saveHistory(userId, sessionId, userMessage, fullText + disclaimer);

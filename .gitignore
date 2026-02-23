@@ -33,5 +33,8 @@ next-env.d.ts
 public/storage/attachments/*
 !public/storage/attachments/.gitkeep
 
-# backups
+# backup directory
 /backups/
+
+# DigiRunner configuration and H2 database data
+/digirunner/

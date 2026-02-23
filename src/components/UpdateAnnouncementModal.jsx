@@ -346,7 +346,26 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
             showToast('請填寫所有必填欄位', 'warning'); return;
         }
 
-        if (!formData.internal_id || formData.internal_id.trim() === '') {
+        // 檢查內部辨識名唯一性
+        if (formData.internal_id && formData.internal_id.trim() !== '') {
+            try {
+                const { data: existing, error: checkError } = await supabase
+                    .from('announcements')
+                    .select('id, title')
+                    .eq('internal_id', formData.internal_id.trim())
+                    .neq('id', announcement.id) // 排除目前正在編輯的這篇
+                    .maybeSingle();
+
+                if (checkError) throw checkError;
+
+                if (existing) {
+                    showToast(`內部辨識名 "${formData.internal_id}" 已被其他公告使用：「${existing.title}」`, 'error');
+                    return;
+                }
+            } catch (err) {
+                console.error('唯一性檢查失敗:', err);
+            }
+        } else {
             if (!window.confirm('您未填寫「內部辨識名」。\n此欄位用於內部申請作業流程自動化。\n\n確定此公告不須該內部辨識名嗎？')) {
                 return;
             }
@@ -372,15 +391,6 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
             }).eq('id', announcement.id).select().single();
             if (error) throw error;
 
-            // --- 自動同步到 Dify 知識庫 ---
-            try {
-                await authFetch('/api/admin/announcements/sync-dify', {
-                    method: 'POST',
-                    body: JSON.stringify({ id: updated.id, action: 'sync' })
-                });
-            } catch (difyError) {
-                console.error('[DifySync] 更新同步失敗:', difyError);
-            }
 
             if (filesToRemove.length > 0) {
                 const pathsToRemove = filesToRemove.map(f => f.path);
@@ -422,25 +432,26 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
             
             // We need to iterate over 'selectedFiles' (which is the truth for order) and apply updates/inserts.
             
+            // 在處理更新前，先過濾掉已經標記刪除的檔案
+            const remainingFiles = selectedFiles.filter(f => !filesToRemove.some(r => r.id === f.id));
+            
             const existingUpdates = [];
             const newAttachments = [];
 
-            selectedFiles.forEach((file, index) => {
+            remainingFiles.forEach((file, index) => {
                 if (file.isExisting) {
-                    // It's an existing file, we just need to update its display_order
+                    // 僅更新未被刪除的現有檔案之排序
                     existingUpdates.push({
                         id: file.id,
                         display_order: index,
-                        announcement_id: announcement.id, // Ensure required fields are present if needed by policies
+                        announcement_id: announcement.id,
                         file_name: file.name,
                         stored_file_path: file.path,
                         file_size: file.size,
                         mime_type: file.type
                     });
                 } else {
-                    // It's a new file. Find its uploaded data.
-                    // Match by file name and size since we don't have the original 'file' object with the random ID in 'uploadedFilesData'
-                    // 'uploadedFilesData' contains 'originalName' and 'size'.
+                    // 處理新上傳的檔案
                     const uploadedInfo = uploadedFilesData.find(u => u.originalName === file.name && u.size === file.size);
                     if (uploadedInfo) {
                         newAttachments.push({
@@ -451,7 +462,6 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                             mime_type: uploadedInfo.mimeType,
                             display_order: index
                         });
-                        // Remove from uploadedFilesData to prevent double matching if identical files exist (rare but possible)
                         const uIndex = uploadedFilesData.indexOf(uploadedInfo);
                         if (uIndex > -1) uploadedFilesData.splice(uIndex, 1);
                     }

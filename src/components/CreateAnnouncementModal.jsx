@@ -448,7 +448,25 @@ ${text}`);
             return;
         }
 
-        if (!formData.internal_id || formData.internal_id.trim() === '') {
+        // 檢查內部辨識名唯一性
+        if (formData.internal_id && formData.internal_id.trim() !== '') {
+            try {
+                const { data: existing, error: checkError } = await supabase
+                    .from('announcements')
+                    .select('id, title')
+                    .eq('internal_id', formData.internal_id.trim())
+                    .maybeSingle();
+
+                if (checkError) throw checkError;
+
+                if (existing) {
+                    showToast(`內部辨識名 "${formData.internal_id}" 已被其他公告使用：「${existing.title}」`, 'error');
+                    return;
+                }
+            } catch (err) {
+                console.error('唯一性檢查失敗:', err);
+            }
+        } else {
             if (!window.confirm('您未填寫「內部辨識名」。\n此欄位用於內部申請作業流程自動化。\n\n確定此公告不須該內部辨識名嗎？')) {
                 return;
             }
@@ -517,16 +535,6 @@ ${text}`);
                 .select().single();
             if (announcementError) throw announcementError;
 
-            // --- 自動同步到 Dify 知識庫 ---
-            try {
-                await authFetch('/api/admin/announcements/sync-dify', {
-                    method: 'POST',
-                    body: JSON.stringify({ id: announcement.id, action: 'sync' })
-                });
-            } catch (difyError) {
-                console.error('[DifySync] 初始同步失敗:', difyError);
-                // 不阻斷主流程，僅記錄錯誤
-            }
 
             if (uploadedFilesData.length > 0) {
                 const attachments = [];

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { copyFile, constants } from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 import { supabaseServer } from '@/lib/supabase/server';
 import { verifyUserAuth, handleApiError, logSuccessAction } from '@/lib/apiMiddleware';
@@ -31,9 +32,16 @@ export async function POST(request) {
       return NextResponse.json({ error: '找不到原始公告' }, { status: 404 });
     }
 
-    // 3. 準備新公告資料 (排除 id, created_at, updated_at)
+    // 3. 準備新公告資料 (排除 id, created_at, updated_at, view_count, dify_document_id)
     // 並強制將 is_active 設為 false
-    const { id: _id, created_at: _created, updated_at: _updated, ...dataToCopy } = original;
+    const { 
+      id: _id, 
+      created_at: _created, 
+      updated_at: _updated, 
+      view_count: _view_count,
+      dify_document_id: _dify_id,
+      ...dataToCopy 
+    } = original;
     
     // 生成標題後綴 _MMDD_副本
     const now = new Date();
@@ -45,6 +53,8 @@ export async function POST(request) {
       ...dataToCopy,
       title: newTitle,
       is_active: false,
+      view_count: 0, // 重置點閱次數
+      dify_document_id: null, // 不複製 Dify 文件 ID，避免 RAG 衝突
       updated_at: now.toISOString(),
     };
 
@@ -74,6 +84,12 @@ export async function POST(request) {
           const relativePath = att.stored_file_path.startsWith('/') ? att.stored_file_path.slice(1) : att.stored_file_path;
           const sourcePath = path.join(publicDir, relativePath);
           
+          // 檢查原始檔案是否存在
+          if (!fs.existsSync(sourcePath)) {
+            console.warn(`[Duplicate] 原始檔案不存在，跳過此附件: ${att.file_name} (${sourcePath})`);
+            continue;
+          }
+
           // 生成新的實體檔名
           // 保留原始副檔名
           const physicalExt = path.extname(att.stored_file_path); 
@@ -90,20 +106,26 @@ export async function POST(request) {
           // 執行實體檔案複製
           await copyFile(sourcePath, targetPath, constants.COPYFILE_EXCL);
 
-          // 準備資料庫記錄
-          // 確保 DB 中的路徑使用正斜線 (/)
-          const dbStoredPath = '/' + newRelativePathSegment.split(path.sep).join('/');
+          // 驗證複製後的檔案確實存在
+          if (fs.existsSync(targetPath)) {
+            // 準備資料庫記錄
+            // 確保 DB 中的路徑使用正斜線 (/)
+            const dbStoredPath = '/' + newRelativePathSegment.split(path.sep).join('/');
 
-          newAttachments.push({
-            announcement_id: newAnnouncement.id,
-            file_name: att.file_name, // 保持原始顯示名稱
-            stored_file_path: dbStoredPath,
-            file_size: att.file_size,
-            mime_type: att.mime_type,
-          });
+            newAttachments.push({
+              announcement_id: newAnnouncement.id,
+              file_name: att.file_name, // 保持原始顯示名稱
+              stored_file_path: dbStoredPath,
+              file_size: att.file_size,
+              mime_type: att.mime_type,
+              display_order: att.display_order || 0
+            });
+          } else {
+            console.error(`[Duplicate] 檔案複製指令成功但目標檔案未生成: ${targetPath}`);
+          }
         } catch (fileErr) {
           console.error(`複製檔案失敗 ${att.file_name}:`, fileErr);
-          // 若實體檔案複製失敗 (例如檔案遺失)，則略過該附件，不中斷整體流程
+          // 若實體檔案複製失敗，則略過該附件
         }
       }
 
@@ -114,7 +136,6 @@ export async function POST(request) {
         
         if (attInsertError) {
             console.error('插入附件記錄失敗:', attInsertError);
-            // 這裡可以選擇是否要回滾，但通常保留公告本體即可
         }
       }
     }
