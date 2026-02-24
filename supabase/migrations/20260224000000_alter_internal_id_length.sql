@@ -1,0 +1,1 @@
+ALTER TABLE public.announcements ALTER COLUMN internal_id TYPE character varying(8);

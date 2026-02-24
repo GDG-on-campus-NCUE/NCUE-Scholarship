@@ -549,8 +549,8 @@ export default function UpdateAnnouncementModal({ isOpen, onClose, announcement,
                                                 className={inputStyles} 
                                                 value={formData.internal_id} 
                                                 onChange={handleChange} 
-                                                maxLength={5}
-                                                placeholder="最多5字，用於申請流程自動化"
+                                                maxLength={8}
+                                                placeholder="最多8字，用於申請流程自動化"
                                             />
                                         </div>
 
