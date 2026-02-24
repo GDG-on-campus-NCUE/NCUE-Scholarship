@@ -21,12 +21,25 @@ const HtmlRenderer = ({ content }) => {
     const cleanContent = DOMPurify.sanitize(content, {
         ADD_ATTR: ['style', 'class', 'target'],
         ALLOWED_CSS_PROPERTIES: ['color'],
-        ADD_TAGS: ['iframe'], // Allow iframes if needed, but mostly for safety to match previous potentially permissive behavior if any
+        ADD_TAGS: ['iframe'], 
     });
 
     return (
         <div className="rich-text-content prose prose-sm max-w-none">
-            <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+            <ReactMarkdown 
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                    // ✅ 強制所有連結以新分頁開啟
+                    a: ({ node, ...props }) => (
+                        <a 
+                            {...props} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-indigo-600 hover:text-indigo-800 underline underline-offset-4"
+                        />
+                    ),
+                }}
+            >
                 {cleanContent}
             </ReactMarkdown>
         </div>

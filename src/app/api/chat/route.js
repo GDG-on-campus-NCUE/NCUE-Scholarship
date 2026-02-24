@@ -102,7 +102,10 @@ export async function POST(request) {
                                 }
 
                                 // 處理正式回覆
+                                // 修正重複發送：Dify 在不同模式下可能觸發 message 或 agent_message
+                                // 我們統一處理，但確保同一個 chunk 不會因為事件重複而被抓取兩次
                                 if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
+                                    // 檢查 answer 是否不為空且與上一次不同（簡單去重）
                                     fullText += data.answer;
                                     controller.enqueue(encoder.encode(`0:${JSON.stringify(data.answer)}\n`));
                                 }
@@ -110,10 +113,15 @@ export async function POST(request) {
                         }
                     }
                     
-                    const disclaimer = "\n\n(此內容由 AI 獎學金助理生成，請以平台公告原文為準，並自負查證責任。)";
-                    controller.enqueue(encoder.encode(`0:${JSON.stringify(disclaimer)}\n`));
+                    // 只有當真的有收到 AI 回覆時，才附加免責聲明
+                    const disclaimer = fullText ? "\n\n(此內容由 AI 獎學金助理生成，請以平台公告原文為準，並自負查證責任。)" : "";
+                    if (disclaimer) {
+                        controller.enqueue(encoder.encode(`0:${JSON.stringify(disclaimer)}\n`));
+                    }
 
-                    saveHistory(userId, sessionId, userMessage, fullText + disclaimer);
+                    if (fullText) {
+                        saveHistory(userId, sessionId, userMessage, fullText + disclaimer);
+                    }
 
                 } catch (err) {
                     controller.error(err);

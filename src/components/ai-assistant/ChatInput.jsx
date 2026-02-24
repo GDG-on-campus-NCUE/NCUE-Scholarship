@@ -94,7 +94,6 @@ const ChatInput = ({
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder="請輸入您的問題..."
-                    disabled={isLoading}
                     rows={1}
                     className="w-full max-h-32 bg-transparent border-0 py-3 px-2 text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none outline-none resize-none custom-scrollbar leading-relaxed"
                     style={{ minHeight: '44px' }}
@@ -104,9 +103,9 @@ const ChatInput = ({
                     type="submit"
                     disabled={isLoading || !input?.trim()}
                     className="flex-shrink-0 w-10 h-10 mb-1 flex items-center justify-center rounded-full bg-indigo-600 text-white transition-all 
-                        hover:bg-indigo-700 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:active:scale-100"
+                        hover:bg-indigo-700 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:active:scale-100 relative"
                 >
-                    <Send size={18} className={isLoading ? 'opacity-0' : 'ml-0.5'} />
+                    <Send size={18} className={`${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity`} />
                     {isLoading && (
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />

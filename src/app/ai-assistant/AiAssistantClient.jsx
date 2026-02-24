@@ -31,8 +31,11 @@ export default function AiAssistantPage() {
     }
 
     return (
-        // 容器高度 = 視窗高度(100vh) - Header 高度
-        <div className="flex flex-col" style={{ height: 'calc(100vh - var(--header-height, 80px))' }} >
+        // ✅ 鎖定視窗高度並隱藏全域捲動條，讓對話視窗在內部捲動
+        <div 
+            className="flex flex-col overflow-hidden w-full relative" 
+            style={{ height: 'calc(100vh - var(--header-height, 80px))' }} 
+        >
             <ChatInterface />
         </div>
     );
