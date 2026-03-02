@@ -361,17 +361,6 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                         announcement={fullAnnouncement}
                                         className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                     />
-                                    {fullAnnouncement.internal_id && (
-                                        <a
-                                            href={`https://docs.google.com/forms/d/e/1FAIpQLSct6GjpISj20foOtBK4TVcMCpSfULcagZTTN4_YkFTNK1DQbQ/viewform?usp=pp_url&entry.40872308=${fullAnnouncement.internal_id}${user ? `&entry.146368827=${encodeURIComponent(user.user_metadata?.name || user.profile?.username || '')}&entry.609200579=${encodeURIComponent((user.user_metadata?.student_id || user.profile?.student_id || '').toUpperCase())}` : ''}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all duration-200 border border-orange-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                                            title="前往申請"
-                                        >
-                                            <span>提交申請</span>
-                                        </a>
-                                    )}
                                     {user && (
                                         <button
                                             onClick={handleSendToEmail}
@@ -381,6 +370,17 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                         >
                                             <span>{isSendingEmail ? "傳送中..." : "寄送至 mail"}</span>
                                         </button>
+                                    )}
+                                    {fullAnnouncement.internal_id && (
+                                        <a
+                                            href={`https://docs.google.com/forms/d/e/1FAIpQLSct6GjpISj20foOtBK4TVcMCpSfULcagZTTN4_YkFTNK1DQbQ/viewform?usp=pp_url&entry.40872308=${fullAnnouncement.internal_id}${user ? `&entry.146368827=${encodeURIComponent(user.user_metadata?.name || user.profile?.username || '')}&entry.609200579=${encodeURIComponent((user.user_metadata?.student_id || user.profile?.student_id || '').toUpperCase())}` : ''}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all duration-200 border border-orange-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                            title="現場交件登記"
+                                        >
+                                            <span>現場交件登記</span>
+                                        </a>
                                     )}
                                 </div>
                             </div>

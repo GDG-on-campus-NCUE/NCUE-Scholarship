@@ -294,7 +294,7 @@ const ChatInterface = () => {
             </div>
 
             {/* 輸入區域 - 固定在容器底部 */}
-            <div className="flex-shrink-0 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-2 z-10">
+            <div className="flex-shrink-0 bg-gradient-to-t from-white via-white to-transparent pt-2 sm:pt-4 pb-1 sm:pb-2 z-10">
                 <div className="max-w-5xl mx-auto w-full">
                     <ChatInput
                         input={input}
