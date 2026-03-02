@@ -31,10 +31,9 @@ export default function AiAssistantPage() {
     }
 
     return (
-        // ✅ 鎖定視窗高度並隱藏全域捲動條，讓對話視窗在內部捲動
         <div 
             className="flex flex-col overflow-hidden w-full relative" 
-            style={{ height: 'calc(100vh - var(--header-height, 80px))' }} 
+            style={{ height: 'calc(100dvh - var(--header-height, 60px))' }} 
         >
             <ChatInterface />
         </div>
