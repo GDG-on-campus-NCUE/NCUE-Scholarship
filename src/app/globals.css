@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-	--header-height: 60px;
+	--header-height: 72px;
 	--transition-speed: 0.6s;
 	--primary: #005A9C;
 	--primary-hover: #004875;
@@ -19,7 +19,7 @@
 
 @media (min-width: 640px) {
 	:root {
-		--header-height: 70px;
+		--header-height: 80px;
 	}
 }
 

@@ -10,20 +10,21 @@ import ChatInput from './ChatInput';
 import { Loader2, MessageSquare, Database, Globe, Sparkles, ShieldCheck } from 'lucide-react';
 
 const WelcomeMessage = () => (
-    <div className="flex flex-col justify-center items-center h-full text-center px-4 py-8 max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
-        <div className="mb-8 relative">
+    <div className="flex flex-col justify-center items-center h-full text-center px-4 py-2 md:py-8 max-w-3xl mx-auto animate-in fade-in zoom-in duration-500 select-none">
+        <div className="mb-4 md:mb-8 relative scale-75 md:scale-100">
             <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 rounded-full"></div>
             <div className="w-20 h-20 bg-white border border-indigo-100 shadow-xl rounded-2xl flex items-center justify-center relative z-10">
                 <Sparkles size={40} className="text-indigo-600" />
             </div>
         </div>
         
-        <h2 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">彰師 AI 獎學金助理</h2>
-        <p className="text-gray-500 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2 md:mb-3 tracking-tight">彰師 AI 獎學金助理</h2>
+        <p className="text-gray-500 text-sm md:text-lg mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed px-2">
             我是您的專屬智慧助手，結合校內知識庫與網路搜尋，為您提供精準的獎學金諮詢服務。
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left mb-12">
+        {/* 桌面版功能卡片 */}
+        <div className="hidden md:grid grid-cols-3 gap-6 w-full text-left mb-12">
             <div className="p-5 bg-white border border-indigo-50/50 rounded-xl shadow-sm">
                 <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-3"><Database size={20} className="text-indigo-600" /></div>
                 <h4 className="font-bold text-gray-800 mb-1">精準檢索</h4>
@@ -41,8 +42,24 @@ const WelcomeMessage = () => (
             </div>
         </div>
 
-        <div className="bg-gray-50/80 rounded-lg p-4 w-full text-xs text-gray-500 border border-gray-100">
-            <p className="font-semibold text-gray-700 flex items-center justify-center mb-1"><ShieldCheck size={14} className="mr-1.5 text-indigo-600" />使用前請詳閱</p>
+        {/* 手機版精簡卡片 */}
+        <div className="grid md:hidden grid-cols-3 gap-2 w-full text-center mb-6">
+            <div className="p-2 bg-white border border-indigo-50/50 rounded-lg shadow-sm flex flex-col items-center">
+                <Database size={18} className="text-indigo-600 mb-1" />
+                <span className="text-[10px] font-bold text-gray-700">精準檢索</span>
+            </div>
+            <div className="p-2 bg-white border border-green-50/50 rounded-lg shadow-sm flex flex-col items-center">
+                <Globe size={18} className="text-green-600 mb-1" />
+                <span className="text-[10px] font-bold text-gray-700">廣泛搜尋</span>
+            </div>
+            <div className="p-2 bg-white border border-amber-50/50 rounded-lg shadow-sm flex flex-col items-center">
+                <MessageSquare size={18} className="text-amber-600 mb-1" />
+                <span className="text-[10px] font-bold text-gray-700">智慧摘要</span>
+            </div>
+        </div>
+
+        <div className="bg-gray-50/80 rounded-lg p-3 md:p-4 w-full text-[10px] md:text-xs text-gray-500 border border-gray-100">
+            <p className="font-semibold text-gray-700 flex items-center justify-center mb-0.5 md:mb-1"><ShieldCheck size={14} className="mr-1.5 text-indigo-600" />使用前請詳閱</p>
             <p>AI 回覆僅供參考，詳細規定請務必以<span className="font-medium text-gray-700">原始公告</span>為準。</p>
         </div>
     </div>
@@ -254,7 +271,7 @@ const ChatInterface = () => {
     };
 
     return (
-        <div className="flex flex-col flex-1 bg-slate-50/50 overflow-hidden font-sans relative">
+        <div className="flex flex-col flex-1 bg-slate-50/50 overflow-hidden font-sans relative select-none">
             {/* 對話顯示區域 - 限制在此內部捲動 */}
             <div 
                 ref={scrollAreaRef} 
@@ -267,7 +284,7 @@ const ChatInterface = () => {
                             <p className="text-sm text-gray-400 font-medium">載入對話紀錄中...</p>
                         </div>
                     ) : messages.length === 0 ? (
-                        <div className="flex-1 flex items-center justify-center py-10"><WelcomeMessage /></div>
+                        <div className="flex-1 flex items-center justify-center py-2"><WelcomeMessage /></div>
                     ) : (
                         <div className="space-y-6 md:space-y-8 pb-12"> {/* 增加底部間距 */}
                             {messages.map((msg, index) => (

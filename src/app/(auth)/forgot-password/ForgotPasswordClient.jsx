@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { Mail, KeyRound, ArrowLeft, Loader2, MailCheck, AlertTriangle, Send } from 'lucide-react';
+import { Mail, KeyRound, ArrowLeft, Loader2, MailCheck, AlertTriangle, Send, X } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 
 function ForgotPasswordContent() {
@@ -81,8 +81,19 @@ function ForgotPasswordContent() {
 		}
 	};
 
+	const [showPrompt, setShowPrompt] = useState(false);
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
+		if (!email || !/\S+@\S+\.\S+/.test(email)) {
+			setError("請輸入有效的電子郵件格式");
+			return;
+		}
+		setShowPrompt(true);
+	};
+
+	const handleConfirmSend = async () => {
+		setShowPrompt(false);
 		setIsLoading(true);
 		const success = await triggerRequest();
 		if (success) {
@@ -115,7 +126,48 @@ function ForgotPasswordContent() {
 	return (
 		<>
 			<Toast show={toast.show} message={toast.message} type={toast.type} onClose={hideToast} />
+
+	{showPrompt && (
+	<div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+	<div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowPrompt(false)}></div>
+	<div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+	<div className="p-6">
+	<div className="flex items-center justify-between mb-4">
+	<div className="p-2 bg-amber-100 rounded-full">
+	<AlertTriangle className="h-6 w-6 text-amber-600" />
+	</div>
+	<button onClick={() => setShowPrompt(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+	<X size={24} />
+	</button>
+	</div>
+
+	<h3 className="text-xl font-bold text-gray-900 mb-2">重要提醒</h3>
+	<p className="text-gray-600 mb-6 leading-relaxed">
+	系統目前全面推行 <span className="font-bold text-indigo-600">Google 帳號登入</span> 以提升安全性。<br/><br/>
+	若您透過 OTP 登入成功，建議您在「個資管理」頁面先<span className="text-red-600 font-bold underline">註銷目前帳號</span>，並立即重新以 <span className="font-bold text-indigo-600">Google 帳號</span> 進行註冊。
+	</p>
+
+	<div className="flex flex-col gap-3">
+	<button 
+	onClick={handleConfirmSend}
+	className="w-full py-3 text-white font-bold bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-lg shadow-indigo-200"
+	>
+	理解並寄送救援郵件
+	</button>
+	<button 
+	onClick={() => setShowPrompt(false)}
+	className="w-full py-3 text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
+	>
+	返回
+	</button>
+	</div>
+	</div>
+	</div>
+	</div>
+	)}
+
 			<div className="flex w-full max-w-5xl my-16 sm:my-24 mx-auto overflow-hidden rounded-2xl shadow-2xl bg-white/70 backdrop-blur-xl border border-gray-200/50">
+
 
 				<div className="relative hidden w-0 flex-1 lg:block bg-slate-900">
 					<div className="absolute inset-0 h-full w-full overflow-hidden">

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://scholarship-api.ncuesa.org.tw';
+const supabaseUrl = process.env.SUPABASE_URL || 'https://api.scholarship.ncuesa.org.tw';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {

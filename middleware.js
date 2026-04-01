@@ -62,7 +62,6 @@ export async function middleware(request) {
 		// 刷新 session（如果過期的話）
 		const { data: { session } } = await supabase.auth.getSession();
 		const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
-			request.nextUrl.pathname.startsWith('/register') ||
 			request.nextUrl.pathname.startsWith('/forgot-password');
 
 		const isProtectedPage = request.nextUrl.pathname.startsWith('/profile') ||
@@ -90,7 +89,6 @@ export async function middleware(request) {
 export const config = {
 	matcher: [
 		'/login',
-		'/register',
 		'/forgot-password',
 		'/profile',
 		'/manage/:path*',

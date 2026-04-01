@@ -43,11 +43,11 @@ export async function POST(request) {
       ...dataToCopy 
     } = original;
     
-    // 生成標題後綴 _MMDD_副本
+    // 生成 副本_MMDD_標題前綴
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const newTitle = `${dataToCopy.title}_${month}${day}_副本`;
+    const newTitle = `副本_${month}${day}_${dataToCopy.title}`;
 
     const newAnnouncementData = {
       ...dataToCopy,

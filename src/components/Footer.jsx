@@ -101,10 +101,11 @@ export default function Footer() {
                             <div className="space-y-4 w-full">
                                 <a href="https://gdg.ncuesa.org.tw" className="group flex items-center justify-center sm:justify-start gap-3 text-gray-300 hover:text-white transition-all duration-300 hover:-translate-y-0.5" target="_blank" rel="noopener noreferrer">
                                     <img src="/GDG.gif" alt="GDG On Campus NCUE Logo" className="h-8 w-auto flex-shrink-0" />
-                                    <span className="font-semibold text-white text-sm">
+                                    <span className="font-semibold text-white text-sm text-left">
                                         <span className="google-word-container">
                                             <span className="g-char g-char-1">G</span><span className="g-char g-char-2">o</span><span className="g-char g-char-3">o</span><span className="g-char g-char-4">g</span><span className="g-char g-char-5">l</span><span className="g-char g-char-6">e</span>
-                                        </span> Developer Group<br/>On Campus NCUE
+                                        </span> Developer Group<br/>
+                                        <span className="font-normal text-gray-400">On Campus NCUE</span>
                                     </span>
                                 </a>
                                 
@@ -124,7 +125,7 @@ export default function Footer() {
                                             <span>楊敦傑</span>
                                         </p>
                                     </div>
-                                    <Link href="https://forms.gle/GmPVHsdV7mLeGyhx7" className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-300" target="_blank" rel="noopener noreferrer">
+                                    <Link href="https://forms.gle/GmPVHsdV7mLeGyhx7" className="group flex items-center justify-center sm:justify-start gap-2 text-gray-400 hover:text-white transition-colors duration-300" target="_blank" rel="noopener noreferrer">
                                         <MessageSquare className="w-4 h-4" />
                                         <span className="text-xs font-semibold footer-link-underline">平台問題回報</span>
                                     </Link>
@@ -135,7 +136,7 @@ export default function Footer() {
 
                     <div className="border-t border-gray-700 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-xs sm:text-sm">
                         <p className="text-gray-400">
-                            © 2026 彰師生輔組校外獎助學金資訊平台. All Rights Reserved.
+                            © 2026 彰師生輔組校外獎助學金資訊平台.<br className="sm:hidden" /> All Rights Reserved.
                         </p>
                     </div>
                 </div>

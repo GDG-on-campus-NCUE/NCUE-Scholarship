@@ -359,16 +359,16 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                 <div className="flex items-center justify-center sm:justify-end gap-2 flex-wrap w-full sm:w-auto">
                                     <DownloadPDFButton
                                         announcement={fullAnnouncement}
-                                        className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                        className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                     />
                                     {user && (
                                         <button
                                             onClick={handleSendToEmail}
                                             disabled={isSendingEmail || isLoadingDetails}
-                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-all duration-200 border border-green-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                             title="傳送公告詳情至我的電子信箱"
                                         >
-                                            <span>{isSendingEmail ? "傳送中..." : "寄送至 mail"}</span>
+                                            <span>{isSendingEmail ? "傳送中..." : "寄送至信箱"}</span>
                                         </button>
                                     )}
                                     {fullAnnouncement.internal_id && (
@@ -376,7 +376,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                             href={`https://docs.google.com/forms/d/e/1FAIpQLSct6GjpISj20foOtBK4TVcMCpSfULcagZTTN4_YkFTNK1DQbQ/viewform?usp=pp_url&entry.40872308=${fullAnnouncement.internal_id}${user ? `&entry.146368827=${encodeURIComponent(user.user_metadata?.name || user.profile?.username || '')}&entry.609200579=${encodeURIComponent((user.user_metadata?.student_id || user.profile?.student_id || '').toUpperCase())}` : ''}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all duration-200 border border-orange-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                            className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                             title="現場交件登記"
                                         >
                                             <span>現場交件登記</span>

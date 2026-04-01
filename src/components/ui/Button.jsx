@@ -61,6 +61,13 @@ const Button = forwardRef(({
       hover:bg-gray-100 hover:text-gray-900
       focus:ring-gray-500/20
     `,
+    purple: `
+      bg-violet-600 text-white border border-violet-600
+      hover:bg-violet-700 hover:border-violet-700
+      focus:ring-violet-500/30
+      shadow-violet-500/30
+      font-bold
+    `,
     link: `
       bg-transparent text-primary border border-transparent p-0
       hover:text-primary-600 hover:underline

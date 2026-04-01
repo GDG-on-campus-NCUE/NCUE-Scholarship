@@ -28,10 +28,6 @@ function AuthErrorContent() {
           </p>
           
           <div className="space-y-4">
-            <LinkButton href="/register" className="w-full">
-              重新註冊
-            </LinkButton>
-            
             <LinkButton href="/login" variant="secondary" className="w-full">
               返回登入
             </LinkButton>

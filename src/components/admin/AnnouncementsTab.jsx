@@ -185,7 +185,7 @@ export default function AnnouncementsTab() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 select-none">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="relative w-full flex-grow">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -217,7 +217,7 @@ export default function AnnouncementsTab() {
                                 <th className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-36" onClick={() => handleSort('updated_at')}>
                                     <div className="flex items-center">最後更新 {renderSortIcon('updated_at')}</div>
                                 </th>
-                                <th className="p-4 px-6 font-semibold text-gray-500 text-center w-48">操作</th>
+                                <th className="p-4 px-6 font-semibold text-gray-500 text-center w-64">操作</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -228,7 +228,16 @@ export default function AnnouncementsTab() {
                             ) : (
                                 announcements.map((ann) => (
                                     <tr key={ann.id} className="group transition-all duration-300 ease-out border-b border-gray-50 last:border-0 relative hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] hover:-translate-y-1 hover:z-10">
-                                        <td className="p-4 px-6 font-medium text-gray-800 break-words">{ann.title}</td>
+                                        <td className="p-4 px-6 font-medium text-gray-800 break-words">
+                                            <a 
+                                                href={`/?announcement_id=${ann.id}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="hover:text-blue-600 hover:underline transition-colors duration-200"
+                                            >
+                                                {ann.title}
+                                            </a>
+                                        </td>
                                         <td className="p-4 px-6 text-gray-600">{ann.category}</td>
                                         <td className="p-4 px-6 text-center text-gray-600 font-mono">
                                             {(ann.view_count || 0).toLocaleString()}
@@ -239,13 +248,13 @@ export default function AnnouncementsTab() {
                                         </td>
                                         <td className="p-4 px-6 text-gray-600">{new Date(ann.updated_at).toLocaleDateString()}</td>
                                         <td className="p-4 px-6">
-                                            <div className="flex items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                            <div className="grid grid-cols-3 grid-rows-2 gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                                                 <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
                                                 <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
                                                 <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
                                                 <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
-                                                <button onClick={() => openPreview('line', ann)} className={buttonStyles.line}><LineIcon /></button>
-                                                <button onClick={() => openPreview('email', ann)} className={buttonStyles.send}><GmailIcon /></button>
+                                                <button onClick={() => openPreview('line', ann)} className={`${buttonStyles.line} w-full`}><LineIcon /></button>
+                                                <button onClick={() => openPreview('email', ann)} className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -271,23 +280,43 @@ export default function AnnouncementsTab() {
                                 >
                                     <button
                                         onClick={() => setExpandedId(isExpanded ? null : ann.id)}
-                                        className="w-full flex items-center justify-between text-left p-4"
+                                        className="w-full flex flex-col text-left p-4"
                                     >
-                                        <div className="flex-1 pr-4">
-                                            <h3 className="font-bold text-base text-gray-900">{ann.title}</h3>
-                                            <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
-                                                <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                                        <div className="w-full mb-3">
+                                            <h3 className="font-bold text-base text-gray-900 leading-snug">
+                                                <a 
+                                                    href={`/?announcement_id=${ann.id}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="hover:text-blue-600 hover:underline transition-colors duration-200"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {ann.title}
+                                                </a>
+                                            </h3>
+                                        </div>
+                                        
+                                        <div className="w-full flex items-center justify-between text-[11px] text-gray-500 border-t border-gray-50 pt-2.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="font-medium text-gray-400 text-[10px]">瀏覽數：</span>
+                                                <span className="flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-md text-gray-600">
                                                     <Eye className="w-3 h-3" />
                                                     {ann.view_count || 0}
                                                 </span>
-                                                <span>{ann.category}</span>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-x-3 flex-shrink-0">
-                                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${ann.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                                {ann.is_active ? '上架' : '下架'}
-                                            </span>
-                                            <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                            
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-medium text-gray-400 text-[10px]">分類：</span>
+                                                    <span className="text-indigo-600 font-semibold">{ann.category}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 border-l border-gray-100 pl-3">
+                                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${ann.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                        {ann.is_active ? '上架' : '下架'}
+                                                    </span>
+                                                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                </div>
+                                            </div>
                                         </div>
                                     </button>
 
@@ -302,15 +331,9 @@ export default function AnnouncementsTab() {
                                                 transition={{ duration: 0.3, ease: 'easeInOut' }}
                                                 className="overflow-hidden"
                                             >
-                                                <div className="border-t border-gray-200 p-4 pt-3">
-                                                    {/* Details Grid */}
+                                                <div className="border-t border-gray-100 p-4 pt-3 bg-gray-50/30">
+                                                    {/* Details Grid - Removed Category and View Count as per request */}
                                                     <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm mb-4">
-                                                        <div className="font-semibold text-gray-500">分類</div>
-                                                        <div className="text-gray-700">{ann.category || '-'}</div>
-
-                                                        <div className="font-semibold text-gray-500">瀏覽數</div>
-                                                        <div className="text-gray-700">{(ann.view_count || 0).toLocaleString()} 次</div>
-
                                                         <div className="font-semibold text-gray-500">申請截止</div>
                                                         <div className="text-gray-700">{ann.application_end_date ? new Date(ann.application_end_date).toLocaleDateString('en-CA') : '無期限'}</div>
 
@@ -319,13 +342,13 @@ export default function AnnouncementsTab() {
                                                     </div>
 
                                                     {/* Action Buttons */}
-                                                    <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-gray-200">
+                                                    <div className="grid grid-cols-3 gap-2 pt-3 border-t border-gray-200">
                                                         <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
                                                         <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
                                                         <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
                                                         <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
-                                                        <button onClick={() => openPreview('line', ann)} className={buttonStyles.line}><LineIcon /></button>
-                                                        <button onClick={() => openPreview('email', ann)} className={buttonStyles.send}><GmailIcon /></button>
+                                                        <button onClick={() => openPreview('line', ann)} className={`${buttonStyles.line} w-full`}><LineIcon /></button>
+                                                        <button onClick={() => openPreview('email', ann)} className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
                                                     </div>
                                                 </div>
                                             </motion.div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ChevronUp } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 /**
  * ScrollToTop 組件
@@ -13,6 +14,7 @@ export default function ScrollToTop() {
     const [visible, setVisible] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const prevYRef = useRef(0);
+    const pathname = usePathname();
 
     // 外框尺寸 56px (3.5rem)
     // 圓環線寬設定
@@ -62,6 +64,9 @@ export default function ScrollToTop() {
         handleScroll();
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // 在服務條款頁面不顯示
+    if (pathname === '/terms-and-privacy') return null;
 
     // 計算終點圓頭的位置
     // 容器 56px, 半徑約 26px (中心 28)

@@ -326,9 +326,11 @@ function AnnouncementListContent() {
                                                 <span className="text-xs font-medium">{`學期 ${item.semester}`}</span>
                                             </div>
                                             <h3 className={`font-bold text-base ${isRead ? '' : 'text-gray-800'} mb-1.5`}>{item.title}</h3>
-                                            <div className={`text-xs font-bold flex items-center gap-1 ${getDateColorClass(item)}`}>
-                                                <span>期限:</span>
-                                                <DateDisplay item={item} className="" />
+                                            <div className="flex justify-end items-center">
+                                                <div className={`text-xs font-bold flex items-center gap-1 ${getDateColorClass(item)}`}>
+                                                    <span>期限:</span>
+                                                    <DateDisplay item={item} className="" />
+                                                </div>
                                             </div>
                                         </div>
                                         <ChevronDown className={`h-5 w-5 text-gray-400 mt-1 flex-shrink-0 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
@@ -342,7 +344,7 @@ function AnnouncementListContent() {
                                                 <div className="font-semibold text-gray-500 mb-1">兼領限制</div>
                                                 <div className="font-bold"><ApplicationLimitations limitations={item.application_limitations} /></div>
                                             </div>
-                                            <div className="pt-2 flex justify-end"><Button size="sm" onClick={() => handleOpenDetailModal(item)}>查看詳細內容</Button></div>
+                                            <div className="pt-2 flex justify-end"><Button variant="purple" size="sm" onClick={() => handleOpenDetailModal(item)}>查看詳細內容</Button></div>
                                         </div>
                                     </motion.div>
                                 )}</AnimatePresence>

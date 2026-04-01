@@ -474,7 +474,7 @@ export default function ExportAndStatisticsTab() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 select-none">
             {/* Top Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatCard
@@ -655,7 +655,15 @@ export default function ExportAndStatisticsTab() {
                                             />
                                         </td>
                                         <td className="p-4">
-                                            <div className="font-medium text-gray-900 line-clamp-1 transition-colors group-hover:text-indigo-700" title={ann.title}>{ann.title}</div>
+                                            <a 
+                                                href={`/?announcement_id=${ann.id}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="font-medium text-gray-900 line-clamp-1 transition-colors hover:text-indigo-700 hover:underline cursor-pointer" 
+                                                title={ann.title}
+                                            >
+                                                {ann.title}
+                                            </a>
                                             {ann.isOverdue && <span className="inline-flex items-center text-xs font-semibold text-rose-600 mt-1"><AlertTriangle className="w-3 h-3 mr-1 animate-pulse"/>已逾期 &gt; 2年</span>}
                                         </td>
                                         <td className="p-4 text-gray-600 whitespace-nowrap">
@@ -718,7 +726,9 @@ export default function ExportAndStatisticsTab() {
                                                 onChange={() => handleSelectOne(ann.id)}
                                                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer h-4 w-4 flex-shrink-0"
                                             />
-                                            <h3 className="font-bold text-gray-900 truncate group-hover:text-indigo-700 transition-colors">{ann.title}</h3>
+                                            <a href={`/?announcement_id=${ann.id}`} target="_blank" rel="noopener noreferrer" className="truncate flex-1">
+                                                <h3 className="font-bold text-gray-900 truncate group-hover:text-indigo-700 transition-colors hover:underline">{ann.title}</h3>
+                                            </a>
                                         </div>
                                         {ann.isOverdue && <div className="flex items-center text-xs font-semibold text-rose-600 ml-6"><AlertTriangle className="w-3 h-3 mr-1 animate-pulse"/>已逾期 &gt; 2年</div>}
                                     </div>

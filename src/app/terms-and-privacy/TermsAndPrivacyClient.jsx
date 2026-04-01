@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import { CheckCircle, Loader2, ArrowRight } from 'lucide-react';
 
 // --- 動畫設定 ---
 const containerVariants = {
@@ -22,13 +25,39 @@ const itemVariants = {
     }
 };
 
+// --- 靜態資料 ---
+const SECTIONS_DATA = [
+    {
+        id: 'tos', title: '第一部分：服務條款', articles: [
+            { id: 'tos_1', title: '第一條、認知與接受條款' }, { id: 'tos_2', title: '第二條、服務說明' },
+            { id: 'tos_3', title: '第三條、使用者註冊與帳戶安全' }, { id: 'tos_4', title: '第四條、使用者行為與義務' },
+            { id: 'tos_5', title: '第五條、智慧財產權' }, { id: 'tos_6', title: '第六條、服務之中斷或變更' },
+            { id: 'tos_7', title: '第七條、責任限制與免責聲明' },
+        ]
+    },
+    {
+        id: 'privacy', title: '第二部分：隱私權政策', articles: [
+            { id: 'privacy_8', title: '第八條、個人資料之蒐集目的與類別' }, { id: 'privacy_9', title: '第九條、個人資料處理與利用' },
+            { id: 'privacy_10', title: '第十條、當事人權利行使' }, { id: 'privacy_11', title: '第十一條、資料安全維護' },
+            { id: 'privacy_12', title: '第十二條、Cookie 技術之使用' }, { id: 'privacy_13', title: '第十三條、隱私權政策之修訂' },
+        ]
+    },
+    {
+        id: 'general', title: '第三部分：一般條款', articles: [
+            { id: 'general_14', title: '第十四條、準據法與管轄法院' }, { id: 'general_15', title: '第十五條、聯絡資訊' },
+        ]
+    },
+];
+
+// --- 子元件 ---
+
 // 目錄元件
 const TableOfContents = ({ sections, activeId, onLinkClick }) => {
-    const isSectionActive = (section) => {
+    const isSectionActive = useCallback((section) => {
         if (!activeId) return false;
         const sectionPrefix = section.id.split('_')[0];
         return activeId.startsWith(sectionPrefix);
-    };
+    }, [activeId]);
 
     return (
         <nav className="sticky top-24 hidden lg:block">
@@ -66,19 +95,14 @@ const TableOfContents = ({ sections, activeId, onLinkClick }) => {
                                                 }`}
                                         >
                                             {article.title}
-                                        </a>
-                                        <AnimatePresence>
                                             {activeId === article.id && (
                                                 <motion.div
                                                     layoutId="active-toc-indicator"
                                                     className="absolute left-[-1px] top-0 bottom-0 w-0.5 bg-violet-400 rounded-full"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                                                    transition={{ duration: 0.3 }}
                                                 />
                                             )}
-                                        </AnimatePresence>
+                                        </a>
                                     </li>
                                 ))}
                             </ul>
@@ -118,39 +142,32 @@ const ContentSection = ({ id, activeId, title, titleAs: TitleComponent = 'h3', c
 
 // --- 主頁面元件---
 export default function TermsAndPrivacyPage() {
+    const { isAuthenticated, hasAgreedToTerms, agreeToTerms } = useAuth();
+    const router = useRouter();
+    const [isAgreeing, setIsAgreeing] = useState(false);
     const [activeId, setActiveId] = useState('tos_1');
+    const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
     const isClickScrolling = useRef(false);
     const scrollTimeout = useRef(null);
     const observerRef = useRef(null);
+    const bottomRef = useRef(null);
 
-    const sections = [
-        {
-            id: 'tos', title: '第一部分：服務條款', articles: [
-                { id: 'tos_1', title: '第一條、認知與接受條款' }, { id: 'tos_2', title: '第二條、服務說明' },
-                { id: 'tos_3', title: '第三條、使用者註冊與帳戶安全' }, { id: 'tos_4', title: '第四條、使用者行為與義務' },
-                { id: 'tos_5', title: '第五條、智慧財產權' }, { id: 'tos_6', title: '第六條、服務之中斷或變更' },
-                { id: 'tos_7', title: '第七條、責任限制與免責聲明' },
-            ]
-        },
-        {
-            id: 'privacy', title: '第二部分：隱私權政策', articles: [
-                { id: 'privacy_8', title: '第八條、個人資料之蒐集目的與類別' }, { id: 'privacy_9', title: '第九條、個人資料處理與利用' },
-                { id: 'privacy_10', title: '第十條、當事人權利行使' }, { id: 'privacy_11', title: '第十一條、資料安全維護' },
-                { id: 'privacy_12', title: '第十二條、Cookie 技術之使用' }, { id: 'privacy_13', title: '第十三條、隱私權政策之修訂' },
-            ]
-        },
-        {
-            id: 'general', title: '第三部分：一般條款', articles: [
-                { id: 'general_14', title: '第十四條、準據法與管轄法院' }, { id: 'general_15', title: '第十五條、聯絡資訊' },
-            ]
-        },
-    ];
+    const sections = useMemo(() => SECTIONS_DATA, []);
 
-    const handleLinkClick = (id) => {
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    const handleLinkClick = useCallback((id) => {
         isClickScrolling.current = true;
         setActiveId(id);
 
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         window.history.pushState(null, '', `#${id}`);
 
         if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
@@ -158,9 +175,72 @@ export default function TermsAndPrivacyPage() {
         scrollTimeout.current = setTimeout(() => {
             isClickScrolling.current = false;
         }, 1000);
+    }, []);
+
+    const handleAgree = async () => {
+        if (!hasScrolledToBottom || isAgreeing) return;
+        setIsAgreeing(true);
+        try {
+            const result = await agreeToTerms();
+            if (result.success) {
+                // 使用 window.location 進行硬跳轉，避免 Next.js Client Router 在狀態尚未完全同步時發生衝突崩潰
+                window.location.href = '/';
+            } else {
+                alert('同意失敗，請稍後再試');
+                setIsAgreeing(false);
+            }
+        } catch (e) {
+            console.error(e);
+            setIsAgreeing(false);
+        }
     };
 
+    // 處理底部滾動偵測
     useEffect(() => {
+        if (!isMounted) return;
+
+        const bottomObserver = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    setHasScrolledToBottom(true);
+                    if (bottomRef.current) {
+                        bottomObserver.unobserve(bottomRef.current);
+                    }
+                }
+            },
+            {
+                root: null,
+                rootMargin: '0px',
+                threshold: 1.0
+            }
+        );
+
+        if (bottomRef.current) {
+            bottomObserver.observe(bottomRef.current);
+        }
+
+        const handleScrollBackup = () => {
+            if (hasScrolledToBottom) return;
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const threshold = document.documentElement.scrollHeight - 100;
+            if (scrollPosition >= threshold) {
+                setHasScrolledToBottom(true);
+            }
+        };
+        
+        window.addEventListener('scroll', handleScrollBackup, { passive: true });
+        handleScrollBackup();
+
+        return () => {
+            bottomObserver.disconnect();
+            window.removeEventListener('scroll', handleScrollBackup);
+        };
+    }, [hasScrolledToBottom, isMounted]);
+
+    // 處理目錄高亮偵測
+    useEffect(() => {
+        if (!isMounted) return;
+
         const handleManualScroll = () => {
             if (isClickScrolling.current) {
                 isClickScrolling.current = false;
@@ -202,11 +282,14 @@ export default function TermsAndPrivacyPage() {
             if (observerRef.current) observerRef.current.disconnect();
             if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [sections]);
+    }, [sections, isMounted]);
+
+    if (!isMounted) {
+        return <div className="bg-slate-50 min-h-screen" />;
+    }
 
     return (
-        <div className="bg-slate-50 text-slate-700 select-none">
+        <div className="bg-slate-50 text-slate-700 select-none relative">
             <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
                 <div className="flex flex-col lg:flex-row justify-center gap-x-16">
                     <div className="w-full lg:w-64 lg:flex-shrink-0 mb-12 lg:mb-0">
@@ -224,7 +307,7 @@ export default function TermsAndPrivacyPage() {
                             </motion.h1>
 
                             <motion.p variants={itemVariants} className="mt-8 text-sm text-slate-500">
-                                <strong>最後更新日期：2026年1月8日</strong>
+                                <strong>最後更新日期：2026 年 4 月 2 日</strong>
                             </motion.p>
                             
                             <motion.div variants={itemVariants} className="mt-6 space-y-4 text-base leading-relaxed text-slate-600">
@@ -352,7 +435,7 @@ export default function TermsAndPrivacyPage() {
                                     <li>請求刪除。</li>
                                 </ul>
                                 <p className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                                    如欲行使上述權利，請透過電子郵件 <a href="mailto:gdg-core@ncuesa.org.tw" className="text-violet-600 hover:underline">gdg-core@ncuesa.org.tw</a> 聯繫開發團隊，我們將依法儘速處理。
+                                    如欲行使上述權利，請透過電子郵件 <a href="mailto:contact@mingchen.dev" className="text-violet-600 hover:underline">contact@mingchen.dev</a> 聯繫開發團隊，我們將依法儘速處理。
                                 </p>
                             </ContentSection>
 
@@ -386,7 +469,7 @@ export default function TermsAndPrivacyPage() {
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
                                         <h4 className="font-bold text-slate-900 mb-2">獎學金業務諮詢</h4>
-                                        <p className="text-sm text-slate-600 mb-3">若您對獎學金申請資格、期限或內容有疑問，請聯繫生輔組：</p>
+                                        <p className="text-sm text-slate-600 mb-3">若您對獎學金申請資格、期限 or 內容有疑問，請聯繫生輔組：</p>
                                         <a href="mailto:act5718@gmail.com" className="flex items-center text-violet-600 hover:underline">
                                             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -397,11 +480,11 @@ export default function TermsAndPrivacyPage() {
                                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
                                         <h4 className="font-bold text-slate-900 mb-2">平台技術與隱私權</h4>
                                         <p className="text-sm text-slate-600 mb-3">若您對平台操作、帳號問題或隱私權政策有疑問，請聯繫開發團隊：</p>
-                                        <a href="mailto:gdg-core@ncuesa.org.tw" className="flex items-center text-violet-600 hover:underline">
+                                        <a href="mailto:contact@mingchen.dev" className="flex items-center text-violet-600 hover:underline">
                                             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                                             </svg>
-                                            gdg-core@ncuesa.org.tw
+                                            contact@mingchen.dev
                                         </a>
                                     </div>
                                 </div>
@@ -414,24 +497,45 @@ export default function TermsAndPrivacyPage() {
                                     <span className="text-xs">Google Developer Group On Campus NCUE</span>
                                 </p>
                             </motion.div>
+                            
+                            {/* 滾動底部偵測點 */}
+                            <div ref={bottomRef} className="h-1 w-full" aria-hidden="true" />
                         </motion.div>
                     </main>
                 </div>
             </div>
 
-            <footer className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t border-slate-200 z-10">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-20 max-w-4xl mx-auto lg:pl-80">
-                        <p className="text-sm text-slate-500">最新修訂：2026年1月8日</p>
-                        <a
-                            href="/"
-                            className="inline-flex items-center gap-2 rounded-md bg-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 transition-colors"
-                        >
-                            回到首頁
-                        </a>
+            {/* 僅在需要同意時才顯示 Footer 區域 */}
+            {isAuthenticated && !hasAgreedToTerms && (
+                <footer className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t border-slate-200 z-10">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-20 max-w-4xl mx-auto lg:pl-80">
+                            <p className="text-sm text-slate-500 hidden sm:block">最新修訂：2026 年 4 月 2 日</p>
+                            
+                            <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+                                <button
+                                    onClick={handleAgree}
+                                    disabled={isAgreeing || !hasScrolledToBottom}
+                                    className={`inline-flex w-full sm:w-auto justify-center items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 group
+                                        ${hasScrolledToBottom 
+                                            ? 'bg-indigo-600 hover:bg-indigo-500 active:scale-95 focus-visible:outline-indigo-500 cursor-pointer' 
+                                            : 'bg-slate-400 cursor-not-allowed'}
+                                    `}
+                                    title={!hasScrolledToBottom ? '請先將條款滑動至底部以啟用同意按鈕' : ''}
+                                >
+                                    {isAgreeing ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <CheckCircle className="w-4 h-4" />
+                                    )}
+                                    {hasScrolledToBottom ? '我已閱讀並同意以上條款' : '請先滑動閱讀所有條款'}
+                                    {hasScrolledToBottom && !isAgreeing && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </footer>
+                </footer>
+            )}
         </div>
     );
 }

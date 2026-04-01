@@ -16,9 +16,6 @@ export const authService = {
           data: {
             name: userData.name,
             student_id: userData.student_id,
-            // 在註冊階段將系所與年級寫入 raw_user_meta_data
-            department: userData.department,
-            year: userData.year,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
@@ -51,15 +48,72 @@ export const authService = {
   },
 
   /**
+   * Signs in with Google OAuth.
+   */
+  async signInWithGoogle() {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account',
+          },
+        }
+      });
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
    * Signs out the current user.
    */
   async signOut() {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // 1. 手動清除前端 cookies 以防萬一 (特別是網域問題造成的殘留)
+      // 這部分先執行，確保即便 API 掛起，本地狀態也能清除
+      if (typeof document !== 'undefined') {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i];
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+          
+          // 清除 Supabase 相關 cookie (sb-...) 以及其他認證相關 cookie
+          if (name.startsWith('sb-') || name.includes('auth') || name.includes('token')) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            // 同時嘗試清除子網域的 cookie
+            const domain = window.location.hostname;
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain}`;
+            // 嘗試清除 ncuesa.org.tw 網域的 cookie
+            if (domain.includes('ncuesa.org.tw')) {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.ncuesa.org.tw`;
+            }
+          }
+        }
+        // 清除 localStorage 中的 Supabase session
+        for (let key in localStorage) {
+          if (key.startsWith('sb-')) {
+            localStorage.removeItem(key);
+          }
+        }
+      }
+
+      // 2. 異步呼叫 Supabase API，不等待它完成以防掛起
+      supabase.auth.signOut().catch(err => {
+        console.warn('Background Supabase signOut API error:', err.message);
+      });
+      
+      // 3. 立即返回成功，讓 UI 能夠繼續處理
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('Logout process error:', error);
+      // 即使報錯，如果 cookie 已清，我們也應該讓前端認為成功
+      return { success: true };
     }
   },
 
@@ -144,10 +198,10 @@ export const authService = {
       },
 
       // 更新使用者個人資料
-      async updateProfile({ name, student_id, department, year }) {
+      async updateProfile({ name, student_id }) {
         try {
           const { data, error } = await supabase.auth.updateUser({
-            data: { name, student_id, department, year }
+            data: { name, student_id }
           });
 
           if (error) throw error;
@@ -158,9 +212,7 @@ export const authService = {
             .from('profiles')
             .update({
               username: name,
-              student_id,
-              department,
-              year
+              student_id
             })
             .eq('id', userId);
 

@@ -47,7 +47,10 @@ export async function GET(request) {
         const { data, error, count } = await viewQuery;
 
         if (!error) {
-            usersData = data;
+            usersData = data.map(user => ({
+                ...user,
+                is_google: user.providers ? user.providers.includes('google') : user.provider === 'google'
+            }));
             totalCount = count;
             usingView = true;
         } else {
@@ -81,6 +84,7 @@ export async function GET(request) {
         // 獲取對應的電子信箱資料 (僅針對當前頁面的 User ID)
         const userIds = profiles.map(p => p.id);
         const emailMap = {};
+        const providerMap = {};
 
         // 平行請求獲取 Email
         await Promise.all(userIds.map(async (uid) => {
@@ -88,6 +92,8 @@ export async function GET(request) {
                 const { data: { user }, error: uError } = await supabase.auth.admin.getUserById(uid);
                 if (user && !uError) {
                     emailMap[uid] = user.email;
+                    const providers = user.app_metadata?.providers || [];
+                    providerMap[uid] = providers.includes('google');
                 }
             } catch (e) {
                 console.error(`Failed to fetch email for user ${uid}`, e);
@@ -97,7 +103,8 @@ export async function GET(request) {
         // 合併資料
         usersData = profiles.map(p => ({
             ...p,
-            email: emailMap[p.id]
+            email: emailMap[p.id],
+            is_google: providerMap[p.id] || false
         }));
         totalCount = count;
     }
@@ -121,7 +128,8 @@ export async function GET(request) {
         emailFull: email, // 保留完整電子信箱供編輯使用
         role: user.role || 'user',
         joinedAt: user.created_at,
-        avatarUrl: user.avatar_url
+        avatarUrl: user.avatar_url,
+        isGoogle: user.is_google
       };
     });
 

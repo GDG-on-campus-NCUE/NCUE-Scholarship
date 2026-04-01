@@ -193,7 +193,7 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
     if (!message) return null;
 
     const isUser = message.role === 'user';
-    const name = isUser ? (user?.user_metadata?.name || 'User') : 'AI Assistant';
+    const name = isUser ? (user?.profile?.username || user?.user_metadata?.name || 'User') : 'AI Assistant';
     const avatarChar = name.charAt(0).toUpperCase();
 
     let time = '';
@@ -229,8 +229,8 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
                     }`}
                 >
                     {isUser ? (
-                        user?.user_metadata?.avatar_url ? (
-                            <img src={user.user_metadata.avatar_url} alt={name} className="w-full h-full rounded-full object-cover" />
+                        (user?.profile?.avatar_url || user?.user_metadata?.avatar_url) ? (
+                            <img src={user?.profile?.avatar_url || user?.user_metadata?.avatar_url} alt={name} className="w-full h-full rounded-full object-cover" />
                         ) : (
                             avatarChar
                         )
