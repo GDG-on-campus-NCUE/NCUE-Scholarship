@@ -11,6 +11,18 @@ import IconButton from "@/components/ui/IconButton";
 
 export const HeaderContext = createContext({ isHeaderVisible: true });
 
+const LogoTitle = ({ isMenuOpen, isOverDark, closeMenu }) => (
+	<Link href="/" className="flex items-center space-x-3 focus:outline-none p-1" aria-label="回到首頁" onClick={closeMenu}>
+		<Image src={logo} alt="NCUE Logo" width={52} height={52} className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" priority />
+		<h1
+			className="font-bold text-base sm:text-lg whitespace-nowrap transition-colors duration-300"
+			style={{ color: isMenuOpen && isOverDark ? 'var(--primary-light)' : 'var(--primary)' }}
+		>
+			生輔組校外獎助學金資訊平台
+		</h1>
+	</Link>
+);
+
 const Header = forwardRef((props, ref) => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -18,7 +30,33 @@ const Header = forwardRef((props, ref) => {
 	const mobileMenuRef = useRef(null);
 	const userMenuRef = useRef(null);
 
-	const isHeaderVisible = true;
+    // 處理滾動顯示邏輯 (Headroom Pattern)
+	const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+
+	useEffect(() => {
+		const handleScroll = () => {
+			const currentScrollY = window.scrollY;
+            
+            if (currentScrollY <= 0) {
+                // 在最頂部時始終顯示
+                setIsVisible(true);
+            } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                // 往下滑且超過 100px 時隱藏
+                setIsVisible(false);
+            } else if (currentScrollY < lastScrollY) {
+                // 往上滑時顯示
+                setIsVisible(true);
+            }
+            
+            setLastScrollY(currentScrollY);
+		};
+
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, [lastScrollY]);
+
+	const isHeaderVisible = isVisible;
 
 	const { user, loading, signOut, isAuthenticated, isAdmin, timeLeft } = useAuth();
 	const [userIp, setUserIp] = useState("");
@@ -165,27 +203,15 @@ const Header = forwardRef((props, ref) => {
 		return ip;
 	};
 
-	const LogoTitle = () => (
-		<Link href="/" className="flex items-center space-x-3 focus:outline-none p-1" aria-label="回到首頁" onClick={closeMenu}>
-			<Image src={logo} alt="NCUE Logo" width={52} height={52} className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" priority />
-			<h1
-				className="font-bold text-base sm:text-lg whitespace-nowrap transition-colors duration-300"
-				style={{ color: isMenuOpen && isOverDark ? 'var(--primary-light)' : 'var(--primary)' }}
-			>
-				生輔組校外獎助學金資訊平台
-			</h1>
-		</Link>
-	);
-
 	return (
 		<HeaderContext.Provider value={{ isHeaderVisible }}>
 			<header
-				className={`header-fixed opacity-100 select-none ${isMenuOpen ? 'menu-open' : ''}`}
+				className={`header-fixed opacity-100 select-none ${isMenuOpen ? 'menu-open' : ''} ${!isVisible && !isMenuOpen ? 'header-hidden' : ''}`}
 				ref={ref}
 				onKeyDown={handleKeyDown}
 			>
 				<div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-full flex items-center justify-between relative z-10">
-					<LogoTitle />
+					<LogoTitle isMenuOpen={isMenuOpen} isOverDark={isOverDark} closeMenu={closeMenu} />
 					<nav className="hidden lg:flex items-center space-x-1 lg:space-x-2" role="navigation">
 						{filteredNavLinks.map(link => (
 							<Link key={link.href} href={link.href} className={`nav-link underline-extend navbar-link ${pathname === link.href ? 'active' : ''}`}>

@@ -17,10 +17,11 @@ export async function getCurrentToken() {
 /**
  * 創建包含 Authorization header 的 fetch 選項
  * @param {Object} options - 額外的 fetch 選項
+ * @param {string} manualToken - 手動提供的 token
  * @returns {Promise<Object>} 包含 Authorization header 的選項
  */
-export async function createAuthFetchOptions(options = {}) {
-  const token = await getCurrentToken();
+export async function createAuthFetchOptions(options = {}, manualToken = null) {
+  const token = manualToken || await getCurrentToken();
   
   const headers = {
     ...options.headers
@@ -46,9 +47,10 @@ export async function createAuthFetchOptions(options = {}) {
  * 帶身份驗證的 fetch 請求
  * @param {string} url - 請求 URL
  * @param {Object} options - fetch 選項
+ * @param {string} manualToken - 手動提供的 token
  * @returns {Promise<Response>} fetch Response
  */
-export async function authFetch(url, options = {}) {
-  const authOptions = await createAuthFetchOptions(options);
+export async function authFetch(url, options = {}, manualToken = null) {
+  const authOptions = await createAuthFetchOptions(options, manualToken);
   return fetch(url, authOptions);
 }

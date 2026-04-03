@@ -63,11 +63,32 @@ export async function GET(request) {
     )
     
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (error) {
         console.error('[AUTH-CALLBACK] 驗證錯誤:', error)
         return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
+      }
+
+      // 寫入登入紀錄
+      try {
+        if (data?.session?.user) {
+          const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+          const userAgent = request.headers.get('user-agent') || 'unknown';
+          
+          await supabase.from('login_history').insert({
+            user_id: data.session.user.id,
+            ip_address: ip,
+            user_agent: userAgent
+          });
+          
+          await supabase.from('profiles').update({
+            last_login_at: new Date().toISOString(),
+            last_login_ip: ip
+          }).eq('id', data.session.user.id);
+        }
+      } catch (logErr) {
+        console.error('[AUTH-CALLBACK] 記錄登入歷史失敗:', logErr);
       }
 
       // 驗證成功，重定向到 profile 頁面

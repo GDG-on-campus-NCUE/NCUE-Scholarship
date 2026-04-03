@@ -51,6 +51,16 @@ CREATE TABLE public.chat_history (
   CONSTRAINT chat_history_pkey PRIMARY KEY (id),
   CONSTRAINT chat_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
+CREATE TABLE public.login_history (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  login_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  ip_address text,
+  user_agent text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT login_history_pkey PRIMARY KEY (id),
+  CONSTRAINT login_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
   student_id text UNIQUE,
@@ -58,6 +68,10 @@ CREATE TABLE public.profiles (
   role text DEFAULT 'user'::text,
   created_at timestamp with time zone DEFAULT now(),
   avatar_url text,
+  email text,
+  has_agreed_to_terms boolean DEFAULT false,
+  last_login_at timestamp with time zone,
+  last_login_ip text,
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

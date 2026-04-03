@@ -99,16 +99,31 @@ export async function POST(request) {
             // Server-side fetching of emails based on role
             const supabase = supabaseServer;
             
-            // 1. Fetch relevant profile IDs
-            let profileQuery = supabase.from('profiles').select('id');
-            if (targetRole !== 'all') {
-                profileQuery = profileQuery.eq('role', targetRole);
+            // 1. Fetch relevant profile IDs (Paginated to handle > 1000)
+            let allProfiles = [];
+            let from = 0;
+            const step = 1000;
+            let profileHasMore = true;
+
+            while (profileHasMore) {
+                let profileQuery = supabase.from('profiles').select('id').range(from, from + step - 1);
+                if (targetRole !== 'all') {
+                    profileQuery = profileQuery.eq('role', targetRole);
+                }
+                const { data: profiles, error: profileError } = await profileQuery;
+                
+                if (profileError) throw profileError;
+                
+                if (profiles && profiles.length > 0) {
+                    allProfiles = [...allProfiles, ...profiles];
+                    if (profiles.length < step) profileHasMore = false;
+                    else from += step;
+                } else {
+                    profileHasMore = false;
+                }
             }
-            const { data: profiles, error: profileError } = await profileQuery;
             
-            if (profileError) throw profileError;
-            
-            const targetIds = new Set(profiles.map(p => p.id));
+            const targetIds = new Set(allProfiles.map(p => p.id));
 
             // 2. Fetch ALL Auth Users and filter
             let allAuthEmails = [];
@@ -153,27 +168,43 @@ export async function POST(request) {
         const finalHtmlContent = generateEmailHtml(subject, htmlBody);
         const plainTextVersion = htmlBody.replace(/<[^>]*>?/gm, '');
 
-        const mailOptions = {
-            from: `"${process.env.SENDER_NAME}" <${process.env.SENDER_EMAIL}>`,
-            bcc: finalBcc,
-            subject: `${subject}`,
-            html: finalHtmlContent,
-            text: plainTextVersion
-        };
+        // --- 分批寄送邏輯 (Batching) ---
+        const BATCH_SIZE = 90; // 每封郵件收件者上限，建議低於 100 以確保穩定
+        const batches = [];
+        for (let i = 0; i < finalBcc.length; i += BATCH_SIZE) {
+            batches.push(finalBcc.slice(i, i + BATCH_SIZE));
+        }
 
-        const result = await transporter.sendMail(mailOptions);
+        console.log(`[BULK-EMAIL] Total recipients: ${finalBcc.length}, splitting into ${batches.length} batches.`);
+
+        const sendResults = [];
+        for (let i = 0; i < batches.length; i++) {
+            const batch = batches[i];
+            const mailOptions = {
+                from: `"${process.env.SENDER_NAME}" <${process.env.SENDER_EMAIL}>`,
+                bcc: batch,
+                subject: `${subject}`,
+                html: finalHtmlContent,
+                text: plainTextVersion
+            };
+
+            const result = await transporter.sendMail(mailOptions);
+            sendResults.push(result.messageId);
+            console.log(`[BULK-EMAIL] Batch ${i + 1}/${batches.length} sent. MessageId: ${result.messageId}`);
+        }
 
         logSuccessAction('BULK_EMAIL_SENT', endpoint, {
             adminId: authCheck.user.id,
             recipientCount: finalBcc.length,
+            batchCount: batches.length,
             targetRole: targetRole || 'explicit',
             subject: subject,
-            messageId: result.messageId
+            messageIds: sendResults
         });
 
         return newCorsResponse({
             success: true,
-            message: `群發郵件已成功寄送給 ${finalBcc.length} 位使用者`,
+            message: `群發郵件已成功寄送給 ${finalBcc.length} 位使用者 (分為 ${batches.length} 批次寄出)`,
         }, 200);
 
     } catch (err) {

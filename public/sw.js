@@ -1,11 +1,11 @@
-const CACHE_NAME = 'ncue-scholarship-v2';
+const CACHE_NAME = 'ncue-scholarship-v3';
 const STATIC_ASSETS = [
   '/',
   '/favicon.ico',
   '/logo.png',
   '/banner.jpg',
-  '/manifest.json',
-  '/offline', // 預計建立的離線 fallback 頁面
+  '/manifest.webmanifest',
+  '/offline',
 ];
 
 // 安裝時預先快取靜態資源

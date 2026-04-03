@@ -9,9 +9,19 @@ const nextConfig = {
         'www.scholarship.ncuesa.org.tw'
     ],
 
-    // 設置 CORS headers
+    // 設置 CORS headers 與 Cache Control
     async headers() {
         return [
+            {
+                // 為靜態資源設置長效快取 (1年)
+                source: '/(logo.png|banner.jpg|favicon.ico|fonts/.*)',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    },
+                ],
+            },
             {
                 // 為所有 API 路由設置 CORS
                 source: '/api/:path*',

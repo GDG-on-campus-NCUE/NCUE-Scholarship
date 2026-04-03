@@ -203,13 +203,6 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                         onClick={onClose}
                     >
                         <style>{`
-                            /* This rule hides the site header and prevents background scroll when the modal is open */
-                            body.modal-open {
-                                overflow: hidden;
-                            }
-                            body.modal-open .header-fixed {
-                                display: none;
-                            }
                             .rich-text-content {
                                 overflow-x: hidden; /* Prevent horizontal scroll on container */
                             }
@@ -373,7 +366,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                     )}
                                     {fullAnnouncement.internal_id && (
                                         <a
-                                            href={`https://docs.google.com/forms/d/e/1FAIpQLSct6GjpISj20foOtBK4TVcMCpSfULcagZTTN4_YkFTNK1DQbQ/viewform?usp=pp_url&entry.40872308=${fullAnnouncement.internal_id}${user ? `&entry.146368827=${encodeURIComponent(user.user_metadata?.name || user.profile?.username || '')}&entry.609200579=${encodeURIComponent((user.user_metadata?.student_id || user.profile?.student_id || '').toUpperCase())}` : ''}`}
+                                            href={`https://docs.google.com/forms/d/e/1FAIpQLSct6GjpISj20foOtBK4TVcMCpSfULcagZTTN4_YkFTNK1DQbQ/viewform?usp=pp_url&entry.40872308=${fullAnnouncement.internal_id}${user ? `&entry.146368827=${encodeURIComponent(user.profile?.name || user.profile?.username || user.user_metadata?.name || '')}&entry.609200579=${encodeURIComponent((user.profile?.student_id || user.user_metadata?.student_id || '').toUpperCase())}` : ''}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center justify-center min-w-[80px] px-4 py-2 text-sm font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all duration-200 border border-violet-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"

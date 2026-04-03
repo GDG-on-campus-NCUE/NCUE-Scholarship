@@ -36,12 +36,12 @@ const sendEmailAnnouncement = async (id, showToast) => {
 
 const sendLineBroadcast = async (id, showToast) => {
     try {
-        showToast('正在透過 LINE 發送公告...', 'info');
+        showToast('正在透過 LINE 寄送公告...', 'info');
         const res = await authFetch('/api/broadcast-line-announcement', { method: 'POST', body: JSON.stringify({ announcementId: id }) });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'LINE 發送失敗');
-        showToast(data.message || '公告已成功透過 LINE 發送！', 'success');
-    } catch (err) { showToast(err.message || 'LINE 發送失敗，請稍後再試', 'error'); }
+        if (!res.ok) throw new Error(data.error || 'LINE 寄送失敗');
+        showToast(data.message || '公告已成功透過 LINE 寄送！', 'success');
+    } catch (err) { showToast(err.message || 'LINE 寄送失敗，請稍後再試', 'error'); }
 };
 
 export default function AnnouncementsTab() {
@@ -248,13 +248,18 @@ export default function AnnouncementsTab() {
                                         </td>
                                         <td className="p-4 px-6 text-gray-600">{new Date(ann.updated_at).toLocaleDateString()}</td>
                                         <td className="p-4 px-6">
-                                            <div className="grid grid-cols-3 grid-rows-2 gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {/* 常駐按鈕 */}
                                                 <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
                                                 <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
                                                 <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
-                                                <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
-                                                <button onClick={() => openPreview('line', ann)} className={`${buttonStyles.line} w-full`}><LineIcon /></button>
-                                                <button onClick={() => openPreview('email', ann)} className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
+                                                
+                                                {/* 懸浮顯示按鈕 - 第二行 */}
+                                                <div className="col-span-3 grid grid-cols-3 gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                                    <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
+                                                    <button onClick={() => openPreview('line', ann)} className={`${buttonStyles.line} w-full`}><LineIcon /></button>
+                                                    <button onClick={() => openPreview('email', ann)} className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
@@ -362,12 +367,13 @@ export default function AnnouncementsTab() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-gray-600">共 {totalCount} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
+                <div className="text-sm text-gray-600 font-medium">共 {totalCount} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <select
                             value={rowsPerPage}
                             onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                            aria-label="每頁顯示筆數"
                             className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm
                                 transition-all duration-300
                                 focus:outline-none focus:border-indigo-500
@@ -376,16 +382,16 @@ export default function AnnouncementsTab() {
                             {[10, 25, 50].map(v => <option key={v} value={v}>{v} 筆 / 頁</option>)}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                     </div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="分頁導覽">
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
                     </nav>
                 </div>
             </div>

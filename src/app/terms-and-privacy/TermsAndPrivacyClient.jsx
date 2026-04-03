@@ -122,17 +122,17 @@ const ContentSection = ({ id, activeId, title, titleAs: TitleComponent = 'h3', c
         <motion.section
             variants={itemVariants}
             id={id}
-            className={`scroll-mt-24 -mx-6 p-6 rounded-2xl transition-all duration-300 ease-in-out border-l-4 ${isActive
+            className={`scroll-mt-24 -mx-2 sm:-mx-6 p-4 sm:p-6 rounded-2xl transition-all duration-300 ease-in-out border-l-4 ${isActive
                 ? 'bg-violet-50/70 border-violet-300'
                 : 'border-transparent'
                 }`}
         >
             {title && (
-                <TitleComponent className={`text-xl sm:text-2xl font-bold transition-colors duration-300 ${isActive ? 'text-violet-700' : 'text-slate-800'}`}>
+                <TitleComponent className={`text-lg sm:text-2xl font-bold transition-colors duration-300 ${isActive ? 'text-violet-700' : 'text-slate-800'}`}>
                     {title}
                 </TitleComponent>
             )}
-            <article className="prose prose-slate max-w-none mt-4 prose-p:leading-relaxed prose-a:text-violet-500 hover:prose-a:underline">
+            <article className="prose prose-slate prose-sm sm:prose-base max-w-none mt-4 prose-p:leading-relaxed prose-a:text-violet-500 hover:prose-a:underline">
                 {children}
             </article>
         </motion.section>
@@ -183,7 +183,6 @@ export default function TermsAndPrivacyPage() {
         try {
             const result = await agreeToTerms();
             if (result.success) {
-                // 使用 window.location 進行硬跳轉，避免 Next.js Client Router 在狀態尚未完全同步時發生衝突崩潰
                 window.location.href = '/';
             } else {
                 alert('同意失敗，請稍後再試');
@@ -290,27 +289,27 @@ export default function TermsAndPrivacyPage() {
 
     return (
         <div className="bg-slate-50 text-slate-700 select-none relative">
-            <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-0 sm:px-6 lg:px-8 py-8 sm:py-16">
                 <div className="flex flex-col lg:flex-row justify-center gap-x-16">
-                    <div className="w-full lg:w-64 lg:flex-shrink-0 mb-12 lg:mb-0">
+                    <div className="w-full lg:w-64 lg:flex-shrink-0 mb-8 lg:mb-0 px-4 sm:px-0">
                         <TableOfContents sections={sections} activeId={activeId} onLinkClick={handleLinkClick} />
                     </div>
                     <main className="w-full max-w-4xl min-w-0">
                         <motion.div
-                            className="bg-white p-8 sm:p-12 rounded-2xl shadow-sm"
+                            className="bg-transparent sm:bg-white p-4 sm:p-12 rounded-none sm:rounded-2xl sm:shadow-sm"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
                         >
-                            <motion.h1 variants={itemVariants} className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+                            <motion.h1 variants={itemVariants} className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight px-2 sm:px-0">
                                 生輔組 校外獎學金平台 服務條款暨隱私權政策
                             </motion.h1>
 
-                            <motion.p variants={itemVariants} className="mt-8 text-sm text-slate-500">
+                            <motion.p variants={itemVariants} className="mt-6 sm:mt-8 text-xs sm:text-sm text-slate-500 px-2 sm:px-0">
                                 <strong>最後更新日期：2026 年 4 月 2 日</strong>
                             </motion.p>
                             
-                            <motion.div variants={itemVariants} className="mt-6 space-y-4 text-base leading-relaxed text-slate-600">
+                            <motion.div variants={itemVariants} className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-600 px-2 sm:px-0">
                                 <p>
                                     歡迎您使用由 <strong>國立彰化師範大學學生事務處生活輔導組</strong>（以下簡稱「本組」）委託，並由 <strong>陳泰銘</strong> 代表 <strong>Google Developer Group On Campus NCUE</strong>（以下簡稱「開發團隊」）所開發與維護之「校外獎學金平台」（以下簡稱「本平台」）。
                                 </p>
@@ -319,9 +318,9 @@ export default function TermsAndPrivacyPage() {
                                 </p>
                             </motion.div>
                             
-                            <hr className="my-10 border-slate-200" />
+                            <hr className="my-8 sm:my-10 border-slate-200 mx-2 sm:mx-0" />
 
-                            <motion.h2 variants={itemVariants} className="text-2xl sm:text-3xl font-bold border-b border-slate-200 pb-4 mt-12 mb-2 text-slate-900">第一部分：服務條款</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-xl sm:text-3xl font-bold border-b border-slate-200 pb-4 mt-10 sm:mt-12 mb-2 text-slate-900 px-2 sm:px-0">第一部分：服務條款</motion.h2>
 
                             <ContentSection id="tos_1" activeId={activeId} title="第一條、認知與接受條款">
                                 <ol className="list-decimal pl-5 space-y-3">
@@ -393,9 +392,9 @@ export default function TermsAndPrivacyPage() {
                                 </ol>
                             </ContentSection>
 
-                            <hr className="my-10 border-slate-200" />
+                            <hr className="my-8 sm:my-10 border-slate-200 mx-2 sm:mx-0" />
 
-                            <motion.h2 variants={itemVariants} className="text-2xl sm:text-3xl font-bold border-b border-slate-200 pb-4 mt-12 mb-2 text-slate-900">第二部分：隱私權政策</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-xl sm:text-3xl font-bold border-b border-slate-200 pb-4 mt-10 sm:mt-12 mb-2 text-slate-900 px-2 sm:px-0">第二部分：隱私權政策</motion.h2>
 
                             <ContentSection id="privacy_8" activeId={activeId} title="第八條、個人資料之蒐集目的與類別">
                                 <p>為提供使用者個人化服務與帳戶管理，我們將依據《個人資料保護法》蒐集、處理及利用您的個人資料：</p>
@@ -420,7 +419,7 @@ export default function TermsAndPrivacyPage() {
                                     <li><strong>利用期間</strong>：自您註冊帳號之日起，至您要求刪除帳號、或本平台終止服務之日止。</li>
                                     <li><strong>利用地區</strong>：中華民國領域內、及本平台使用之雲端服務供應商所在地。</li>
                                     <li><strong>利用對象</strong>：僅限於本組、開發團隊及受委託處理事務之廠商（如雲端主機服務商）。</li>
-                                    <li><strong>AI 資料處理</strong>：為提供 AI 輔助功能，系統可能會將<strong>已去識別化</strong>或<strong>非個人機敏</strong>之獎學金公告文本傳送至第三方 AI 服務提供商（如 Google）進行運算，但我們不會將您的個人註冊資料（如 Email、密碼）傳送給 AI 模型進行訓練。</li>
+                                    <li><strong>AI 資料處理</strong>：為提供 AI 輔助功能，系統可能會將<strong>已去識別化</strong>或<strong>非個人機敏</strong>之獎學金公告文本傳送至第三方 AI服務提供商（如 Google）進行運算，但我們不會將您的個人註冊資料（如 Email、密碼）傳送給 AI 模型進行訓練。</li>
                                     <li><strong>不予揭露</strong>：除法律另有規定或配合司法單位調查外，我們絕不會將您的個人資料出售、交換或出租給任何無關之第三人。</li>
                                 </ol>
                             </ContentSection>
@@ -457,16 +456,16 @@ export default function TermsAndPrivacyPage() {
                                 <p>本隱私權政策將因應需求或法令變更隨時進行修正，修正後之條款將刊登於本網站，並於公告後立即生效。建議您定期閱讀本政策以掌握最新資訊。</p>
                             </ContentSection>
 
-                            <hr className="my-10 border-slate-200" />
+                            <hr className="my-8 sm:my-10 border-slate-200 mx-2 sm:mx-0" />
 
-                            <motion.h2 variants={itemVariants} className="text-2xl sm:text-3xl font-bold border-b border-slate-200 pb-4 mt-12 mb-2 text-slate-900">第三部分：一般條款</motion.h2>
+                            <motion.h2 variants={itemVariants} className="text-xl sm:text-3xl font-bold border-b border-slate-200 pb-4 mt-10 sm:mt-12 mb-2 text-slate-900 px-2 sm:px-0">第三部分：一般條款</motion.h2>
 
                             <ContentSection id="general_14" activeId={activeId} title="第十四條、準據法與管轄法院">
                                 <p>本條款之解釋與適用，以及與本條款有關的爭議，均應依照<strong>中華民國法律</strong>予以處理。若產生任何訴訟，雙方同意以<strong>臺灣彰化地方法院</strong>為第一審管轄法院。</p>
                             </ContentSection>
 
                             <ContentSection id="general_15" activeId={activeId} title="第十五條、聯絡資訊">
-                                <div className="grid md:grid-cols-2 gap-6">
+                                <div className="grid md:grid-cols-2 gap-6 px-2 sm:px-0">
                                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
                                         <h4 className="font-bold text-slate-900 mb-2">獎學金業務諮詢</h4>
                                         <p className="text-sm text-slate-600 mb-3">若您對獎學金申請資格、期限 or 內容有疑問，請聯繫生輔組：</p>
@@ -490,7 +489,7 @@ export default function TermsAndPrivacyPage() {
                                 </div>
                             </ContentSection>
 
-                            <motion.div variants={itemVariants} className="border-t border-slate-200 mt-12 pt-6">
+                            <motion.div variants={itemVariants} className="border-t border-slate-200 mt-12 pt-6 px-2 sm:px-0">
                                 <p className="text-right text-slate-400 text-sm">
                                     Developed by <strong>Tai Ming Chen</strong> & <strong>Grason Yang</strong>
                                     <br />
@@ -498,14 +497,12 @@ export default function TermsAndPrivacyPage() {
                                 </p>
                             </motion.div>
                             
-                            {/* 滾動底部偵測點 */}
                             <div ref={bottomRef} className="h-1 w-full" aria-hidden="true" />
                         </motion.div>
                     </main>
                 </div>
             </div>
 
-            {/* 僅在需要同意時才顯示 Footer 區域 */}
             {isAuthenticated && !hasAgreedToTerms && (
                 <footer className="sticky bottom-0 bg-white/80 backdrop-blur-sm border-t border-slate-200 z-10">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">

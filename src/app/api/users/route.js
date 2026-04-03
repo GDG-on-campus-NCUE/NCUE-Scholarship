@@ -8,6 +8,7 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const role = searchParams.get('role') || '';
 
     // 1. Rate limiting 檢查
     const rateLimitCheck = checkRateLimit(request, 'users-get', 100, 60000); // 每分鐘100次
@@ -42,6 +43,10 @@ export async function GET(request) {
             viewQuery = viewQuery.or(`username.ilike.%${search}%,student_id.ilike.%${search}%,email.ilike.%${search}%`);
         }
 
+        if (role) {
+            viewQuery = viewQuery.eq('role', role);
+        }
+
         viewQuery = viewQuery.order('created_at', { ascending: false }).range(from, to);
 
         const { data, error, count } = await viewQuery;
@@ -70,6 +75,10 @@ export async function GET(request) {
         if (search) {
             // Fallback 模式不支援 Email 搜尋
             query = query.or(`username.ilike.%${search}%,student_id.ilike.%${search}%`);
+        }
+
+        if (role) {
+            query = query.eq('role', role);
         }
         
         query = query.order('created_at', { ascending: false }).range(from, to);

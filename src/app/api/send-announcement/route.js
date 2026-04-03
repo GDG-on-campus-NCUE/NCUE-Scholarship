@@ -168,44 +168,79 @@ export async function POST(request) {
             return NextResponse.json({ error: '無法取得公告資料', details: annError?.message }, { status: 500 });
         }
 
-        const { data: usersData, error: userError } = await supabaseServer.auth.admin.listUsers();
-        if (userError) {
-            return NextResponse.json({ error: '無法取得使用者清單', details: userError?.message }, { status: 500 });
+        // 取得所有使用者 Email (處理分頁)
+        let allEmails = [];
+        let page = 1;
+        const perPage = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+            const { data: authData, error: authError } = await supabaseServer.auth.admin.listUsers({
+                page: page,
+                perPage: perPage
+            });
+            
+            if (authError) throw authError;
+
+            if (authData?.users && authData.users.length > 0) {
+                const pageEmails = authData.users
+                    .map(u => u.email)
+                    .filter(email => email);
+                
+                allEmails = [...allEmails, ...pageEmails];
+
+                if (authData.users.length < perPage) hasMore = false;
+                else page++;
+            } else {
+                hasMore = false;
+            }
         }
 
-        const emails = usersData?.users?.map((u) => u.email).filter(Boolean);
-        if (!emails || emails.length === 0) {
+        if (allEmails.length === 0) {
             return NextResponse.json({ error: '沒有可寄送的 Email' }, { status: 400 });
         }
 
         const finalHtmlContent = generateAnnouncementEmailHtml(announcement);
         const plainTextContent = (announcement.summary || '').replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
 
-        // --- UPDATED: MailOptions 'from' to match the first example ---
-        const mailOptions = {
-            from: `"${process.env.SENDER_NAME}" <${process.env.SENDER_EMAIL}>`,
-            bcc: emails.join(','), // Use BCC for privacy
-            subject: `【獎學金公告通知】${announcement.title}`,
-            text: plainTextContent,
-            html: finalHtmlContent
-        };
+        // --- 分批寄送邏輯 (Batching) ---
+        const BATCH_SIZE = 90; 
+        const batches = [];
+        for (let i = 0; i < allEmails.length; i += BATCH_SIZE) {
+            batches.push(allEmails.slice(i, i + BATCH_SIZE));
+        }
 
-        const result = await transporter.sendMail(mailOptions);
+        console.log(`[ANNOUNCEMENT-EMAIL] Total recipients: ${allEmails.length}, splitting into ${batches.length} batches.`);
+
+        const sendResults = [];
+        for (let i = 0; i < batches.length; i++) {
+            const batch = batches[i];
+            const mailOptions = {
+                from: `"${process.env.SENDER_NAME}" <${process.env.SENDER_EMAIL}>`,
+                bcc: batch,
+                subject: `【獎學金公告通知】${announcement.title}`,
+                text: plainTextContent,
+                html: finalHtmlContent
+            };
+
+            const result = await transporter.sendMail(mailOptions);
+            sendResults.push(result.messageId);
+            console.log(`[ANNOUNCEMENT-EMAIL] Batch ${i + 1}/${batches.length} sent. MessageId: ${result.messageId}`);
+        }
         
         logSuccessAction('ANNOUNCEMENT_SENT', '/api/send-announcement', {
             adminId: authCheck.user.id,
             announcementId,
-            recipientCount: emails.length,
-            messageId: result.messageId
+            recipientCount: allEmails.length,
+            batchCount: batches.length,
+            messageIds: sendResults
         });
-
-        console.log('公告郵件發送成功:', result.messageId);
 
         return NextResponse.json({
             success: true,
-            message: `公告已成功發送給 ${emails.length} 位使用者`,
-            messageId: result.messageId,
-            recipientCount: emails.length
+            message: `公告已成功發送給 ${allEmails.length} 位使用者 (分為 ${batches.length} 批次寄出)`,
+            messageIds: sendResults,
+            recipientCount: allEmails.length
         });
 
     } catch (err) {

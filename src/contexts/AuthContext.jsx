@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase/client'; // Direct access for profile creation
+import { supabase } from '@/lib/supabase/client';
 import { authService } from '@/lib/supabase/auth';
+import { useRouter } from 'next/navigation';
+import { authFetch } from '@/lib/authFetch';
 
 const AuthContext = createContext({});
 
@@ -17,6 +19,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+    const router = useRouter();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -26,24 +29,38 @@ export const AuthProvider = ({ children }) => {
     const lastActivity = useRef(Date.now());
     const timerRef = useRef(null);
 
+    const refreshUserData = useCallback(async () => {
+        const result = await authService.getCurrentUser();
+        if (result.success && result.user) {
+            setUser({
+                ...result.user,
+                needsProfileCompletion: !result.user.profile?.student_id,
+                hasAgreedToTerms: !!result.user.profile?.has_agreed_to_terms
+            });
+        } else {
+            setUser(null);
+        }
+        setLoading(false);
+    }, []);
+
     const signOut = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const result = await authService.signOut();
-            if (result.success) {
-                setUser(null);
-                setTimeLeft(IDLE_TIMEOUT);
-                // 強制跳轉至首頁並重整，清除所有前端狀態與元件快取，避免殘留的 Auth Guard 造成無限轉圈
-                window.location.href = '/';
-            } else {
-                setError(result.error);
-            }
+            setUser(null);
+            setTimeLeft(IDLE_TIMEOUT);
+            // 使用 router.replace 避免 history 堆疊，並重導向到首頁
+            router.replace('/');
+            // 稍微延遲後強制重新載入，確保所有元件狀態清除
+            setTimeout(() => {
+                if (typeof window !== 'undefined') window.location.reload();
+            }, 100);
             return result;
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [router]);
 
     // 更新活動時間
     const resetIdleTimer = useCallback(() => {
@@ -52,101 +69,40 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        // Fetches the user and their profile, setting the state.
-        const getAndSetUser = async () => {
-            const result = await authService.getCurrentUser();
-            if (result.success && result.user) {
-                setUser({
-                    ...result.user,
-                    needsProfileCompletion: !result.user.profile?.student_id,
-                    hasAgreedToTerms: !!result.user.profile?.has_agreed_to_terms
-                });
-            }
-            setLoading(false);
-        };
+        // 初次載入獲取使用者
+        refreshUserData();
 
-        getAndSetUser();
-
-        // The core logic for handling auth state changes.
+        // 監聽認證狀態變化
         const { data: { subscription } } = authService.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
-                const currentUser = session.user;
-                const email = currentUser.email;
+            console.log('Auth state changed:', event);
 
-                // 1. 先根據 Email 檢查是否有現有 Profile (用於關聯 Google 帳號與舊有 Email 帳號)
-                const { data: existingProfileByEmail } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', email)
-                    .maybeSingle();
-
-                if (existingProfileByEmail && existingProfileByEmail.id !== currentUser.id) {
-                    // 如果 Email 已存在但 ID 不同，將舊 Profile 關聯到新 ID
-                    console.log('Linking existing profile to new Google ID...');
-                    await supabase
-                        .from('profiles')
-                        .update({ id: currentUser.id })
-                        .eq('id', existingProfileByEmail.id);
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                if (session?.user) {
+                    // 通知後端同步 Profile (使用 session 中的 token 確保驗證成功)
+                    const token = session.access_token;
+                    authFetch('/api/auth/profile-sync', { method: 'POST' }, token).catch(console.error);
+                    await refreshUserData();
                 }
-
-                // 2. 檢查目前 ID 是否有 Profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
-
-                // If no profile exists and it's a social login or we have metadata
-                if (!profile) {
-                    const name = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '';
-                    await supabase.from('profiles').insert({
-                        id: currentUser.id,
-                        username: name,
-                        email: email,
-                        role: 'user',
-                        has_agreed_to_terms: false
-                    });
-
-                    if (name) {
-                        await supabase.auth.updateUser({
-                            data: { display_name: name },
-                        });
-                    }
-                }
-
-                const { success, user: userData } = await authService.getCurrentUser();
-                if (success && userData) {
-                    setUser({
-                        ...userData,
-                        needsProfileCompletion: !userData.profile?.student_id,
-                        hasAgreedToTerms: !!userData.profile?.has_agreed_to_terms
-                    });
-                }
-                setError(null);
-                resetIdleTimer();
-
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
-                setError(null);
-                // 當檢測到登出事件時（可能是其他分頁觸發），強制跳轉至首頁並重整，確保所有分頁都能同步登出狀態
-                if (typeof window !== 'undefined') {
-                    // 只有當不在登入頁等公開頁面時才強制跳轉，避免干擾正常的登入流程
-                    const publicPaths = ['/login', '/forgot-password', '/reset-password', '/terms-and-privacy', '/auth/callback'];
-                    const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path)) || window.location.pathname === '/';
-                    
-                    if (!isPublicPath) {
-                        window.location.href = '/';
-                    }
+                setLoading(false);
+                
+                // 處理 PWA 或多標籤頁同步登出
+                const publicPaths = ['/login', '/forgot-password', '/reset-password', '/terms-and-privacy', '/auth/callback', '/resource'];
+                const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path)) || window.location.pathname === '/';
+                
+                if (!isPublicPath) {
+                    router.replace('/login');
                 }
+            } else if (event === 'USER_UPDATED') {
+                await refreshUserData();
             }
-
-            setLoading(false);
         });
 
         return () => {
             subscription?.unsubscribe();
         };
-    }, [resetIdleTimer]);
+    }, [refreshUserData, router]);
 
     // 監聽使用者行為與倒數計時器
     useEffect(() => {
@@ -181,7 +137,13 @@ export const AuthProvider = ({ children }) => {
     const signIn = async (email, password) => {
         setError(null);
         const result = await authService.signIn(email, password);
-        if (!result.success) setError(result.error);
+        if (result.success) {
+            await refreshUserData();
+            // 主動觸發寫入登入紀錄
+            authFetch('/api/users/login-log', { method: 'POST' }).catch(console.error);
+        } else {
+            setError(result.error);
+        }
         return result;
     };
 
@@ -195,9 +157,8 @@ export const AuthProvider = ({ children }) => {
     const deleteAccount = async () => {
         setError(null);
         try {
-            const response = await fetch('/api/users/delete-account', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await authFetch('/api/users/delete-account', {
+                method: 'POST'
             });
             const data = await response.json();
             if (data.success) {
@@ -230,14 +191,7 @@ export const AuthProvider = ({ children }) => {
         const { name, student_id } = profileData;
         const result = await authService.updateProfile({ name, student_id });
         if (result.success) {
-            const refreshed = await authService.getCurrentUser();
-            if (refreshed.success && refreshed.user) {
-                setUser({
-                    ...refreshed.user,
-                    needsProfileCompletion: !refreshed.user.profile?.student_id,
-                    hasAgreedToTerms: !!refreshed.user.profile?.has_agreed_to_terms
-                });
-            }
+            await refreshUserData();
         } else {
             setError(result.error);
         }
@@ -254,15 +208,7 @@ export const AuthProvider = ({ children }) => {
                 .eq('id', user.id);
             
             if (error) throw error;
-            
-            const refreshed = await authService.getCurrentUser();
-            if (refreshed.success && refreshed.user) {
-                setUser({
-                    ...refreshed.user,
-                    needsProfileCompletion: !refreshed.user.profile?.student_id,
-                    hasAgreedToTerms: true
-                });
-            }
+            await refreshUserData();
             return { success: true };
         } catch (err) {
             console.error('Error agreeing to terms:', err);
@@ -274,7 +220,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         error,
-        timeLeft, // 暴露剩餘秒數
+        timeLeft,
         signIn,
         signInWithGoogle,
         signOut,
@@ -284,7 +230,7 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         agreeToTerms,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'admin' || user?.profile?.role === 'admin',
         needsProfileCompletion: !!user?.needsProfileCompletion,
         hasAgreedToTerms: !!user?.hasAgreedToTerms
     };

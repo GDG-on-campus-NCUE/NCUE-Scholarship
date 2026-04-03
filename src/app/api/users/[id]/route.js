@@ -3,11 +3,12 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { verifyUserAuth, checkRateLimit, validateRequestData, handleApiError, logSuccessAction } from '@/lib/apiMiddleware';
 
 export async function PUT(request, { params }) {
-  try {
-    const { userId } = await params;
+  const { id } = await params;
+  const endpoint = `/api/users/${id}`;
 
+  try {
     // 1. Rate limiting 檢查
-    const rateLimitCheck = checkRateLimit(request, 'users-put', 5, 60000); // 每分鐘5次
+    const rateLimitCheck = checkRateLimit(request, 'users-put', 10, 60000); // 每分鐘10次
     if (!rateLimitCheck.success) {
       return rateLimitCheck.error;
     }
@@ -16,7 +17,7 @@ export async function PUT(request, { params }) {
     const authCheck = await verifyUserAuth(request, {
       requireAuth: true,
       requireAdmin: true,
-      endpoint: '/api/users/[userId]'
+      endpoint
     });
     
     if (!authCheck.success) {
@@ -37,27 +38,30 @@ export async function PUT(request, { params }) {
 
     const { role, username } = dataValidation.data;
 
-    // 4. 驗證 userId 格式
-    if (!userId || typeof userId !== 'string') {
+    // 4. 驗證 id 格式
+    if (!id || typeof id !== 'string') {
       return NextResponse.json(
         { error: '無效的用戶 ID' },
         { status: 400 }
       );
     }
 
-    // 5. 防止管理員意外移除自己的管理員權限
-    if (userId === authCheck.user.id && role && role !== 'admin') {
-      return NextResponse.json(
-        { error: '不能移除自己的管理員權限' },
-        { status: 400 }
-      );
+    // 5. 防止管理員意外移除自己的管理員權限，或變更自己的資料 (應在 Profile 頁面變更)
+    if (id === authCheck.user.id) {
+        if (role && role !== 'admin') {
+            return NextResponse.json({ error: '不能移除自己的管理員權限' }, { status: 400 });
+        }
+        // 如果只是想透過此 API 變更自己的 username，也可以允許，但通常管理員管理他人
     }
 
     // 6. 更新用戶資料
     const supabase = supabaseServer;
     const updateData = {};
     if (role !== undefined) {
-      updateData.role = role;
+        if (!['user', 'admin'].includes(role)) {
+            return NextResponse.json({ error: '無效的角色權限' }, { status: 400 });
+        }
+        updateData.role = role;
     }
     if (username !== undefined) {
       updateData.username = username;
@@ -73,7 +77,7 @@ export async function PUT(request, { params }) {
     const { data, error } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', userId)
+      .eq('id', id)
       .select('id, student_id, username, role, created_at, avatar_url')
       .single();
 
@@ -82,13 +86,9 @@ export async function PUT(request, { params }) {
       throw new Error('更新用戶資料失敗');
     }
 
-    // 7. 獲取對應的電子信箱
-    const { data: authUsers, error: emailFetchError } = await supabase.auth.admin.listUsers();
-    let email = '';
-    if (authUsers?.users) {
-      const authUser = authUsers.users.find(u => u.id === data.id);
-      email = authUser?.email || '';
-    }
+    // 7. 獲取對應的電子信箱 (從 auth.admin)
+    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(id);
+    const email = authUser?.user?.email || '';
 
     // 8. 格式化回傳資料
     const formattedUser = {
@@ -102,18 +102,49 @@ export async function PUT(request, { params }) {
     };
 
     // 記錄成功操作
-    logSuccessAction('UPDATE_USER', '/api/users/[userId]', {
+    logSuccessAction('USER_UPDATED', endpoint, {
       adminId: authCheck.user.id,
-      targetUserId: userId,
+      targetUserId: id,
       changes: updateData
     });
 
     return NextResponse.json({
       success: true,
-      data: formattedUser
+      data: formattedUser,
+      message: '使用者資料更新成功'
     });
 
   } catch (error) {
-    return handleApiError(error, '/api/users/[userId]');
+    return handleApiError(error, endpoint);
   }
+}
+
+export async function DELETE(request, { params }) {
+    const { id } = await params;
+    const endpoint = `/api/users/${id}`;
+
+    try {
+        const authCheck = await verifyUserAuth(request, {
+            requireAuth: true,
+            requireAdmin: true,
+            endpoint
+        });
+        if (!authCheck.success) return authCheck.error;
+
+        // 避免刪除自己
+        if (authCheck.user.id === id) {
+            return NextResponse.json({ error: '無法刪除目前的登入帳號' }, { status: 403 });
+        }
+
+        const { error } = await supabaseServer.auth.admin.deleteUser(id);
+
+        if (error) throw error;
+
+        logSuccessAction('USER_DELETED', endpoint, { adminId: authCheck.user.id, targetUserId: id });
+
+        return NextResponse.json({ success: true, message: '使用者已成功刪除' });
+
+    } catch (err) {
+        return handleApiError(err, endpoint);
+    }
 }

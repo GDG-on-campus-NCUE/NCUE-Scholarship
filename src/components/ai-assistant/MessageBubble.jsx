@@ -254,19 +254,16 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
 
                 {/* 主對話框 */}
                 {parsedContent ? (
-                    <div className={`relative px-5 py-3.5 shadow-sm text-[15px] leading-relaxed break-words
+                    <div className={`relative px-5 py-3.5 shadow-sm text-[15px] leading-relaxed break-words w-fit
                         ${isUser
-                            ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none selection:bg-indigo-800'
-                            : 'bg-white text-slate-800 border border-gray-200/60 rounded-2xl rounded-tl-none selection:bg-indigo-100'
+                            ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none selection:bg-indigo-800 ml-auto'
+                            : 'bg-white text-slate-800 border border-gray-200/60 rounded-2xl rounded-tl-none selection:bg-indigo-100 mr-auto'
                         }`}
                     >
                          {isClient && (
                             <>
-                                <div className={`prose prose-sm max-w-none 
-                                    ${isUser ? 'prose-invert text-white prose-p:leading-relaxed' : 'text-slate-700 prose-headings:text-slate-900 prose-strong:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-700'}
-                                    prose-p:my-1.5 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-                                `}>
-                                    <HtmlRenderer content={parsedContent} />
+                                <div className="max-w-none">
+                                    <HtmlRenderer content={parsedContent} isUser={isUser} />
                                 </div>
 
                                 {announcementIds.length > 0 && (

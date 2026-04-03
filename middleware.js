@@ -68,9 +68,10 @@ export async function middleware(request) {
 			request.nextUrl.pathname.startsWith('/manage') ||
 			request.nextUrl.pathname.startsWith('/management');
 
-		// 如果用戶已登入但訪問認證頁面，重定向到個人資料頁面
+		// 如果用戶已登入但訪問認證頁面，重定向到指定頁面或個人資料頁面
 		if (session && isAuthPage) {
-			return NextResponse.redirect(new URL('/profile', request.url));
+			const redirectTo = request.nextUrl.searchParams.get('redirect') || '/profile';
+			return NextResponse.redirect(new URL(redirectTo, request.url));
 		}
 
 		// 如果用戶未登入但訪問受保護頁面，重定向到登入頁面

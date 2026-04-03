@@ -8,15 +8,16 @@ export default function HomePageClient() {
     return (
         <div className="w-full bg-slate-50 font-sans min-h-screen">
             
-            <div className="relative w-full">
+            <div className="relative w-full overflow-hidden aspect-[4000/862]">
                 <Image
                     src="/banner.jpg"
                     alt="NCUE Banner"
-                    width={4000}
-                    height={862}
+                    width={1200}
+                    height={258}
                     priority
-                    className="w-full h-auto"
-                    onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/4000x862/e2e8f0/475569?text=Banner+Image'; }}
+                    sizes="100vw"
+                    className="w-full h-auto object-cover"
+                    onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/1200x258/e2e8f0/475569?text=Banner+Image'; }}
                 />
             </div>
 

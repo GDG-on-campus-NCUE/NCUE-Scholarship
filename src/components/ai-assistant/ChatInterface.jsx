@@ -72,7 +72,7 @@ const ChatInterface = () => {
     const scrollAreaRef = useRef(null);
     const messagesEndRef = useRef(null);
     
-    // ✅ 完全手動原生狀態管理
+    // 完全手動原生狀態管理
     const [sessionId, setSessionId] = useState(null);
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
@@ -82,7 +82,7 @@ const ChatInterface = () => {
         setInput(e.target.value);
     };
 
-    // ✅ 自製的串流發送邏輯，保證相容且絕對不會鎖死輸入框
+    // 自製的串流發送邏輯，保證相容且絕對不會鎖死輸入框
     const onChatSubmit = async (e) => {
         e?.preventDefault();
         const contentToSend = input.trim();

@@ -87,14 +87,6 @@ export default function ProfileCompletionModal() {
     return (
         <AnimatePresence>
             <div className="fixed inset-0 z-[2000] flex items-start md:items-center justify-center p-4 overflow-y-auto pt-6 md:pt-4">
-                <style>{`
-                    body.modal-open {
-                        overflow: hidden;
-                    }
-                    body.modal-open .header-fixed {
-                        display: none;
-                    }
-                `}</style>
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

@@ -5,12 +5,14 @@ import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
 import ScrollToTop from "@/components/ScrollToTop";
 import AndroidInstallPrompt from "@/components/AndroidInstallPrompt";
+import Head from 'next/head';
 
 const notoSans = Noto_Sans_TC({
 	subsets: ['latin'],
 	weight: ['400', '700'],
 	variable: '--font-noto-sans',
 	display: 'swap',
+    preload: true,
 })
 
 export const metadata = {
@@ -54,7 +56,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
 	return (
-		<html lang="zh-TW" className={notoSans.variable}>
+		<html lang="zh-TW" className={notoSans.variable} suppressHydrationWarning>
+            <head><link rel="preload" href="/banner.jpg" as="image" type="image/jpeg" imageSrcSet="/banner.jpg 1200w" /></head>
 			<body className={notoSans.className}>
 				<ClientProviders>
 					<div className="layout-container">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { User as UserIcon, Edit3, Save, LogOut, Loader2, AtSign, Fingerprint, Calendar, Clock, FileText, GraduationCap, AlertCircle, Trash2, AlertTriangle, X } from "lucide-react";
 import Toast from '@/components/ui/Toast';
+import { authFetch } from '@/lib/authFetch';
 
 // --- Helper function to render input fields ---
 const renderInputField = (label, name, value, placeholder, onChange, required = false, props = {}) => (
@@ -34,6 +35,10 @@ export default function ProfilePage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
+    // 登入紀錄狀態
+    const [loginHistory, setLoginHistory] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
 	const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 	const showToast = (message, type = 'success') => setToast({ show: true, message, type });
 
@@ -45,6 +50,21 @@ export default function ProfilePage() {
 		}
 	}, [isAuthenticated, loading, router]);
 
+    const fetchLoginHistory = async () => {
+        setIsLoadingHistory(true);
+        try {
+            const response = await authFetch('/api/users/login-log');
+            if (response.ok) {
+                const data = await response.json();
+                setLoginHistory(data.history || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch login history:", error);
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
 	useEffect(() => {
 		if (user?.user_metadata || user?.profile) {
 			setFormData({
@@ -55,8 +75,19 @@ export default function ProfilePage() {
             if (user?.needsProfileCompletion) {
                 setIsEditing(true);
             }
+            fetchLoginHistory();
 		}
 	}, [user]);
+
+    const formatDateTime = (isoString) => {
+        if (!isoString) return "未知";
+        const date = new Date(isoString);
+        return date.toLocaleString('zh-TW', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+        });
+    };
 
 	const handleProfileChange = (e) => {
 		let { name, value } = e.target;
@@ -65,6 +96,14 @@ export default function ProfilePage() {
 		}
 		setFormData(prev => ({ ...prev, [name]: value }));
 	};
+
+    const handleCancel = () => {
+        setFormData({
+            name: user?.profile?.username || user?.user_metadata?.name || "",
+            student_id: user?.profile?.student_id || user?.user_metadata?.student_id || "",
+        });
+        setIsEditing(false);
+    };
 
 	const handleProfileSubmit = async (e) => {
 		e.preventDefault();
@@ -228,8 +267,8 @@ export default function ProfilePage() {
                         )}
 					</aside>
 
-					<main className="lg:col-span-2 flex flex-col h-full mt-8 lg:mt-0">
-						<div className="bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col">
+					<main className="lg:col-span-2 flex flex-col mt-8 lg:mt-0 gap-8">
+						<div className="bg-white rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit flex flex-col">
 							<form onSubmit={handleProfileSubmit} className="flex flex-col h-full">
 								<div className="p-8">
 									<div>
@@ -253,7 +292,7 @@ export default function ProfilePage() {
 									{isEditing ? (
 										<div className="flex gap-2">
 											{!needsCompletion && (
-                                                <button type="button" onClick={() => setIsEditing(false)} className={`${ghostButtonClasses} border-gray-300 bg-transparent text-gray-700 hover:bg-gray-100`}>
+                                                <button type="button" onClick={handleCancel} className={`${ghostButtonClasses} border-gray-300 bg-transparent text-gray-700 hover:bg-gray-100`}>
                                                     取消
                                                 </button>
                                             )}
@@ -271,6 +310,68 @@ export default function ProfilePage() {
 								</div>
 							</form>
 						</div>
+
+                        {/* 登入紀錄區塊 */}
+                        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl h-fit">
+                            <div className="p-4 sm:p-6 border-b border-gray-50 flex items-center justify-between bg-white">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="p-1.5 sm:p-2 bg-indigo-50 rounded-lg">
+                                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-bold text-gray-900">最近登入紀錄</h3>
+                                </div>
+                                <button 
+                                    onClick={fetchLoginHistory} 
+                                    disabled={isLoadingHistory}
+                                    className="text-[10px] sm:text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-indigo-50/50 hover:bg-indigo-50 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {isLoadingHistory ? <Loader2 size={10} className="animate-spin" /> : null}
+                                    重新整理
+                                </button>
+                            </div>
+                            
+                            <div className="w-full overflow-x-auto custom-scrollbar">
+                                {loginHistory.length > 0 ? (
+                                    <table className="w-full text-sm text-left border-collapse min-w-full">
+                                        <thead className="bg-gray-50/50 text-gray-500 font-bold text-[9px] sm:text-[11px] uppercase tracking-wider">
+                                            <tr>
+                                                <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold whitespace-nowrap">登入時間 (UTC+8)</th>
+                                                <th className="px-4 sm:px-6 py-2 sm:py-3 font-semibold text-right whitespace-nowrap">來源 IP 地址</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {loginHistory.map((record, index) => (
+                                                <tr key={index} className="hover:bg-indigo-50/20 transition-colors group">
+                                                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-700 font-medium whitespace-nowrap group-hover:text-indigo-700 transition-colors text-xs sm:text-sm">
+                                                        {formatDateTime(record.login_at)}
+                                                    </td>
+                                                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-right font-mono text-gray-500 text-[10px] sm:text-xs whitespace-nowrap">
+                                                        {record.ip_address}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <div className="p-8 sm:p-12 text-center min-h-[250px] flex flex-col items-center justify-center">
+                                        {isLoadingHistory ? (
+                                            <div className="flex flex-col items-center gap-2 sm:gap-3">
+                                                <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-300 animate-spin" />
+                                                <p className="text-xs sm:text-sm text-gray-400 font-medium">載入登入紀錄中...</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1 sm:gap-2 text-gray-300">
+                                                <Fingerprint className="h-12 w-12 sm:h-16 sm:w-16 mb-2" />
+                                                <p className="text-xs sm:text-sm font-medium">尚無登入紀錄</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-3 sm:p-4 bg-gray-50/30 border-t border-gray-50 text-center">
+                                <p className="text-[9px] sm:text-[11px] text-slate-400">系統僅顯示最近 10 筆登入活動。若發現異常 IP 登入，請立即聯繫系統管理員。</p>
+                            </div>
+                        </div>
 					</main>
 				</div>
 			</div>

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 import { storage } from '@/utils/helpers';
+import { authFetch } from '@/lib/authFetch';
 
 function LoginContent() {
 	const router = useRouter();
@@ -62,11 +63,12 @@ function LoginContent() {
 	}, []);
 
 	useEffect(() => {
-		if (!loading && isAuthenticated) {
+		if (isAuthenticated) {
 			const redirectTo = searchParams.get('redirect') || '/profile';
 			router.push(redirectTo);
 		}
-	}, [isAuthenticated, loading, router, searchParams]);
+	}, [isAuthenticated, router, searchParams]);
+
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
@@ -179,7 +181,7 @@ function LoginContent() {
 						<div>
 							<h2 className="text-3xl font-bold leading-9 tracking-tight text-gray-900">歡迎回來</h2>
 							<p className="mt-2 text-sm leading-6 text-gray-500 text-pretty">
-								請使用您的 Google 帳號登入系統。
+								請使用您的 Google 帳號登入或註冊。
 							</p>
 						</div>
 
@@ -207,7 +209,7 @@ function LoginContent() {
 										fill="#EA4335"
 									/>
 								</svg>
-								<span className="text-base font-semibold leading-6">使用 Google 帳號登入</span>
+								<span className="text-base font-semibold leading-6">使用 Google 帳號登入/註冊</span>
 							</button>
 
 							<div className="mt-10 flex justify-center">
@@ -215,7 +217,7 @@ function LoginContent() {
                                     onClick={() => setShowOldLogin(!showOldLogin)}
                                     className="text-sm text-gray-500 hover:text-gray-700 font-medium flex items-center gap-1 transition-colors"
                                 >
-                                    使用舊有帳號密碼登入
+                                    使用舊版帳密登入
                                     <svg className={`w-4 h-4 transition-transform duration-300 ${showOldLogin ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </button>
 							</div>

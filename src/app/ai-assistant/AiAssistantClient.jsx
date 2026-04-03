@@ -15,6 +15,21 @@ export default function AiAssistantPage() {
         }
     }, [isAuthenticated, loading, router])
 
+    // 在此頁面隱藏全域 Footer，並鎖定 body 捲動
+    useEffect(() => {
+        const footer = document.querySelector('footer');
+        if (footer) footer.style.display = 'none';
+          
+        document.body.style.overscrollBehavior = 'none';
+        document.documentElement.style.overscrollBehavior = 'none';
+
+        return () => {
+            if (footer) footer.style.display = '';
+            document.body.style.overscrollBehavior = '';
+            document.documentElement.style.overscrollBehavior = '';
+        };
+    }, []);
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -32,8 +47,11 @@ export default function AiAssistantPage() {
 
     return (
         <div 
-            className="flex flex-col overflow-hidden w-full relative" 
-            style={{ height: 'calc(100dvh - var(--header-height, 60px))' }} 
+            className="flex flex-col overflow-hidden w-full relative bg-slate-50/50" 
+            style={{ 
+                height: 'calc(100dvh - var(--header-height, 72px))',
+                overscrollBehavior: 'none'
+            }} 
         >
             <ChatInterface />
         </div>

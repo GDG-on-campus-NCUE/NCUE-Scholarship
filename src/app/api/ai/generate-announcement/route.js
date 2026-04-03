@@ -101,9 +101,11 @@ export async function POST(request) {
 # 獎助學金代碼定義 (Category Definitions)
 - **A**: 各縣市政府獎助學金
 - **B**: 縣市政府以外之各級公家機關及公營單位獎助學金
-- **C**: 宗親會及民間各項指定身分獎助學金 (指定姓名、籍貫、學系等)
+- **C**: 宗教及民間各項指定身分獎助學金
 - **D**: 非公家機關或其他無法歸類的獎助學金
-- **E**: 獎學金得獎名單公告
+- **E**: 本校獲配推薦名額獎助學金
+- **F**: 校外獎助學金得獎公告
+- **G**: 校內獎助學金
 
 # 最終輸出規則
 - **你的回覆必須是、也只能是一個 JSON 物件**，不含任何 Markdown 標記。
@@ -129,6 +131,8 @@ export async function POST(request) {
 ${scrapedContents}
 ${sourceUrls}
 ${files && files.length > 0 ? '\n# 檔案資料來源\n' : ''}
+
+${promptText ? `# 特定優化指令\n${promptText}\n` : ''}
 `;
 
     parts.push({ text: finalPrompt });

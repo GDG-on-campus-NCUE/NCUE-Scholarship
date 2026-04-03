@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from '@/components/ui/Toast';
 import { authFetch } from '@/lib/authFetch';
-import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail, ChevronDown } from 'lucide-react';
+import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail, ChevronDown, Trash2 } from 'lucide-react';
 import SendNotificationModal from './SendNotificationModal';
 
 const NotifyIcon = () => (
@@ -29,6 +29,7 @@ export default function UsersTab() {
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(''); // 新增 debounce 狀態
+    const [roleFilter, setRoleFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -39,7 +40,8 @@ export default function UsersTab() {
     const [notificationUser, setNotificationUser] = useState(null); // 要寄送通知的目標使用者
     const [bulkTargetRole, setBulkTargetRole] = useState('all'); // 群發目標角色: 'all', 'user', 'admin'
     const [isSending, setIsSending] = useState(false); // 控制 Modal 中的寄送中狀態
-    
+    const [isDeletingId, setIsDeletingId] = useState(null); // 正在刪除的使用者 ID
+
     // --- 下拉選單狀態 (行動版/點擊) ---
     const [isBulkDropdownOpen, setIsBulkDropdownOpen] = useState(false);
 
@@ -66,7 +68,8 @@ export default function UsersTab() {
             const params = new URLSearchParams({
                 page: currentPage,
                 limit: rowsPerPage,
-                search: debouncedSearchTerm // 使用 debouncedSearchTerm
+                search: debouncedSearchTerm, // 使用 debouncedSearchTerm
+                role: roleFilter
             });
             const response = await authFetch(`/api/users?${params.toString()}`);
             const data = await response.json();
@@ -86,9 +89,15 @@ export default function UsersTab() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, rowsPerPage, debouncedSearchTerm]);
+    }, [currentPage, rowsPerPage, debouncedSearchTerm, roleFilter]);
 
     useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+    // Role filter change handler
+    const handleRoleFilterChange = (newRole) => {
+        setRoleFilter(newRole);
+        setCurrentPage(1);
+    };
 
     // 點擊外部關閉 dropdown
     useEffect(() => {
@@ -128,6 +137,33 @@ export default function UsersTab() {
         }
     };
 
+    const handleDeleteUser = async (userToDelete) => {
+        if (currentUser && userToDelete.id === currentUser.id) {
+            showToast('無法刪除目前的登入帳號', 'error');
+            return;
+        }
+
+        if (!confirm(`警告：確定要永久刪除使用者「${userToDelete.name}」嗎？此動作將移除該使用者的所有資料且無法恢復。`)) return;
+
+        setIsDeletingId(userToDelete.id);
+        try {
+            const response = await authFetch(`/api/users/${userToDelete.id}`, {
+                method: 'DELETE',
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showToast('使用者已成功刪除', 'success');
+                fetchUsers();
+            } else {
+                showToast(data.error || '刪除失敗', 'error');
+            }
+        } catch (error) {
+            showToast('刪除時發生錯誤', 'error');
+        } finally {
+            setIsDeletingId(null);
+        }
+    };
+
     const openNotificationModal = (user, role = 'all') => {
         setNotificationUser(user);
         setBulkTargetRole(role);
@@ -145,7 +181,7 @@ export default function UsersTab() {
         try {
             const isBulkSend = !notificationUser;
             const apiEndpoint = isBulkSend ? '/api/send-bulk-email' : '/api/send-custom-email';
-            
+
             let apiPayload;
             if (isBulkSend) {
                 // Use new server-side role targeting
@@ -212,6 +248,7 @@ export default function UsersTab() {
     const buttonStyles = {
         demote: `${ghostButtonBase} border-indigo-200 bg-transparent text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/20 whitespace-nowrap`,
         promote: `${ghostButtonBase} border-rose-200 bg-transparent text-rose-600 hover:bg-rose-100 hover:text-rose-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-rose-500/20 whitespace-nowrap`,
+        delete: `${ghostButtonBase} p-2 border-red-200 bg-transparent text-red-600 hover:bg-red-100 hover:text-red-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20`,
         notify: `${ghostButtonBase} p-2 border-sky-200 bg-transparent text-sky-600 hover:bg-sky-100 hover:text-sky-700 hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-sky-500/20`,
         notifyAll: `${ghostButtonBase} py-3 px-4 rounded-lg bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800 hover:shadow-green-500/20 whitespace-nowrap relative`,
     };
@@ -226,7 +263,7 @@ export default function UsersTab() {
                             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                                 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30" />
                     </div>
-                    
+
                     {/* --- 群發信件 Dropdown --- */}
                     <div className="relative group bulk-email-dropdown">
                         <button 
@@ -241,7 +278,7 @@ export default function UsersTab() {
                             <span className="hidden sm:inline whitespace-nowrap">群發信件</span>
                             <ChevronDown size={14} className={`transition-transform duration-200 ${isBulkDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
-                        
+
                         {/* Dropdown Menu */}
                         <div className={`absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 transition-all duration-200 origin-top-right transform
                             ${isBulkDropdownOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible group-hover:opacity-100 group-hover:scale-100 group-hover:visible'}
@@ -262,10 +299,36 @@ export default function UsersTab() {
                     </div>
 
                 </div>
-                <div className="lg:col-span-2 grid grid-cols-3 gap-4 text-center bg-white p-3 rounded-xl border border-gray-200/80">
-                    <div><h3 className="text-sm font-medium text-gray-500 flex items-center justify-center gap-1.5"><Users size={14} />總用戶數</h3><p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p></div>
-                    <div className="border-l border-gray-200"><h3 className="text-sm font-medium text-gray-500 flex items-center justify-center gap-1.5"><Shield size={14} />管理員</h3><p className="text-2xl font-bold text-blue-600 mt-1">{stats.admins}</p></div>
-                    <div className="border-l border-gray-200"><h3 className="text-sm font-medium text-gray-500 flex items-center justify-center gap-1.5"><UserCheck size={14} />使用者</h3><p className="text-2xl font-bold text-gray-600 mt-1">{stats.users}</p></div>
+                <div className="lg:col-span-2 grid grid-cols-3 bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden h-[76px]">
+                    <button 
+                        onClick={() => handleRoleFilterChange('')}
+                        className={`flex flex-col items-center justify-center transition-all duration-300 ${roleFilter === '' ? 'bg-indigo-50 ring-1 ring-inset ring-indigo-200/50' : 'hover:bg-gray-50'}`}
+                    >
+                        <h3 className={`text-xs font-medium flex items-center gap-1.5 ${roleFilter === '' ? 'text-indigo-600' : 'text-gray-500'}`}>
+                            <Users size={14} />總用戶數
+                        </h3>
+                        <p className={`text-xl font-bold mt-0.5 ${roleFilter === '' ? 'text-indigo-700' : 'text-gray-900'}`}>{stats.total}</p>
+                    </button>
+                    
+                    <button 
+                        onClick={() => handleRoleFilterChange('admin')}
+                        className={`flex flex-col items-center justify-center border-l border-gray-100 transition-all duration-300 ${roleFilter === 'admin' ? 'bg-blue-50 ring-1 ring-inset ring-blue-200/50' : 'hover:bg-gray-50'}`}
+                    >
+                        <h3 className={`text-xs font-medium flex items-center gap-1.5 ${roleFilter === 'admin' ? 'text-blue-600' : 'text-gray-500'}`}>
+                            <Shield size={14} />管理員
+                        </h3>
+                        <p className={`text-xl font-bold mt-0.5 ${roleFilter === 'admin' ? 'text-blue-700' : 'text-blue-600'}`}>{stats.admins}</p>
+                    </button>
+                    
+                    <button 
+                        onClick={() => handleRoleFilterChange('user')}
+                        className={`flex flex-col items-center justify-center border-l border-gray-100 transition-all duration-300 ${roleFilter === 'user' ? 'bg-emerald-50 ring-1 ring-inset ring-emerald-200/50' : 'hover:bg-gray-50'}`}
+                    >
+                        <h3 className={`text-xs font-medium flex items-center gap-1.5 ${roleFilter === 'user' ? 'text-emerald-600' : 'text-gray-500'}`}>
+                            <UserCheck size={14} />使用者
+                        </h3>
+                        <p className={`text-xl font-bold mt-0.5 ${roleFilter === 'user' ? 'text-emerald-700' : 'text-gray-600'}`}>{stats.users}</p>
+                    </button>
                 </div>
             </div>
 
@@ -287,9 +350,12 @@ export default function UsersTab() {
                                         <td className="p-4 px-6 text-gray-600" title={user.emailFull}>{user.email}</td>
                                         <td className="p-4 px-6"><span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{user.role === 'admin' ? '管理員' : '使用者'}</span></td>
                                         <td className="p-4 px-6">
-                                            <div className="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                            <div className="flex items-center justify-center gap-2 transition-all duration-300">
                                                 <button onClick={() => handleRoleChange(user)} className={user.role === 'admin' ? buttonStyles.demote : buttonStyles.promote} disabled={currentUser?.id === user.id}>{user.role === 'admin' ? '設為使用者' : '設為管理員'}</button>
                                                 <button onClick={() => openNotificationModal(user)} className={buttonStyles.notify} title="寄送通知"><NotifyIcon /></button>
+                                                <button onClick={() => handleDeleteUser(user)} className={buttonStyles.delete} title="刪除帳號" disabled={currentUser?.id === user.id || isDeletingId === user.id}>
+                                                    {isDeletingId === user.id ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 size={16} />}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -298,24 +364,57 @@ export default function UsersTab() {
                         </tbody>
                     </table>
                 </div>
-                <div className="md:hidden divide-y divide-gray-100">
+                <div className="md:hidden divide-y divide-gray-100/50">
                     {loading ? (<div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>) : users.length === 0 ? (<div className="text-center p-8 text-gray-500">找不到符合條件的使用者。</div>) : (
                         users.map(user => (
-                            <div key={user.id} className="p-4 space-y-3">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-base text-gray-900 flex-1 pr-4 flex items-center">
-                                        {user.isGoogle && <span className="mr-1.5"><GoogleIcon /></span>}
-                                        {user.name || '-'}
-                                    </h3>
-                                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{user.role === 'admin' ? '管理員' : '使用者'}</span>
+                            <div key={user.id} className="p-5 space-y-4 hover:bg-gray-50 transition-colors">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-inner ${user.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                                            {user.name ? user.name[0] : '?'}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 flex items-center gap-1.5">
+                                                {user.isGoogle && <GoogleIcon />}
+                                                {user.name || '未命名'}
+                                            </h3>
+                                            <p className="text-[11px] font-mono text-gray-400 tracking-tighter uppercase">{user.studentId || 'NO ID'}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${user.role === 'admin' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
+                                        {user.role === 'admin' ? '管理員' : '使用者'}
+                                    </span>
                                 </div>
-                                <div className="text-sm space-y-2 text-gray-600 border-t pt-3">
-                                    <p><strong className="font-semibold text-gray-800">學號: </strong>{user.studentId || '-'}</p>
-                                    <p><strong className="font-semibold text-gray-800">信箱: </strong>{user.email}</p>
+                                
+                                <div className="bg-gray-50/50 rounded-lg p-3 space-y-1.5">
+                                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                                        <Mail size={12} className="text-gray-400" />
+                                        <span className="truncate" title={user.emailFull}>{user.email}</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center justify-end border-t pt-3 gap-2">
-                                    <button onClick={() => handleRoleChange(user)} className={user.role === 'admin' ? buttonStyles.demote : buttonStyles.promote} disabled={currentUser?.id === user.id}>{user.role === 'admin' ? '設為使用者' : '設為管理員'}</button>
-                                    <button onClick={() => openNotificationModal(user)} className={buttonStyles.notify} title="寄送通知"><NotifyIcon /></button>
+
+                                <div className="flex items-center justify-between pt-1">
+                                    <button 
+                                        onClick={() => handleRoleChange(user)} 
+                                        className={`text-xs font-bold px-4 py-2 rounded-lg transition-all ${user.role === 'admin' ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
+                                        disabled={currentUser?.id === user.id}
+                                    >
+                                        {user.role === 'admin' ? '設為使用者' : '設為管理員'}
+                                    </button>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => openNotificationModal(user)} className="p-2.5 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100 transition-colors" title="寄送通知">
+                                            <NotifyIcon />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteUser(user)} 
+                                            className="p-2.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" 
+                                            title="刪除帳號" 
+                                            disabled={currentUser?.id === user.id || isDeletingId === user.id}
+                                        >
+                                            {isDeletingId === user.id ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 size={18} />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))
