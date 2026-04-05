@@ -304,8 +304,34 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
 
     const handleSave = async () => {
         try {
-            await performSave();
-            showToast("公告發布成功", "success"); if (refreshAnnouncements) refreshAnnouncements(); onClose();
+            const ann = await performSave();
+            showToast("公告發布成功", "success"); 
+            
+            // --- 自動發送推播通知 (修正：加上 await 並處理結果) ---
+            try {
+                const notifyRes = await authFetch('/api/admin/notifications/broadcast', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: `【新公告】${ann.title}`,
+                        body: '點擊查看最新獎助學金資訊',
+                        url: `${window.location.origin}/?announcement_id=${ann.id}`, 
+                        announcementId: ann.id
+                    })
+                });
+                
+                const notifyData = await notifyRes.json();
+                if (notifyRes.ok) {
+                    console.log('Push broadcast successful:', notifyData);
+                } else {
+                    console.error('Push broadcast failed:', notifyData);
+                }
+            } catch (notifyErr) {
+                console.error('Failed to send broadcast:', notifyErr);
+            }
+            // -----------------------
+
+            if (refreshAnnouncements) refreshAnnouncements(); 
+            onClose();
         } catch (error) {
             showToast(error.message, "error");
         }

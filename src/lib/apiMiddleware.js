@@ -80,7 +80,7 @@ export async function verifyUserAuth(request, options = {}) {
 		}
 
 		// 4. 檢查管理員權限
-		if (requireAdmin && userProfile.role !== 'admin') {
+		if (requireAdmin && userProfile.role !== 'admin' && userProfile.role !== 'super_admin') {
 			logSecurityEvent('INSUFFICIENT_PERMISSIONS', {
 				ip,
 				endpoint,

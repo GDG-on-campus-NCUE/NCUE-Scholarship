@@ -3,9 +3,10 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "tw.org.ncuesa.scholarship", 
+      "package_name": "tw.org.ncuesa.scholarship",
       "sha256_cert_fingerprints": [
-        "YOUR_SHA256_FINGERPRINT_HERE"
+        "C1:0D:C1:97:3E:F3:C2:AE:9D:12:D2:2D:07:E9:E2:66:EA:75:AD:C1:C4:CE:60:9E:8E:32:BF:32:B7:AE:D8:EF",
+        "5C:AF:03:B7:38:78:7A:FA:74:DE:01:7B:9B:63:46:6C:1D:D6:11:09:01:B6:79:F2:3A:B9:10:AF:BB:B3:42:7F"
       ]
     }
   }

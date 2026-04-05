@@ -17,6 +17,7 @@ const notoSans = Noto_Sans_TC({
 
 export const metadata = {
 	metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://scholarship.ncuesa.org.tw'),
+	manifest: '/manifest.webmanifest',
 	title: {
 		template: '%s | 彰師生輔組獎助學金資訊平台',
 		default: '彰師生輔組獎助學金資訊平台',
@@ -28,7 +29,7 @@ export const metadata = {
 			{ url: '/logo.png', sizes: '192x192', type: 'image/png' }
 		],
 		shortcut: '/favicon.ico',
-		apple: { url: '/logo.png', sizes: '180x180', type: 'image/png' }
+		apple: { url: '/maskable_icon.png', sizes: '180x180', type: 'image/png' }
 	},
 	openGraph: {
 		type: 'website',
@@ -57,7 +58,6 @@ export const metadata = {
 export default function RootLayout({ children }) {
 	return (
 		<html lang="zh-TW" className={notoSans.variable} suppressHydrationWarning>
-            <head><link rel="preload" href="/banner.jpg" as="image" type="image/jpeg" imageSrcSet="/banner.jpg 1200w" /></head>
 			<body className={notoSans.className}>
 				<ClientProviders>
 					<div className="layout-container">
