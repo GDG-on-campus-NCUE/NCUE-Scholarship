@@ -151,7 +151,8 @@ export default function EmailPreview({ announcement }) {
                 .email-prose-preview h1 { font-size: 22px; }
                 .email-prose-preview h2 { font-size: 20px; }
                 .email-prose-preview h3 { font-size: 18px; }
-                .email-prose-preview ul, .email-prose-preview ol { padding-left: 24px; margin-bottom: 16px; }
+                .email-prose-preview ul { padding-left: 24px; margin-bottom: 16px; list-style-type: disc; }
+                .email-prose-preview ol { padding-left: 24px; margin-bottom: 16px; list-style-type: decimal; }
                 .email-prose-preview li { margin-bottom: 8px; }
                 .email-prose-preview table { width: 100% !important; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; border: 1px solid #dee2e6; }
                 .email-prose-preview th, .email-prose-preview td { border: 1px solid #dee2e6; padding: 10px 12px; text-align: left; }

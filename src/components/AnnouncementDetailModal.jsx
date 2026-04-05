@@ -206,6 +206,37 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                             .rich-text-content {
                                 overflow-x: hidden; /* Prevent horizontal scroll on container */
                             }
+                            .rich-text-content p {
+                                margin-bottom: 1rem;
+                            }
+                            .rich-text-content p:last-child {
+                                margin-bottom: 0;
+                            }
+                            .rich-text-content h1, .rich-text-content h2, .rich-text-content h3 {
+                                font-weight: 700;
+                                margin-top: 1.5rem;
+                                margin-bottom: 0.75rem;
+                                color: #1f2937;
+                            }
+                            .rich-text-content h1 { font-size: 1.25rem; }
+                            .rich-text-content h2 { font-size: 1.125rem; }
+                            .rich-text-content h3 { font-size: 1rem; }
+                            .rich-text-content ul {
+                                list-style-type: disc;
+                                padding-left: 1.5rem;
+                                margin-top: 0.5rem;
+                                margin-bottom: 1rem;
+                            }
+                            .rich-text-content ol {
+                                list-style-type: decimal;
+                                padding-left: 1.5rem;
+                                margin-top: 0.5rem;
+                                margin-bottom: 1rem;
+                            }
+                            .rich-text-content li {
+                                margin-bottom: 0.25rem;
+                                display: list-item;
+                            }
                             /* Scroll wrapper for tables */
                             .table-scroll-wrapper {
                                 width: 100%;
@@ -220,8 +251,14 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                 border-collapse: collapse;
                                 margin: 0; /* Remove margin as wrapper handles it */
                             }
+                            .table-scroll-wrapper th {
+                                background-color: #f9fafb;
+                                font-weight: 600;
+                                text-align: left;
+                            }
                             .table-scroll-wrapper th, 
                             .table-scroll-wrapper td {
+                                border: 1px solid #e5e7eb;
                                 padding: 0.75rem 1rem;
                                 white-space: normal; /* Allow text wrapping */
                                 min-width: 120px; /* Ensure columns don't collapse too much on mobile */
@@ -287,7 +324,7 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
                                             <p className="font-semibold text-gray-500">適用對象</p>
                                             <div
                                                 className="text-gray-800 rich-text-content"
-                                                dangerouslySetInnerHTML={{ __html: fullAnnouncement.target_audience || '未指定' }}
+                                                dangerouslySetInnerHTML={{ __html: targetAudienceHtml }}
                                             />
                                         </div>
                                     </div>
