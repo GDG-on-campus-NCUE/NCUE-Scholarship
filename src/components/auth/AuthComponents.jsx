@@ -145,7 +145,7 @@ export function StatusPage({
   children 
 }) {
   const iconColors = {
-    success: 'text-green-600',
+    success: 'text-green-700',
     error: 'text-red-600',
     loading: 'text-blue-600'
   };

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Toast from '@/components/ui/Toast';
 import { authFetch } from '@/lib/authFetch';
-import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail, ChevronDown, Trash2 } from 'lucide-react';
+import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Loader2, Mail, ChevronDown, Trash2, ChevronsUpDown } from 'lucide-react';
 import SendNotificationModal from './SendNotificationModal';
 
 const NotifyIcon = () => (
@@ -260,6 +260,7 @@ export default function UsersTab() {
                     <div className="relative flex-grow">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input type="text" placeholder="搜尋姓名、學號、信箱..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                            aria-label="搜尋使用者"
                             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                                 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30" />
                     </div>
@@ -423,18 +424,32 @@ export default function UsersTab() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-gray-600">共 {totalCount} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
+                <div className="text-sm text-gray-600 font-medium">共 {totalCount} 位使用者，第 {currentPage} / {totalPages || 1} 頁</div>
                 <div className="flex items-center gap-2">
-                    <div className="relative"><select value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                        className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm
-                            transition-all duration-300
-                            focus:outline-none focus:border-indigo-500
-                            focus:ring-4 focus:ring-indigo-500/30">
-                        <option value={10}>10 筆 / 頁</option>
-                        <option value={25}>25 筆 / 頁</option>
-                        <option value={50}>50 筆 / 頁</option>
-                    </select><div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400"><svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></div></div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm"><button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button><button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button><button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button><button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button></nav>
+                    <div className="relative">
+                        <select
+                            value={rowsPerPage}
+                            onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                            aria-label="每頁顯示人數"
+                            className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm
+                                transition-all duration-300
+                                focus:outline-none focus:border-indigo-500
+                                focus:ring-4 focus:ring-indigo-500/30"
+                        >
+                            {[10, 25, 50].map(v => <option key={v} value={v}>{v} 位 / 頁</option>)}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="分頁導覽">
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
+                    </nav>
                 </div>
             </div>
 

@@ -429,9 +429,16 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
                             </div>
 
                             <div className="px-5 py-4 bg-gray-50/80 backdrop-blur-md border-t border-gray-100 flex items-center justify-between gap-4 z-10 flex-shrink-0">
-                                <div className="overflow-hidden">{currentStep === 2 && (<button type="button" onClick={() => setCurrentStep(0)} disabled={isLoading} className={buttonStyles.secondary}>上一步</button>)}</div>
+                                <div className="overflow-hidden">
+                                    {currentStep === 2 && (
+                                        <button type="button" onClick={() => setCurrentStep(0)} disabled={isLoading} className={buttonStyles.secondary}>上一步</button>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                    <button onClick={onClose} className="sm:hidden px-5 h-[42px] text-sm font-bold text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">取消</button>
+                                    {/* Only show Cancel button on mobile when NOT in Step 2 to avoid overflow with "Back" button */}
+                                    {currentStep !== 2 && (
+                                        <button onClick={onClose} className="sm:hidden px-5 h-[42px] text-sm font-bold text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">取消</button>
+                                    )}
                                     {currentStep === 0 && (<button type="button" onClick={handleNextStep} disabled={isLoading || (inputMode === 'ai' && selectedFiles.length === 0 && urls.length === 0)} className={buttonStyles.primary + " px-8"}>{inputMode === 'ai' ? '開始 AI 智慧分析' : '下一步：填寫內容'}</button>)}
                                     {currentStep === 2 && (
                                         <>

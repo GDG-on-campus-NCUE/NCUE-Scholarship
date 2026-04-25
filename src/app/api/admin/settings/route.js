@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
 import { verifyUserAuth, handleApiError } from '@/lib/apiMiddleware';
 
-const ALLOWED_KEYS = ['GEMINI_API_KEY', 'SERP_API_KEY', 'NEXT_PUBLIC_TINYMCE_API_KEY'];
+const ALLOWED_KEYS = ['GEMINI_API_KEY', 'SERP_API_KEY', 'NEXT_PUBLIC_TINYMCE_API_KEY', 'GCP_SERVICE_ACCOUNT_JSON', 'AI_ASSISTANT_ENABLED'];
 
-function maskValue(value) {
+function maskValue(key, value) {
   if (!value) return '';
+  // Don't mask toggle switches or non-sensitive status keys
+  if (key === 'AI_ASSISTANT_ENABLED') return value;
+  
   if (value.length <= 8) return '******';
   return `${value.substring(0, 3)}******${value.substring(value.length - 4)}`;
 }
@@ -31,13 +34,11 @@ export async function GET(request) {
 
         if (error) {
             console.error('Error fetching system_settings:', error);
-            // Fallback to empty array to allow UI to render (e.g. with Env vars)
         } else {
             safeDbSettings = dbSettings || [];
         }
     } catch (dbError) {
         console.error('Exception fetching system_settings:', dbError);
-        // Continue with empty DB settings
     }
 
     const result = ALLOWED_KEYS.map(key => {
@@ -46,7 +47,7 @@ export async function GET(request) {
       if (dbItem && dbItem.value) {
         return {
           key,
-          value: maskValue(dbItem.value),
+          value: maskValue(key, dbItem.value),
           isSet: true,
           source: 'database',
           updatedAt: dbItem.updated_at
@@ -54,7 +55,6 @@ export async function GET(request) {
       }
 
       // Check Env
-      // Handle legacy GEMINI key mapping for check
       let envValue = process.env[key];
       if (key === 'GEMINI_API_KEY' && !envValue) {
         envValue = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -63,7 +63,7 @@ export async function GET(request) {
       if (envValue) {
         return {
           key,
-          value: maskValue(envValue),
+          value: maskValue(key, envValue),
           isSet: true,
           source: 'environment',
           updatedAt: null

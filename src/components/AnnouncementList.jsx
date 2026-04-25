@@ -225,14 +225,14 @@ function AnnouncementListContent() {
                 <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Award size={22} className="text-indigo-500" />獎助學金分類代碼定義
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm sm:text-base text-slate-600">
-                    <p><strong className="font-semibold text-red-600">A：</strong>各縣市政府獎助學金</p>
-                    <p><strong className="font-semibold text-orange-500">B：</strong>縣市政府以外之各級公家機關及公營單位獎助學金</p>
-                    <p><strong className="font-semibold text-yellow-500">C：</strong>宗教及民間各項指定身分獎助學金</p>
-                    <p><strong className="font-semibold text-green-600">D：</strong>非公家機關或其他無法歸類的獎助學金</p>
-                    <p><strong className="font-semibold text-blue-600">E：</strong>本校獲配推薦名額獎助學金</p>
-                    <p><strong className="font-semibold text-indigo-600">F：</strong>校外獎助學金得獎公告</p>
-                    <p><strong className="font-semibold text-purple-600">G：</strong>校內獎助學金</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm sm:text-base text-slate-700">
+                    <p><strong className="font-semibold text-red-700">A：</strong>各縣市政府獎助學金</p>
+                    <p><strong className="font-semibold text-orange-700">B：</strong>縣市政府以外之各級公家機關及公營單位獎助學金</p>
+                    <p><strong className="font-semibold text-amber-700">C：</strong>宗教及民間各項指定身分獎助學金</p>
+                    <p><strong className="font-semibold text-green-700">D：</strong>非公家機關或其他無法歸類的獎助學金</p>
+                    <p><strong className="font-semibold text-blue-700">E：</strong>本校獲配推薦名額獎助學金</p>
+                    <p><strong className="font-semibold text-indigo-700">F：</strong>校外獎助學金得獎公告</p>
+                    <p><strong className="font-semibold text-purple-700">G：</strong>校內獎助學金</p>
                 </div>
             </div>
 
@@ -240,6 +240,7 @@ function AnnouncementListContent() {
                 <div className="relative w-full md:w-auto md:flex-1 md:max-w-md">
                     <Search className="h-5 w-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input type="text" placeholder="搜尋公告標題、摘要、適用對象..." value={search} onChange={e => setSearch(e.target.value)}
+                        aria-label="搜尋公告"
                         className="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                             focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
                     />
@@ -251,6 +252,7 @@ function AnnouncementListContent() {
                         <select
                             value={categoryFilter}
                             onChange={(e) => handleCategoryChange(e.target.value)}
+                            aria-label="依分類篩選"
                             className="appearance-none w-full bg-slate-100 border border-transparent rounded-lg py-2 pl-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/30"
                         >
                             <option value="all">全部分類</option>

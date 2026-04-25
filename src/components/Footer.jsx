@@ -111,8 +111,8 @@ export default function Footer() {
                                 
                                 <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-8 pt-2">
                                     <div className="text-center sm:text-left">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-500 mb-1">Especially thanks to</p>
-                                        <p className="text-sm text-gray-400 font-medium flex items-center justify-center sm:justify-start gap-1">
+                                        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 mb-1">Especially thanks to</p>
+                                        <p className="text-sm text-gray-300 font-medium flex items-center justify-center sm:justify-start gap-1">
                                             <Link 
                                                 href="https://mingchen.dev" 
                                                 target="_blank" 
@@ -121,11 +121,11 @@ export default function Footer() {
                                             >
                                                 陳泰銘
                                             </Link>
-                                            <span className="text-gray-700">|</span> 
+                                            <span className="text-gray-600">|</span> 
                                             <span>楊敦傑</span>
                                         </p>
                                     </div>
-                                    <Link href="https://forms.gle/GmPVHsdV7mLeGyhx7" className="group flex items-center justify-center sm:justify-start gap-2 text-gray-400 hover:text-white transition-colors duration-300" target="_blank" rel="noopener noreferrer">
+                                    <Link href="https://forms.gle/GmPVHsdV7mLeGyhx7" className="group flex items-center justify-center sm:justify-start gap-2 text-gray-300 hover:text-white transition-colors duration-300" target="_blank" rel="noopener noreferrer">
                                         <MessageSquare className="w-4 h-4" />
                                         <span className="text-xs font-semibold footer-link-underline">平台問題回報</span>
                                     </Link>

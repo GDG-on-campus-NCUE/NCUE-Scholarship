@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "@fontsource/noto-sans-tc": "^5.2.6",
+    "@google-cloud/bigquery": "^8.1.1",
+    "@google-cloud/monitoring": "^5.3.1",
     "@google/genai": "^1.11.0",
     "@google/generative-ai": "^0.24.1",
     "@react-pdf/renderer": "^4.3.0",
@@ -28,6 +30,8 @@
     "firebase": "^12.11.0",
     "firebase-admin": "^13.7.0",
     "framer-motion": "^12.23.12",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
     "lucide-react": "^0.534.0",
     "mime": "^4.0.7",
     "mime-types": "^3.0.1",

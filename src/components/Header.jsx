@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Download, Smartphone, Clock } from 'lucide-react';
+import { Download, Smartphone, Clock, RefreshCw, AlertTriangle, X } from 'lucide-react';
 import { useState, forwardRef, useEffect, useRef, createContext } from "react";
 import { usePathname } from 'next/navigation';
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@/app/assets/logo.png";
 import IconButton from "@/components/ui/IconButton";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const HeaderContext = createContext({ isHeaderVisible: true });
 
@@ -58,7 +59,7 @@ const Header = forwardRef((props, ref) => {
 
 	const isHeaderVisible = isVisible;
 
-	const { user, loading, signOut, isAuthenticated, isAdmin, timeLeft } = useAuth();
+	const { user, loading, signOut, isAuthenticated, isAdmin, timeLeft, canExtend, extendSession, resetIdleTimer } = useAuth();
 	const [userIp, setUserIp] = useState("");
 	const pathname = usePathname();
 
@@ -171,6 +172,46 @@ const Header = forwardRef((props, ref) => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // 延長連線時間點擊處理
+    const handleExtendSession = () => {
+        if (!canExtend) return;
+        const success = extendSession();
+        if (success) {
+            // alert("連線時間已延長至 60 分鐘。");
+        }
+    };
+
+    // 監控倒數計時，剩餘 10 分鐘時發出通知
+    const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+    const hasWarnedRef = useRef(false);
+    
+    useEffect(() => {
+        // 修改為小於等於 600 (10分鐘)，確保跳秒時也能觸發
+        if (timeLeft > 0 && timeLeft <= 600 && !hasWarnedRef.current) {
+            hasWarnedRef.current = true;
+            setShowTimeoutModal(true);
+            console.log("[Header] Idle warning triggered at:", timeLeft);
+        }
+        
+        // 重置警告旗標：只有當時間回升到 10 分鐘以上時（例如使用者活動或手動延長），才允許下次再次警告
+        if (timeLeft > 600) {
+            hasWarnedRef.current = false;
+        }
+        
+        // 如果倒數結束，關閉 Modal
+        if (timeLeft <= 0) {
+            setShowTimeoutModal(false);
+        }
+    }, [timeLeft]);
+
+    const handleContinueSession = () => {
+        resetIdleTimer();
+        if (canExtend) {
+            extendSession();
+        }
+        setShowTimeoutModal(false);
+    };
+
 
 	const navLinks = [
 		{ href: '/', label: '首頁' },
@@ -221,10 +262,18 @@ const Header = forwardRef((props, ref) => {
 						{isAuthenticated && (
                             <>
                                 {/* 自動登出計時器 */}
-                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all duration-300 ml-2 ${timeLeft < 60 ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-500'}`} title="基於安全性考量，如長時間未操作系統將於倒數結束後自動登出。">
-                                    <Clock size={14} />
+                                <button 
+                                    onClick={handleExtendSession}
+                                    disabled={!canExtend}
+                                    className={`group flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all duration-300 ml-2 relative overflow-hidden
+                                        ${timeLeft < 60 ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'}
+                                        ${!canExtend ? 'cursor-default opacity-80' : 'cursor-pointer'}
+                                    `} 
+                                    title={canExtend ? "點擊可將自動登出時間延長至 60 分鐘 (僅限一次)。" : "基於安全性考量，如長時間未操作系統將於倒數結束後自動登出。"}
+                                >
+                                    {canExtend ? <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-500" /> : <Clock size={14} />}
                                     <span className="text-xs font-mono font-bold">{formatTime(timeLeft)}</span>
-                                </div>
+                                </button>
 
                                 <div 
                                     className="relative ml-2" 
@@ -324,10 +373,14 @@ const Header = forwardRef((props, ref) => {
 							>
 								<div className={`text-left px-4 py-2 transition-colors duration-200 flex items-center justify-between ${isOverDark ? 'text-slate-800' : 'text-slate-700'}`}>
 									<span className="font-medium text-indigo-600">Hi, {user?.profile?.username || user?.user_metadata?.name || 'User'}</span>
-                                    <div className="flex items-center gap-1 text-sm font-mono opacity-80 text-slate-500">
-                                        <Clock size={12} />
+                                    <button 
+                                        onClick={handleExtendSession}
+                                        disabled={!canExtend}
+                                        className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-sm font-mono transition-all duration-300 ${timeLeft < 60 ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                                    >
+                                        {canExtend ? <RefreshCw size={12} /> : <Clock size={12} />}
                                         {formatTime(timeLeft)}
-                                    </div>
+                                    </button>
 								</div>
 								<Link
 									href="/profile"
@@ -360,6 +413,71 @@ const Header = forwardRef((props, ref) => {
 					</div>
 				</div>
 			</header>
+
+            {/* 自動登出提醒 Modal */}
+            <AnimatePresence>
+                {showTimeoutModal && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                        {/* Backdrop */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowTimeoutModal(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        
+                        {/* Modal Content */}
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100"
+                        >
+                            <div className="p-8 text-center">
+                                <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+                                    <AlertTriangle size={40} strokeWidth={2.5} />
+                                </div>
+                                
+                                <h3 className="text-2xl font-black text-gray-900 mb-2 font-sans tracking-tight">登出提醒</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                                    您已長時間未操作系統，將於以下時間後自動登出以保護您的帳號安全：
+                                </p>
+                                
+                                <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
+                                    <Clock size={20} className="text-indigo-600" />
+                                    <span className="text-3xl font-mono font-black text-indigo-700 tracking-tighter">
+                                        {formatTime(timeLeft)}
+                                    </span>
+                                </div>
+                                
+                                <div className="flex flex-col gap-3">
+                                    <button 
+                                        onClick={handleContinueSession}
+                                        className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all"
+                                    >
+                                        繼續使用系統
+                                    </button>
+                                    <button 
+                                        onClick={handleLogout}
+                                        className="w-full py-3 bg-white text-gray-500 font-bold rounded-xl hover:text-red-500 transition-colors"
+                                    >
+                                        立即登出
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {/* Close Button */}
+                            <button 
+                                onClick={() => setShowTimeoutModal(false)}
+                                className="absolute top-4 right-4 p-2 text-gray-300 hover:text-gray-600 rounded-full transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 		</HeaderContext.Provider>
 	);
 });

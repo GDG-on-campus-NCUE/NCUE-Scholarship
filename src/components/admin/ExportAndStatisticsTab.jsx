@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import SimpleLineChart from '@/components/ui/SimpleLineChart';
 
 const StatCard = ({ title, value, icon: Icon, color = "indigo", subtext }) => {
     const colorStyles = {
@@ -34,192 +35,6 @@ const StatCard = ({ title, value, icon: Icon, color = "indigo", subtext }) => {
         </div>
     );
 };
-
-// Simple SVG Line Chart Component
-const SimpleLineChart = ({ data, granularity }) => {
-    const [hoveredPoint, setHoveredPoint] = useState(null);
-
-    const padding = 40;
-    const width = 800;
-    const height = 300;
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
-
-    // Calculate visible labels indices to prevent overlapping
-    const visibleLabelIndices = useMemo(() => {
-        if (!data || data.length === 0) return [];
-        
-        const indices = [];
-        const minGap = 85; // Minimum pixels between labels to prevent overlap (for YYYY-MM-DD format)
-        let lastX = -1000;
-
-        for (let i = 0; i < data.length; i++) {
-            const x = padding + (i / (data.length - 1 || 1)) * chartWidth;
-            
-            // Always show the first label
-            if (i === 0) {
-                indices.push(i);
-                lastX = x;
-                continue;
-            }
-
-            // For the last label, we want to ensure it's always visible
-            if (i === data.length - 1) {
-                if (x - lastX < minGap && indices.length > 1) {
-                    // If too close to the previous label, replace the previous one
-                    indices[indices.length - 1] = i;
-                } else if (x - lastX >= minGap) {
-                    indices.push(i);
-                }
-                continue;
-            }
-
-            // Standard logic for middle labels: respect minGap and a basic density check
-            const skip = Math.ceil(data.length / 10);
-            if (i % skip === 0 && (x - lastX >= minGap)) {
-                // Also check distance to the VERY LAST point to avoid crowding the end
-                const lastPointX = padding + chartWidth;
-                if (lastPointX - x >= minGap * 0.8) {
-                    indices.push(i);
-                    lastX = x;
-                }
-            }
-        }
-        return indices;
-    }, [data, chartWidth]);
-
-    if (!data || data.length === 0) {
-        return <div className="h-64 flex items-center justify-center text-gray-400 select-none">無圖表資料</div>;
-    }
-
-    const maxCount = Math.max(...data.map(d => d.count), 5); // Ensure at least 5 for scale
-    const points = data.map((d, i) => {
-        const x = padding + (i / (data.length - 1 || 1)) * chartWidth;
-        const y = height - padding - (d.count / maxCount) * chartHeight;
-        return { x, y, ...d };
-    });
-
-    const pathD = points.length > 1
-        ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')
-        : points.length === 1 ? `M ${points[0].x} ${points[0].y} Z` : '';
-
-    return (
-        <div className="w-full overflow-x-auto select-none">
-            <div className="min-w-[600px] relative group">
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto bg-white rounded-xl border border-gray-200/80 shadow-sm cursor-crosshair">
-                    {/* Grid Lines (Horizontal) */}
-                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                        const y = height - padding - ratio * chartHeight;
-                        return (
-                            <g key={i}>
-                                <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
-                                <text x={padding - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-gray-400 font-sans font-medium">
-                                    {Math.round(ratio * maxCount)}
-                                </text>
-                            </g>
-                        );
-                    })}
-
-                    {/* Chart Line */}
-                    <path 
-                        d={pathD} 
-                        fill="none" 
-                        stroke="#8b5cf6" 
-                        strokeWidth="2.5" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        className="transition-all duration-300 group-hover:stroke-[3.5px] group-hover:drop-shadow-md" 
-                    />
-
-                    {/* Area under line */}
-                    {points.length > 1 && (
-                        <path
-                            d={`${pathD} L ${points[points.length-1].x} ${height - padding} L ${points[0].x} ${height - padding} Z`}
-                            fill="url(#purple-gradient)" 
-                            opacity="0.15" 
-                        />
-                    )}
-
-                    <defs>
-                        <linearGradient id="purple-gradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#8b5cf6" />
-                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-                        </linearGradient>
-                    </defs>
-
-                    {/* Cursor Line */}
-                    {hoveredPoint && (
-                        <line
-                            x1={hoveredPoint.x} y1={padding}
-                            x2={hoveredPoint.x} y2={height - padding}
-                            stroke="#d8b4fe" strokeWidth="1" strokeDasharray="4 4"
-                            className="transition-all duration-75"
-                        />
-                    )}
-
-                    {/* X Axis Labels */}
-                    {points.map((p, i) => {
-                        const showLabel = visibleLabelIndices.includes(i);
-
-                        return showLabel ? (
-                            <text key={i} x={p.x} y={height - padding + 20} textAnchor="middle" className="text-[10px] fill-gray-500 font-sans font-medium">
-                                {p.date}
-                            </text>
-                        ) : null;
-                    })}
-
-                    {/* Visible Nodes (Points) */}
-                    {points.map((p, i) => (
-                        <circle
-                            key={`node-${i}`}
-                            cx={p.x}
-                            cy={p.y}
-                            r="3.5"
-                            className="fill-white stroke-purple-500 stroke-[2px] transition-all duration-300 group-hover:stroke-purple-600"
-                        />
-                    ))}
-
-                    {/* Interactive Points & Overlay */}
-                    {points.map((p, i) => (
-                        <g key={i} onMouseEnter={() => setHoveredPoint(p)} onMouseLeave={() => setHoveredPoint(null)}>
-                            {/* Hover Highlight Point */}
-                            <circle
-                                cx={p.x} cy={p.y} r={hoveredPoint === p ? 6 : 0}
-                                className="fill-white stroke-purple-600 stroke-[3px] transition-all duration-200 shadow-md z-10"
-                            />
-                            {/* Hit Area */}
-                            <rect
-                                x={p.x - (chartWidth / points.length) / 2}
-                                y={padding}
-                                width={chartWidth / points.length}
-                                height={chartHeight}
-                                fill="transparent"
-                                className="cursor-crosshair"
-                            />
-                        </g>
-                    ))}
-                </svg>
-
-                {/* Hover Tooltip */}
-                {hoveredPoint && (
-                    <div
-                        className="absolute bg-white/90 backdrop-blur-sm border border-purple-100 text-gray-800 text-xs rounded-xl px-3 py-2 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-3 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.1)] z-20 whitespace-nowrap"
-                        style={{ left: `${(hoveredPoint.x / width) * 100}%`, top: `${(hoveredPoint.y / height) * 100}%` }}
-                    >
-                        <div className="font-bold text-purple-700 mb-0.5">{hoveredPoint.date}</div>
-                        <div className="flex items-center gap-1.5 text-gray-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                            瀏覽數: <span className="font-mono font-semibold text-gray-900">{hoveredPoint.count}</span>
-                        </div>
-                        {/* Triangle arrow */}
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-[4px] border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-white/90"></div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
 
 export default function ExportAndStatisticsTab() {
     const [loading, setLoading] = useState(true);
@@ -549,6 +364,7 @@ export default function ExportAndStatisticsTab() {
                     <select
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
+                        aria-label="篩選公告狀態"
                         className="py-2 pl-3 pr-8 text-sm border border-gray-300 rounded-lg transition-all duration-200
                             focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20"
                     >
@@ -771,6 +587,7 @@ export default function ExportAndStatisticsTab() {
                         <select
                             value={rowsPerPage}
                             onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                            aria-label="每頁顯示筆數"
                             className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm
                                 transition-all duration-300
                                 focus:outline-none focus:border-purple-500
@@ -779,16 +596,16 @@ export default function ExportAndStatisticsTab() {
                             {[10, 25, 50].map(v => <option key={v} value={v}>{v} 筆 / 頁</option>)}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                     </div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="分頁導覽">
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
                     </nav>
                 </div>
             </div>

@@ -8,7 +8,8 @@ import { authFetch } from '@/lib/authFetch';
 
 const AuthContext = createContext({});
 
-const IDLE_TIMEOUT = 30 * 60; // 30 分鐘 (秒)
+const DEFAULT_TIMEOUT = 30 * 60; // 30 分鐘 (秒)
+const EXTENDED_TIMEOUT = 60 * 60; // 60 分鐘 (秒)
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -25,7 +26,9 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
     
     // 自動登出相關狀態
-    const [timeLeft, setTimeLeft] = useState(IDLE_TIMEOUT);
+    const [idleTimeout, setIdleTimeout] = useState(DEFAULT_TIMEOUT);
+    const [canExtend, setCanExtend] = useState(true);
+    const [timeLeft, setTimeLeft] = useState(DEFAULT_TIMEOUT);
     const lastActivity = useRef(Date.now());
     const timerRef = useRef(null);
 
@@ -49,7 +52,9 @@ export const AuthProvider = ({ children }) => {
         try {
             const result = await authService.signOut();
             setUser(null);
-            setTimeLeft(IDLE_TIMEOUT);
+            setTimeLeft(DEFAULT_TIMEOUT);
+            setIdleTimeout(DEFAULT_TIMEOUT);
+            setCanExtend(true);
             // 使用 router.replace 避免 history 堆疊，並重導向到首頁
             router.replace('/');
             // 稍微延遲後強制重新載入，確保所有元件狀態清除
@@ -65,8 +70,18 @@ export const AuthProvider = ({ children }) => {
     // 更新活動時間
     const resetIdleTimer = useCallback(() => {
         lastActivity.current = Date.now();
-        setTimeLeft(IDLE_TIMEOUT);
-    }, []);
+        setTimeLeft(idleTimeout);
+    }, [idleTimeout]);
+
+    // 延長連線時間 (僅限一次)
+    const extendSession = useCallback(() => {
+        if (!canExtend) return false;
+        setIdleTimeout(EXTENDED_TIMEOUT);
+        setCanExtend(false);
+        lastActivity.current = Date.now();
+        setTimeLeft(EXTENDED_TIMEOUT);
+        return true;
+    }, [canExtend]);
 
     useEffect(() => {
         // 初次載入獲取使用者
@@ -86,6 +101,8 @@ export const AuthProvider = ({ children }) => {
             } else if (event === 'SIGNED_OUT') {
                 setUser(null);
                 setLoading(false);
+                setIdleTimeout(DEFAULT_TIMEOUT);
+                setCanExtend(true);
                 
                 // 處理 PWA 或多標籤頁同步登出
                 const publicPaths = ['/login', '/forgot-password', '/reset-password', '/terms-and-privacy', '/auth/callback', '/resource'];
@@ -118,7 +135,7 @@ export const AuthProvider = ({ children }) => {
         timerRef.current = setInterval(() => {
             const now = Date.now();
             const diff = Math.floor((now - lastActivity.current) / 1000);
-            const remaining = IDLE_TIMEOUT - diff;
+            const remaining = idleTimeout - diff;
 
             if (remaining <= 0) {
                 clearInterval(timerRef.current);
@@ -132,7 +149,7 @@ export const AuthProvider = ({ children }) => {
             events.forEach(name => document.removeEventListener(name, handleUserActivity));
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [user, signOut, resetIdleTimer]);
+    }, [user, signOut, resetIdleTimer, idleTimeout]);
 
     const signIn = async (email, password) => {
         setError(null);
@@ -221,6 +238,9 @@ export const AuthProvider = ({ children }) => {
         loading,
         error,
         timeLeft,
+        canExtend,
+        extendSession,
+        resetIdleTimer,
         signIn,
         signInWithGoogle,
         signOut,

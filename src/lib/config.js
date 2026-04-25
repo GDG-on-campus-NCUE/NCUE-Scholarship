@@ -42,8 +42,11 @@ export async function getSystemConfig(key) {
  */
 export async function getPublicSystemConfig() {
   const tinyMceKey = await getSystemConfig('NEXT_PUBLIC_TINYMCE_API_KEY');
+  const aiAssistantEnabled = await getSystemConfig('AI_ASSISTANT_ENABLED');
   
   return {
-    NEXT_PUBLIC_TINYMCE_API_KEY: tinyMceKey || ''
+    NEXT_PUBLIC_TINYMCE_API_KEY: tinyMceKey || '',
+    // Default to true if not set
+    AI_ASSISTANT_ENABLED: aiAssistantEnabled !== 'false'
   };
 }

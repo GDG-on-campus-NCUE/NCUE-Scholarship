@@ -150,9 +150,9 @@ export default function AnnouncementDetailModal({ isOpen, onClose, announcement 
         const endDate = fullAnnouncement.application_end_date ? new Date(fullAnnouncement.application_end_date) : null;
         const startDate = fullAnnouncement.application_start_date ? new Date(fullAnnouncement.application_start_date) : null;
 
-        let colorClass = 'text-green-600';
+        let colorClass = 'text-green-700';
         if (endDate === null) {
-            colorClass = 'text-green-600';
+            colorClass = 'text-green-700';
         } else if (endDate < today) {
             colorClass = 'text-red-600';
         } else if (startDate && startDate > today) {

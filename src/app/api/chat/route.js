@@ -1,9 +1,9 @@
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server'
 import { verifyUserAuth, checkRateLimit, handleApiError } from '@/lib/apiMiddleware'
 import { supabaseServer as supabase } from '@/lib/supabase/server'
+import { getSystemConfig } from '@/lib/config'
 
 const DIGIRUNNER_URL = process.env.DIGIRUNNER_URL;
 const DIFY_API_KEY = process.env.DIFY_API_KEY;
@@ -21,6 +21,12 @@ async function saveHistory(userId, sessionId, userMessage, aiResponse) {
 
 export async function POST(request) {
     try {
+        // Check if AI Assistant is disabled by admin
+        const aiEnabled = await getSystemConfig('AI_ASSISTANT_ENABLED');
+        if (aiEnabled === 'false') {
+            return NextResponse.json({ error: 'AI Assistant is currently disabled by administrator.' }, { status: 403 });
+        }
+
         const rateLimitCheck = checkRateLimit(request, 'chat', 30, 60000);
         if (!rateLimitCheck.success) return rateLimitCheck.error;
 

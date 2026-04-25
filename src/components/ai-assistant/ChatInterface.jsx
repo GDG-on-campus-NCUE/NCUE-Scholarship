@@ -31,7 +31,7 @@ const WelcomeMessage = () => (
                 <p className="text-sm text-gray-600 leading-snug">優先搜尋校內獎學金資料庫，提供最相關的公告資訊。</p>
             </div>
             <div className="p-5 bg-white border border-green-50/50 rounded-xl shadow-sm">
-                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3"><Globe size={20} className="text-green-600" /></div>
+                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3"><Globe size={20} className="text-green-700" /></div>
                 <h4 className="font-bold text-gray-800 mb-1">廣泛搜尋</h4>
                 <p className="text-sm text-gray-600 leading-snug">若內部資訊不足，自動擴大搜尋網路公開資訊。</p>
             </div>
@@ -49,7 +49,7 @@ const WelcomeMessage = () => (
                 <span className="text-[10px] font-bold text-gray-700">精準檢索</span>
             </div>
             <div className="p-2 bg-white border border-green-50/50 rounded-lg shadow-sm flex flex-col items-center">
-                <Globe size={18} className="text-green-600 mb-1" />
+                <Globe size={18} className="text-green-700 mb-1" />
                 <span className="text-[10px] font-bold text-gray-700">廣泛搜尋</span>
             </div>
             <div className="p-2 bg-white border border-amber-50/50 rounded-lg shadow-sm flex flex-col items-center">
