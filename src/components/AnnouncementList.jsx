@@ -220,7 +220,7 @@ function AnnouncementListContent() {
     const totalPages = Math.ceil(totalCount / rowsPerPage);
 
     return (
-        <div className="w-full sm:p-2 lg:p-4">
+        <div className="w-full sm:p-2 lg:p-4 select-none">
             <div className="bg-white/80 backdrop-blur-lg border border-slate-200/80 rounded-2xl p-4 sm:p-6 mb-6 shadow-sm">
                 <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Award size={22} className="text-indigo-500" />獎助學金分類代碼定義
@@ -242,7 +242,7 @@ function AnnouncementListContent() {
                     <input type="text" placeholder="搜尋公告標題、摘要、適用對象..." value={search} onChange={e => setSearch(e.target.value)}
                         aria-label="搜尋公告"
                         className="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
-                            focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
+                            focus:border-indigo-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/30"
                     />
                 </div>
 
@@ -253,7 +253,7 @@ function AnnouncementListContent() {
                             value={categoryFilter}
                             onChange={(e) => handleCategoryChange(e.target.value)}
                             aria-label="依分類篩選"
-                            className="appearance-none w-full bg-slate-100 border border-transparent rounded-lg py-2 pl-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/30"
+                            className="appearance-none w-full bg-slate-100 border border-transparent rounded-lg py-2 pl-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-500 focus-visible:ring-4 focus-visible:ring-indigo-500/30"
                         >
                             <option value="all">全部分類</option>
                             {['A', 'B', 'C', 'D', 'E', 'F', 'G'].map(cat => (
@@ -279,18 +279,32 @@ function AnnouncementListContent() {
                     <table className="w-full text-sm table-fixed">
                         <thead className="bg-gray-50/70 text-left">
                             <tr>
-                                <th className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-[10%]" onClick={() => handleSort('semester')}><div className="flex items-center">學期 {renderSortIcon('semester')}</div></th>
-                                <th className="p-4 px-6 font-semibold text-gray-500 w-[25%]">獎助學金資料</th>
-                                <th className="p-4 px-6 font-semibold text-gray-500 w-[35%]">適用對象</th>
-                                <th className="p-4 px-6 font-semibold text-gray-500 w-[10%]">兼領限制</th>
-                                <th className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-[20%]" onClick={() => handleSort('application_end_date')}><div className="flex items-center">申請期限 / 送件方式 {renderSortIcon('application_end_date')}</div></th>
+                                <th scope="col" className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-[10%]" onClick={() => handleSort('semester')}><div className="flex items-center">學期 {renderSortIcon('semester')}</div></th>
+                                <th scope="col" className="p-4 px-6 font-semibold text-gray-500 w-[25%]">獎助學金資料</th>
+                                <th scope="col" className="p-4 px-6 font-semibold text-gray-500 w-[35%]">適用對象</th>
+                                <th scope="col" className="p-4 px-6 font-semibold text-gray-500 w-[10%]">兼領限制</th>
+                                <th scope="col" className="p-4 px-6 font-semibold text-gray-500 cursor-pointer w-[20%]" onClick={() => handleSort('application_end_date')}><div className="flex items-center">申請期限 / 送件方式 {renderSortIcon('application_end_date')}</div></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (<tr><td colSpan="5" className="text-center p-16 text-gray-500"><Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />載入中...</td></tr>) : (announcements || []).filter(item => item && item.id).map(item => {
                                 const isRead = readIds.has(item.id);
                                 return (
-                                    <tr key={item.id} ref={el => (announcementRefs.current[item.id] = el)} onClick={() => handleOpenDetailModal(item)} className={`transform transition-all duration-300 hover:bg-violet-100/50 hover:shadow-2xl z-0 hover:z-10 hover:scale-[1.01] cursor-pointer ${isRead ? 'bg-gray-100 text-gray-500' : ''}`}>
+                                    <tr 
+                                        key={item.id} 
+                                        ref={el => (announcementRefs.current[item.id] = el)} 
+                                        onClick={() => handleOpenDetailModal(item)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleOpenDetailModal(item);
+                                            }
+                                        }}
+                                        tabIndex="0"
+                                        role="button"
+                                        aria-label={`查看公告詳情：${item.title}`}
+                                        className={`transform transition-all duration-300 hover:bg-violet-100/50 hover:shadow-2xl z-0 hover:z-10 hover:scale-[1.01] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${isRead ? 'bg-gray-100 text-gray-500' : ''}`}
+                                    >
                                         <td className="p-4 px-6 font-medium align-top">{item.semester}</td>
                                         <td className="p-4 px-6 align-top">
                                             <div className="flex items-start gap-3">
@@ -362,16 +376,21 @@ function AnnouncementListContent() {
                 <div className="text-sm text-gray-600">共 {totalCount} 筆資料，第 {page} / {totalPages || 1} 頁</div>
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <select value={rowsPerPage} onChange={e => { setRowsPerPage(Number(e.target.value)); setPage(1); }} className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/30">
+                        <select 
+                            value={rowsPerPage} 
+                            onChange={e => { setRowsPerPage(Number(e.target.value)); setPage(1); }} 
+                            aria-label="每頁顯示筆數"
+                            className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm transition-all duration-300 focus:outline-none focus:border-indigo-500 focus-visible:ring-4 focus-visible:ring-indigo-500/30"
+                        >
                             {[10, 25, 50].map(v => <option key={v} value={v}>{v} 筆 / 頁</option>)}
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400"><ChevronsUpDown className="h-4 w-4" /></div>
                     </div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                        <button onClick={() => setPage(1)} disabled={page === 1} className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
-                        <button onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="分頁導覽">
+                        <button onClick={() => setPage(1)} disabled={page === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setPage(p => p - 1)} disabled={page === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
+                        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
+                        <button onClick={() => setPage(totalPages)} disabled={page >= totalPages} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
                     </nav>
                 </div>
             </div>

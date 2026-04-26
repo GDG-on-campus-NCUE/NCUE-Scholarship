@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +25,9 @@ function LoginContent() {
 	const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 	const showToast = (message, type = 'success') => setToast({ show: true, message, type });
 	const hideToast = () => setToast(prev => ({ ...prev, show: false }));
+
+    const emailRef = useRef(null);
+    const passwordRef = useRef(null);
 
 	// 確保只在客戶端渲染
 	useEffect(() => {
@@ -89,6 +92,9 @@ function LoginContent() {
 		const formErrors = validateForm();
 		if (Object.keys(formErrors).length > 0) {
 			setErrors(formErrors);
+
+            if (formErrors.email) emailRef.current?.focus();
+            else if (formErrors.password) passwordRef.current?.focus();
 			return;
 		}
 
@@ -226,28 +232,32 @@ function LoginContent() {
 						<div className={`transition-all duration-500 ease-in-out overflow-hidden ${showOldLogin ? 'max-h-[500px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'}`}>
 							<form onSubmit={handleSubmit} className="space-y-6">
 								<div>
-									<label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">電子郵件</label>
+									<label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 cursor-pointer">
+                                        電子郵件 <span className="text-red-600 font-bold">(必填)</span>
+                                    </label>
 									<div className="mt-2 relative">
 										<Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-										<input id="email" name="email" type="email" autoComplete="email" required={showOldLogin} placeholder="example@mail.com" value={formData.email} onChange={handleChange}
-											className={`block w-full rounded-md border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ${errors.email ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:shadow-lg focus:shadow-indigo-500/50 sm:text-sm sm:leading-6 transition-all`}
+										<input id="email" name="email" type="email" ref={emailRef} autoComplete="email" required={showOldLogin} placeholder="example@mail.com" value={formData.email} onChange={handleChange}
+											className={`block w-full rounded-md border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ${errors.email ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:shadow-lg focus-visible:shadow-indigo-500/50 sm:text-sm sm:leading-6 transition-all`}
 										/>
 									</div>
-									{errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
+									{errors.email && <p className="mt-2 text-sm text-red-600 font-bold" id="email-error">{errors.email}</p>}
 								</div>
 
 								<div>
-									<label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">密碼</label>
+									<label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900 cursor-pointer">
+                                        密碼 <span className="text-red-600 font-bold">(必填)</span>
+                                    </label>
 									<div className="mt-2 relative">
 										<Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-										<input id="password" name="password" required={showOldLogin} type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="請輸入您的密碼" value={formData.password} onChange={handleChange}
-											className={`block w-full rounded-md border-0 py-2.5 pl-10 pr-10 text-gray-900 ring-1 ring-inset ${errors.password ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:shadow-lg focus:shadow-indigo-500/50 sm:text-sm sm:leading-6 transition-all`}
+										<input id="password" name="password" required={showOldLogin} type={showPassword ? "text" : "password"} ref={passwordRef} autoComplete="current-password" placeholder="請輸入您的密碼" value={formData.password} onChange={handleChange}
+											className={`block w-full rounded-md border-0 py-2.5 pl-10 pr-10 text-gray-900 ring-1 ring-inset ${errors.password ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:shadow-lg focus-visible:shadow-indigo-500/50 sm:text-sm sm:leading-6 transition-all`}
 										/>
-										<button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
+										<button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "隱藏密碼" : "顯示密碼"} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
 											{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
 										</button>
 									</div>
-									{errors.password && <p className="mt-2 text-sm text-red-600">{errors.password}</p>}
+									{errors.password && <p className="mt-2 text-sm text-red-600 font-bold" id="password-error">{errors.password}</p>}
 								</div>
 
 								<div className="flex items-center justify-between">

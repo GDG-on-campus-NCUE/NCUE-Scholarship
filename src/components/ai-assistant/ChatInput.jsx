@@ -76,7 +76,8 @@ const ChatInput = ({
             <form 
                 onSubmit={onFormSubmit} 
                 className={`relative flex items-end gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-[24px] bg-white border transition-all duration-300 shadow-sm
-                    ${isLoading ? 'border-gray-200 bg-gray-50' : 'border-gray-200 hover:border-gray-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:shadow-md'}
+                    ${isLoading ? 'border-gray-200 bg-gray-50' : 'border-gray-200 hover:border-gray-300 focus-within:ring-0'}
+                    ${!isLoading && 'has-[:focus-visible]:border-indigo-400 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-indigo-500/10 has-[:focus-visible]:shadow-md'}
                 `}
             >
                 <div className="pl-2 sm:pl-3 pb-2 sm:pb-3 text-indigo-500">
@@ -94,14 +95,17 @@ const ChatInput = ({
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder="請輸入您的問題..."
+                    aria-label="您的訊息"
+                    title="請輸入您的問題"
                     rows={1}
-                    className="w-full max-h-32 bg-transparent border-0 py-2 sm:py-3 px-1 sm:px-2 text-sm sm:text-base text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none outline-none resize-none custom-scrollbar leading-relaxed"
+                    className="w-full max-h-32 bg-transparent border-0 py-2 sm:py-3 px-1 sm:px-2 text-sm sm:text-base text-gray-800 placeholder-gray-400 focus:!ring-0 focus:!outline-none !outline-none resize-none custom-scrollbar leading-relaxed"
                     style={{ minHeight: '38px' }}
                 />
 
                 <button
                     type="submit"
                     disabled={isLoading || !input?.trim()}
+                    aria-label="傳送訊息"
                     className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 mb-0.5 sm:mb-1 flex items-center justify-center rounded-full bg-indigo-600 text-white transition-all 
                         hover:bg-indigo-700 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:active:scale-100 relative"
                 >

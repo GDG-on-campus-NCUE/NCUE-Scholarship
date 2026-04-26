@@ -28,7 +28,7 @@ const ThinkingTimer = ({ isStopped }) => {
     const remainingMs = Math.floor((ms % 1000) / 10);
     
     return (
-        <span className="font-mono tabular-nums opacity-60">
+        <span className="font-mono tabular-nums opacity-60" aria-hidden="true">
             {seconds.toString().padStart(2, '0')}.{remainingMs.toString().padStart(2, '0')}
         </span>
     );
@@ -111,10 +111,12 @@ const ThoughtSection = ({ content, reasoning, hasFormalContent, isStreaming = fa
                         {/* 藥丸按鈕 */}
                         <button 
                             onClick={() => setIsExpanded(!isExpanded)}
+                            aria-expanded={isExpanded}
+                            aria-controls={`thought-content-${idx}`}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-100 bg-white shadow-sm text-[11px] font-medium text-slate-600 hover:bg-indigo-50/30 transition-all select-none group"
                         >
                             <div className="relative">
-                                <Search size={13} className={`text-indigo-500 ${!isExpanded && part.isUnfinished ? 'animate-pulse' : ''}`} />
+                                <Search size={13} className={`text-indigo-500 ${!isExpanded && part.isUnfinished ? 'animate-pulse' : ''}`} aria-hidden="true" />
                                 {!isExpanded && part.isUnfinished && (
                                     <div className="absolute inset-0 bg-indigo-400 blur-md opacity-40 animate-ping rounded-full"></div>
                                 )}
@@ -125,12 +127,15 @@ const ThoughtSection = ({ content, reasoning, hasFormalContent, isStreaming = fa
                                 <ThinkingTimer isStopped={!part.isUnfinished} />
                             </span>
 
-                            {isExpanded ? <ChevronUp size={13} className="opacity-50 group-hover:opacity-100" /> : <ChevronDown size={13} className="opacity-50 group-hover:opacity-100" />}
+                            {isExpanded ? <ChevronUp size={13} className="opacity-50 group-hover:opacity-100" aria-hidden="true" /> : <ChevronDown size={13} className="opacity-50 group-hover:opacity-100" aria-hidden="true" />}
                         </button>
                         
                         {/* 思考內容 (支援 Markdown) */}
                         {isExpanded && (
-                            <div className="relative mt-2 pl-4 py-1 ml-2 animate-in fade-in slide-in-from-left-1 duration-500">
+                            <div 
+                                id={`thought-content-${idx}`}
+                                className="relative mt-2 pl-4 py-1 ml-2 animate-in fade-in slide-in-from-left-1 duration-500"
+                            >
                                 <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-indigo-200 via-indigo-100 to-transparent rounded-full opacity-60"></div>
                                 <div className="text-[13px] text-slate-500/90 italic leading-relaxed prose prose-sm prose-slate prose-p:my-1 prose-pre:bg-slate-50/50">
                                     {part.value ? <HtmlRenderer content={part.value} /> : <span className="opacity-50">正在整理思維脈絡...</span>}
@@ -154,10 +159,11 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
     // ✅ 強化版的載入中 UI (Gemini 深度思考風格)
     if (isLoading && !message) {
         return (
-            <div className="flex gap-3 w-full group animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex gap-3 w-full group animate-in fade-in slide-in-from-bottom-2 duration-300" role="status">
+                <span className="sr-only">AI 正在思考並準備回覆中...</span>
                 <div className="flex-shrink-0 flex flex-col items-center gap-1 mt-1">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white border border-indigo-100 text-indigo-600 shadow-sm">
-                        <Sparkles size={18} />
+                        <Sparkles size={18} aria-hidden="true" />
                     </div>
                 </div>
                 <div className="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
@@ -169,7 +175,7 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
                     <div className="mb-3">
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-100 bg-white shadow-sm text-[11px] font-medium text-slate-600 select-none">
                             <div className="relative">
-                                <Search size={13} className="text-indigo-500 animate-pulse" />
+                                <Search size={13} className="text-indigo-500 animate-pulse" aria-hidden="true" />
                                 <div className="absolute inset-0 bg-indigo-400 blur-md opacity-40 animate-ping rounded-full"></div>
                             </div>
                             <span className="flex items-center gap-1.5">
@@ -180,7 +186,7 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
                     </div>
 
                     {/* 準備回應的動態點 */}
-                    <div className="px-5 py-3 bg-white border border-gray-100 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5">
+                    <div className="px-5 py-3 bg-white border border-gray-100 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5" aria-hidden="true">
                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>
@@ -230,12 +236,12 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
                 >
                     {isUser ? (
                         (user?.profile?.avatar_url || user?.user_metadata?.avatar_url) ? (
-                            <img src={user?.profile?.avatar_url || user?.user_metadata?.avatar_url} alt={name} className="w-full h-full rounded-full object-cover" />
+                            <img src={user?.profile?.avatar_url || user?.user_metadata?.avatar_url} alt={`${name} 的頭像`} className="w-full h-full rounded-full object-cover" />
                         ) : (
                             avatarChar
                         )
                     ) : (
-                        <Sparkles size={18} />
+                        <Sparkles size={18} aria-hidden="true" />
                     )}
                 </div>
             </div>
@@ -243,7 +249,10 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
             {/* Message Body */}
             <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
                 <div className="flex items-baseline gap-2 mb-1 px-1">
-                    <span className="text-xs font-semibold text-gray-500">{name}</span>
+                    <span className="text-xs font-semibold text-gray-500">
+                        <span className="sr-only">{isUser ? '您傳送的訊息' : 'AI Assistant 回覆'}：</span>
+                        {name}
+                    </span>
                     <span className="text-[10px] text-gray-400">{time}</span>
                 </div>
 
@@ -269,7 +278,7 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
                                 {announcementIds.length > 0 && (
                                     <div className="mt-4 pt-3 border-t border-gray-100/10 space-y-3 w-full">
                                         <p className="text-xs font-medium opacity-70 mb-2 flex items-center gap-1">
-                                            <Bot size={12} />
+                                            <Bot size={12} aria-hidden="true" />
                                             相關公告推薦
                                         </p>
                                         <div className="grid grid-cols-1 gap-2">
@@ -282,7 +291,7 @@ const MessageBubble = ({ message, user, isLoading = false, isStreaming = false }
                     </div>
                 ) : (
                     !isUser && isLoading && (
-                        <div className="px-5 py-3 bg-white border border-gray-100 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5 animate-pulse">
+                        <div className="px-5 py-3 bg-white border border-gray-100 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5 animate-pulse" aria-hidden="true">
                             <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                             <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                             <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>

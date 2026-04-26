@@ -8,13 +8,13 @@ import { Search, Users, Shield, UserCheck, ChevronsLeft, ChevronLeft, ChevronRig
 import SendNotificationModal from './SendNotificationModal';
 
 const NotifyIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50" className="inline-block">
+    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50" className="inline-block" aria-hidden="true">
         <path fill="#4caf50" d="M45,16.2l-5,2.75l-5,4.75L35,40h7c1.657,0,3-1.343,3-3V16.2z"></path><path fill="#1e88e5" d="M3,16.2l3.614,1.71L13,23.7V40H6c-1.657,0-3-1.343-3-3V16.2z"></path><polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17"></polygon><path fill="#c62828" d="M3,12.298V16.2l10,7.5V11.2L9.876,8.859C9.132,8.301,8.228,8,7.298,8h0C4.924,8,3,9.924,3,12.298z"></path><path fill="#fbc02d" d="M45,12.298V16.2l-10,7.5V11.2l3.124-2.341C38.868,8.301,39.772,8,40.702,8h0 C43.076,8,45,9.924,45,12.298z"></path>
     </svg>
 );
 
 const GoogleIcon = () => (
-    <svg className="h-4 w-4 inline-block" viewBox="0 0 24 24">
+    <svg className="h-4 w-4 inline-block" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -273,11 +273,12 @@ export default function UsersTab() {
                                 setIsBulkDropdownOpen(!isBulkDropdownOpen);
                             }}
                             className={`${buttonStyles.notifyAll} w-full md:w-auto`}
+                            aria-label="群發信件選項"
                             title="群發信件選項"
                         >
-                            <Mail size={16} />
+                            <Mail size={16} aria-hidden="true" />
                             <span className="hidden sm:inline whitespace-nowrap">群發信件</span>
-                            <ChevronDown size={14} className={`transition-transform duration-200 ${isBulkDropdownOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown size={14} className={`transition-transform duration-200 ${isBulkDropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                         </button>
 
                         {/* Dropdown Menu */}
@@ -287,13 +288,13 @@ export default function UsersTab() {
                         `}>
                             <div className="py-1">
                                 <button onClick={() => openNotificationModal(null, 'all')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2 transition-colors">
-                                    <Users size={14} /> 寄送給所有人
+                                    <Users size={14} aria-hidden="true" /> 寄送給所有人
                                 </button>
                                 <button onClick={() => openNotificationModal(null, 'user')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2 transition-colors">
-                                    <UserCheck size={14} /> 寄送給使用者
+                                    <UserCheck size={14} aria-hidden="true" /> 寄送給使用者
                                 </button>
                                 <button onClick={() => openNotificationModal(null, 'admin')} className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2 transition-colors">
-                                    <Shield size={14} /> 寄送給管理員
+                                    <Shield size={14} aria-hidden="true" /> 寄送給管理員
                                 </button>
                             </div>
                         </div>
@@ -303,30 +304,33 @@ export default function UsersTab() {
                 <div className="lg:col-span-2 grid grid-cols-3 bg-white rounded-xl border border-gray-200/80 shadow-sm overflow-hidden h-[76px]">
                     <button 
                         onClick={() => handleRoleFilterChange('')}
+                        aria-label={`顯示所有使用者，共 ${stats.total} 位`}
                         className={`flex flex-col items-center justify-center transition-all duration-300 ${roleFilter === '' ? 'bg-indigo-50 ring-1 ring-inset ring-indigo-200/50' : 'hover:bg-gray-50'}`}
                     >
                         <h3 className={`text-xs font-medium flex items-center gap-1.5 ${roleFilter === '' ? 'text-indigo-600' : 'text-gray-500'}`}>
-                            <Users size={14} />總用戶數
+                            <Users size={14} aria-hidden="true" />總用戶數
                         </h3>
                         <p className={`text-xl font-bold mt-0.5 ${roleFilter === '' ? 'text-indigo-700' : 'text-gray-900'}`}>{stats.total}</p>
                     </button>
                     
                     <button 
                         onClick={() => handleRoleFilterChange('admin')}
+                        aria-label={`僅顯示管理員，共 ${stats.admins} 位`}
                         className={`flex flex-col items-center justify-center border-l border-gray-100 transition-all duration-300 ${roleFilter === 'admin' ? 'bg-blue-50 ring-1 ring-inset ring-blue-200/50' : 'hover:bg-gray-50'}`}
                     >
                         <h3 className={`text-xs font-medium flex items-center gap-1.5 ${roleFilter === 'admin' ? 'text-blue-600' : 'text-gray-500'}`}>
-                            <Shield size={14} />管理員
+                            <Shield size={14} aria-hidden="true" />管理員
                         </h3>
                         <p className={`text-xl font-bold mt-0.5 ${roleFilter === 'admin' ? 'text-blue-700' : 'text-blue-600'}`}>{stats.admins}</p>
                     </button>
                     
                     <button 
                         onClick={() => handleRoleFilterChange('user')}
+                        aria-label={`僅顯示使用者，共 ${stats.users} 位`}
                         className={`flex flex-col items-center justify-center border-l border-gray-100 transition-all duration-300 ${roleFilter === 'user' ? 'bg-emerald-50 ring-1 ring-inset ring-emerald-200/50' : 'hover:bg-gray-50'}`}
                     >
                         <h3 className={`text-xs font-medium flex items-center gap-1.5 ${roleFilter === 'user' ? 'text-emerald-600' : 'text-gray-500'}`}>
-                            <UserCheck size={14} />使用者
+                            <UserCheck size={14} aria-hidden="true" />使用者
                         </h3>
                         <p className={`text-xl font-bold mt-0.5 ${roleFilter === 'user' ? 'text-emerald-700' : 'text-gray-600'}`}>{stats.users}</p>
                     </button>
@@ -340,7 +344,7 @@ export default function UsersTab() {
                             <th className="p-4 px-6 font-semibold text-gray-500">學號</th><th className="p-4 px-6 font-semibold text-gray-500">姓名</th><th className="p-4 px-6 font-semibold text-gray-500">電子信箱</th><th className="p-4 px-6 font-semibold text-gray-500">權限</th><th className="p-4 px-6 font-semibold text-gray-500 text-center">操作</th>
                         </tr></thead>
                         <tbody className="divide-y divide-gray-100">
-                            {loading ? (<tr><td colSpan="5" className="text-center p-12"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></td></tr>) : users.length === 0 ? (<tr><td colSpan="5" className="text-center p-12 text-gray-500">找不到符合條件的使用者。</td></tr>) : (
+                            {loading ? (<tr><td colSpan="5" className="text-center p-12"><Loader2 className="h-6 w-6 animate-spin mx-auto" aria-label="載入中" /></td></tr>) : users.length === 0 ? (<tr><td colSpan="5" className="text-center p-12 text-gray-500">找不到符合條件的使用者。</td></tr>) : (
                                 users.map((user) => (
                                     <tr key={user.id} className="group transition-all duration-300 ease-out border-b border-gray-50 last:border-0 relative hover:bg-gradient-to-r hover:from-indigo-50/80 hover:to-purple-50/80 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] hover:-translate-y-1 hover:z-10">
                                         <td className="p-4 px-6 font-mono">{user.studentId || '-'}</td>
@@ -352,10 +356,10 @@ export default function UsersTab() {
                                         <td className="p-4 px-6"><span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{user.role === 'admin' ? '管理員' : '使用者'}</span></td>
                                         <td className="p-4 px-6">
                                             <div className="flex items-center justify-center gap-2 transition-all duration-300">
-                                                <button onClick={() => handleRoleChange(user)} className={user.role === 'admin' ? buttonStyles.demote : buttonStyles.promote} disabled={currentUser?.id === user.id}>{user.role === 'admin' ? '設為使用者' : '設為管理員'}</button>
-                                                <button onClick={() => openNotificationModal(user)} className={buttonStyles.notify} title="寄送通知"><NotifyIcon /></button>
-                                                <button onClick={() => handleDeleteUser(user)} className={buttonStyles.delete} title="刪除帳號" disabled={currentUser?.id === user.id || isDeletingId === user.id}>
-                                                    {isDeletingId === user.id ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 size={16} />}
+                                                <button onClick={() => handleRoleChange(user)} aria-label={`將 ${user.name} ${user.role === 'admin' ? '設為使用者' : '設為管理員'}`} className={user.role === 'admin' ? buttonStyles.demote : buttonStyles.promote} disabled={currentUser?.id === user.id}>{user.role === 'admin' ? '設為使用者' : '設為管理員'}</button>
+                                                <button onClick={() => openNotificationModal(user)} aria-label={`向 ${user.name} 寄送通知`} className={buttonStyles.notify} title="寄送通知"><NotifyIcon /></button>
+                                                <button onClick={() => handleDeleteUser(user)} aria-label={`刪除使用者 ${user.name}`} className={buttonStyles.delete} title="刪除帳號" disabled={currentUser?.id === user.id || isDeletingId === user.id}>
+                                                    {isDeletingId === user.id ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 size={16} aria-hidden="true" />}
                                                 </button>
                                             </div>
                                         </td>
@@ -366,12 +370,12 @@ export default function UsersTab() {
                     </table>
                 </div>
                 <div className="md:hidden divide-y divide-gray-100/50">
-                    {loading ? (<div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>) : users.length === 0 ? (<div className="text-center p-8 text-gray-500">找不到符合條件的使用者。</div>) : (
+                    {loading ? (<div className="text-center p-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" aria-label="載入中" /></div>) : users.length === 0 ? (<div className="text-center p-8 text-gray-500">找不到符合條件的使用者。</div>) : (
                         users.map(user => (
                             <div key={user.id} className="p-5 space-y-4 hover:bg-gray-50 transition-colors">
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-2">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-inner ${user.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-inner ${user.role === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-indigo-100 text-indigo-600'}`} aria-hidden="true">
                                             {user.name ? user.name[0] : '?'}
                                         </div>
                                         <div>
@@ -389,7 +393,7 @@ export default function UsersTab() {
                                 
                                 <div className="bg-gray-50/50 rounded-lg p-3 space-y-1.5">
                                     <div className="flex items-center gap-2 text-xs text-gray-600">
-                                        <Mail size={12} className="text-gray-400" />
+                                        <Mail size={12} className="text-gray-400" aria-hidden="true" />
                                         <span className="truncate" title={user.emailFull}>{user.email}</span>
                                     </div>
                                 </div>
@@ -397,6 +401,7 @@ export default function UsersTab() {
                                 <div className="flex items-center justify-between pt-1">
                                     <button 
                                         onClick={() => handleRoleChange(user)} 
+                                        aria-label={`將 ${user.name} ${user.role === 'admin' ? '設為使用者' : '設為管理員'}`}
                                         className={`text-xs font-bold px-4 py-2 rounded-lg transition-all ${user.role === 'admin' ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
                                         disabled={currentUser?.id === user.id}
                                     >
@@ -404,16 +409,17 @@ export default function UsersTab() {
                                     </button>
                                     
                                     <div className="flex items-center gap-2">
-                                        <button onClick={() => openNotificationModal(user)} className="p-2.5 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100 transition-colors" title="寄送通知">
+                                        <button onClick={() => openNotificationModal(user)} aria-label={`向 ${user.name} 寄送通知`} className="p-2.5 bg-sky-50 text-sky-600 rounded-lg hover:bg-sky-100 transition-colors" title="寄送通知">
                                             <NotifyIcon />
                                         </button>
                                         <button 
                                             onClick={() => handleDeleteUser(user)} 
+                                            aria-label={`刪除使用者 ${user.name}`}
                                             className="p-2.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" 
                                             title="刪除帳號" 
                                             disabled={currentUser?.id === user.id || isDeletingId === user.id}
                                         >
-                                            {isDeletingId === user.id ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 size={18} />}
+                                            {isDeletingId === user.id ? <Loader2 className="animate-spin h-4 w-4" /> : <Trash2 size={18} aria-hidden="true" />}
                                         </button>
                                     </div>
                                 </div>
@@ -424,7 +430,7 @@ export default function UsersTab() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-gray-600 font-medium">共 {totalCount} 位使用者，第 {currentPage} / {totalPages || 1} 頁</div>
+                <div className="text-sm text-gray-600 font-medium">共 {totalCount} 筆資料，第 {currentPage} / {totalPages || 1} 頁</div>
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <select
@@ -445,10 +451,10 @@ export default function UsersTab() {
                         </div>
                     </div>
                     <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="分頁導覽">
-                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" aria-hidden="true" /></button>
+                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
+                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" aria-hidden="true" /></button>
                     </nav>
                 </div>
             </div>

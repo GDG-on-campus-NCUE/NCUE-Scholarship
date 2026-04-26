@@ -27,7 +27,7 @@ const StatusBadge = ({ isSet, source }) => {
     if (!isSet) {
         return (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 select-none border border-red-200">
-                <AlertCircle size={12} />
+                <AlertCircle size={12} aria-hidden="true" />
                 未設定
             </span>
         );
@@ -35,14 +35,14 @@ const StatusBadge = ({ isSet, source }) => {
     if (source === 'database') {
         return (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 select-none border border-emerald-200">
-                <Database size={12} />
+                <Database size={12} aria-hidden="true" />
                 使用資料庫設定
             </span>
         );
     }
     return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 select-none border border-amber-200">
-            <Server size={12} />
+            <Server size={12} aria-hidden="true" />
             使用環境變數
         </span>
     );
@@ -156,7 +156,7 @@ export default function SettingsTab() {
             >
                 <div>
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <Shield className="text-indigo-600" />
+                        <Shield className="text-indigo-600" aria-hidden="true" />
                         系統功能與金鑰管理
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">
@@ -166,9 +166,10 @@ export default function SettingsTab() {
                 <button 
                     onClick={fetchSettings} 
                     disabled={loading}
+                    aria-label="重新整理系統設定列表"
                     className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 shadow-sm"
                 >
-                    <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                    <RefreshCw size={16} className={loading ? "animate-spin" : ""} aria-hidden="true" />
                     重新整理
                 </button>
             </motion.div>
@@ -176,7 +177,7 @@ export default function SettingsTab() {
             <div className="space-y-4">
                 {loading ? (
                     <div className="text-center p-12 bg-white rounded-xl border border-gray-200 min-h-[400px] flex flex-col items-center justify-center">
-                        <RefreshCw className="h-8 w-8 animate-spin mx-auto text-indigo-500" />
+                        <RefreshCw className="h-8 w-8 animate-spin mx-auto text-indigo-500" aria-hidden="true" />
                         <p className="mt-3 text-gray-500 select-none">載入設定中...</p>
                     </div>
                 ) : (
@@ -189,7 +190,7 @@ export default function SettingsTab() {
                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4 select-none">
                                     <div>
                                         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 group-hover:text-indigo-700 transition-colors">
-                                            {setting.key === 'AI_ASSISTANT_ENABLED' ? <MessageSquare size={18} className="text-indigo-500" /> : <Key size={18} className="text-indigo-500" />}
+                                            {setting.key === 'AI_ASSISTANT_ENABLED' ? <MessageSquare size={18} className="text-indigo-500" aria-hidden="true" /> : <Key size={18} className="text-indigo-500" aria-hidden="true" />}
                                             {SETTING_LABELS[setting.key] || setting.key}
                                         </h3>
                                         <p className="text-sm text-gray-500 mt-1">
@@ -213,6 +214,7 @@ export default function SettingsTab() {
                                             <button 
                                                 onClick={() => handleSave(setting.key, setting.value === 'true' ? 'false' : 'true')}
                                                 disabled={saving}
+                                                aria-label={setting.value === 'true' ? '停用 AI 獎助學金助理' : '啟用 AI 獎助學金助理'}
                                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${setting.value === 'true' ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'}`}
                                             >
                                                 {saving ? <RefreshCw size={16} className="animate-spin" /> : (setting.value === 'true' ? <ToggleRight size={20} /> : <ToggleLeft size={20} />)}
@@ -228,6 +230,8 @@ export default function SettingsTab() {
                                                         value={editValue} 
                                                         onChange={(e) => setEditValue(e.target.value)}
                                                         placeholder="輸入新的內容..."
+                                                        aria-label={`更新 ${SETTING_LABELS[setting.key] || setting.key} 的內容`}
+                                                        title={`請輸入 ${SETTING_LABELS[setting.key] || setting.key} 的新金鑰或設定值`}
                                                         className="w-full pl-4 pr-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all outline-none text-sm"
                                                         autoFocus
                                                     />
@@ -236,6 +240,7 @@ export default function SettingsTab() {
                                                     <button 
                                                         onClick={() => handleSave(setting.key)} 
                                                         disabled={saving}
+                                                        aria-label="儲存設定"
                                                         className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 transition-all duration-200 hover:shadow-md active:scale-95"
                                                     >
                                                         {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
@@ -244,9 +249,10 @@ export default function SettingsTab() {
                                                     <button 
                                                         onClick={handleCancel}
                                                         disabled={saving}
+                                                        aria-label="取消編輯"
                                                         className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 hover:shadow-md active:scale-95"
                                                     >
-                                                        <X size={14} />
+                                                        <X size={14} aria-hidden="true" />
                                                         取消
                                                     </button>
                                                 </div>
@@ -258,6 +264,7 @@ export default function SettingsTab() {
                                                 </div>
                                                 <button 
                                                     onClick={() => handleEdit(setting.key)}
+                                                    aria-label={`更新 ${SETTING_LABELS[setting.key] || setting.key} 的內容`}
                                                     className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 rounded-lg border border-indigo-200 transition-all duration-200 hover:shadow-md active:scale-95 whitespace-nowrap"
                                                 >
                                                     更新內容

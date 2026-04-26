@@ -3,18 +3,18 @@
 :root {
 	--header-height: 72px;
 	--transition-speed: 0.6s;
-	--primary: #005A9C;
-	--primary-hover: #004875;
+	--primary: #004D85;
+	--primary-hover: #003a63;
 	--primary-light: #64B5F6;
 	--secondary: #00A6D6;
 	--accent: #F7B538;
 	--background: #F8F9FA;
 	--surface: #FFFFFF;
-	--text: #343A40;
-	--text-muted: #6C757D;
+	--text: #1F2937;
+	--text-muted: #4B5563;
 	--border: #DEE2E6;
-	--success: #28a745;
-	--error: #dc3545;
+	--success: #15803d;
+	--error: #b91c1c;
 }
 
 @media (min-width: 640px) {
@@ -207,4 +207,59 @@ body.modal-open .scroll-to-top {
 		opacity: 0.9;
 		z-index: -1;
 	}
+}
+
+/* --- Accessibility (Q9 & Q10) --- */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    background: var(--primary);
+    color: white;
+    padding: 12px 24px;
+    z-index: 9999;
+    transition: top 0.3s;
+    font-weight: bold;
+    border-radius: 0 0 8px 0;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* 1. 移除滑鼠點選樣式 (針對非鍵盤操作) */
+:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-ring-offset-width: 0px !important;
+    --tw-ring-width: 0px !important;
+}
+
+/* 2. 鍵盤 TAB 選取樣式 (Focus-Visible) - 強化視覺顯見度，符合無障礙最高標準 */
+:focus-visible {
+    outline: none;
+    border-color: var(--primary); /* 邊框顏色加深 */
+    box-shadow: 0 0 0 4px rgba(0, 77, 133, 0.4); /* 發光範圍加大且更深 */
+    ring: 2px solid white; /* 增加內圈間隔感 */
+}
+
+/* 特定元件優化 */
+.nav-link:focus-visible {
+    background-color: rgba(0, 77, 133, 0.1);
+    border-radius: 8px;
+}
+
+.input-field:focus {
+	border-color: var(--primary-light);
+	box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+    outline: none !important;
+}
+
+.input-field:focus-visible {
+	border-color: var(--primary) !important;
+	box-shadow: 0 0 0 5px rgba(0, 77, 133, 0.3) !important;
 }

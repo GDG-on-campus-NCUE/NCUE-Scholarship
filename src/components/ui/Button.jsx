@@ -16,7 +16,7 @@ const Button = forwardRef(({
   const baseClasses = `
     inline-flex items-center justify-center gap-2 
     font-medium rounded-lg transition-all duration-300 
-    focus:outline-none focus:ring-2 focus:ring-offset-2 
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 
     disabled:opacity-50 disabled:cursor-not-allowed
     transform hover:scale-[1.02] active:scale-[0.98]
     shadow-sm hover:shadow-md
@@ -26,58 +26,58 @@ const Button = forwardRef(({
     primary: `
       bg-blue-600 text-white border border-blue-600
       hover:bg-blue-700 hover:border-blue-700
-      focus:ring-blue-500/30
+      focus-visible:ring-blue-500/30
       shadow-blue-500/30
       font-bold
     `,
     secondary: `
       bg-white text-primary border border-primary
       hover:bg-primary/5 hover:border-primary-600
-      focus:ring-primary/20
+      focus-visible:ring-primary/20
       font-bold
     `,
     success: `
       bg-success text-white border border-success
       hover:bg-green-600 hover:border-green-600
-      focus:ring-success/20
+      focus-visible:ring-success/20
       shadow-success/20
       font-bold
     `,
     danger: `
       bg-red-700 text-white border border-error
       hover:bg-red-600 hover:border-red-600
-      focus:ring-error/20
+      focus-visible:ring-error/20
       shadow-error/20
       font-bold
     `,
     warning: `
       bg-accent text-gray-800 border border-accent
       hover:bg-yellow-500 hover:border-yellow-500
-      focus:ring-accent/20
+      focus-visible:ring-accent/20
       shadow-accent/20
     `,
     ghost: `
       bg-transparent text-gray-700 border border-transparent
       hover:bg-gray-100 hover:text-gray-900
-      focus:ring-gray-500/20
+      focus-visible:ring-gray-500/20
     `,
     purple: `
       bg-violet-600 text-white border border-violet-600
       hover:bg-violet-700 hover:border-violet-700
-      focus:ring-violet-500/30
+      focus-visible:ring-violet-500/30
       shadow-violet-500/30
       font-bold
     `,
     'purple-outline': `
       bg-transparent text-violet-600 border border-violet-600
       hover:bg-violet-50
-      focus:ring-violet-500/30
+      focus-visible:ring-violet-500/30
       font-bold
     `,
     link: `
       bg-transparent text-primary border border-transparent p-0
       hover:text-primary-600 hover:underline
-      focus:ring-primary/20 shadow-none hover:shadow-none
+      focus-visible:ring-primary/20 shadow-none hover:shadow-none
       hover:scale-100 active:scale-100
     `
   }

@@ -13,12 +13,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DownloadPDFButton from './DownloadPDFButton';
 
 const LineIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50" className="inline-block">
+    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50" className="inline-block" aria-hidden="true">
         <path fill="#00c300" d="M12.5,42h23c3.59,0,6.5-2.91,6.5-6.5v-23C42,8.91,39.09,6,35.5,6h-23C8.91,6,6,8.91,6,12.5v23C6,39.09,8.91,42,12.5,42z"></path><path fill="#fff" d="M37.113,22.417c0-5.865-5.88-10.637-13.107-10.637s-13.108,4.772-13.108,10.637c0,5.258,4.663,9.662,10.962,10.495c0.427,0.092,1.008,0.282,1.155,0.646c0.132,0.331,0.086,0.85,0.042,1.185c0,0-0.153,0.925-0.187,1.122c-0.057,0.331-0.263,1.296,1.135,0.707c1.399-0.589,7.548-4.445,10.298-7.611h-0.001C36.203,26.879,37.113,24.764,37.113,22.417z M18.875,25.907h-2.604c-0.379,0-0.687-0.308-0.687-0.688V20.01c0-0.379,0.308-0.687,0.687-0.687c0.379,0,0.687,0.308,0.687,0.687v4.521h1.917c0.379,0,0.687,0.308,0.687,0.687C19.562,25.598,19.254,25.907,18.875,25.907z M21.568,25.219c0,0.379-0.308,0.688-0.687,0.688s-0.687-0.308-0.687-0.688V20.01c0-0.379,0.308-0.687,0.687-0.687s0.687,0.308,0.687,0.687V25.219z M27.838,25.219c0,0.297-0.188,0.559-0.47,0.652c-0.071,0.024-0.145,0.036-0.218,0.036c-0.215,0-0.42-0.103-0.549-0.275l-2.669-3.635v3.222c0,0.379-0.308,0.688-0.688,0.688c-0.379,0-0.688-0.308-0.688-0.688V20.01c0-0.296,0.189-0.558,0.47-0.652c0.071-0.024,0.144-0.035,0.218-0.035c0.214,0,0.42,0.103,0.549,0.275l2.67,3.635V20.01c0-0.379,0.309-0.687,0.688-0.687c0.379,0,0.687,0.308,0.687,0.687V25.219z M32.052,21.927c0.379,0,0.688,0.308,0.688,0.688c0,0.379-0.308,0.687-0.688,0.687h-1.917v1.23h1.917c0.379,0,0.688,0.308,0.688,0.687c0,0.379-0.309,0.688-0.688,0.688h-2.604c-0.378,0-0.687-0.308-0.687-0.688v-2.603c0-0.001,0-0.001,0-0.001c0,0,0-0.001,0-0.001v-2.601c0-0.001,0-0.001,0-0.002c0-0.379,0.308-0.687,0.687-0.687h2.604c0.379,0,0.688,0.308,0.688,0.687s-0.308,0.687-0.688,0.687h-1.917v1.23H32.052z"></path>
     </svg>
 );
 const GmailIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50" className="inline-block">
+    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50" className="inline-block" aria-hidden="true">
         <path fill="#4caf50" d="M45,16.2l-5,2.75l-5,4.75L35,40h7c1.657,0,3-1.343,3-3V16.2z"></path><path fill="#1e88e5" d="M3,16.2l3.614,1.71L13,23.7V40H6c-1.657,0-3-1.343-3-3V16.2z"></path><polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17"></polygon><path fill="#c62828" d="M3,12.298V16.2l10,7.5V11.2L9.876,8.859C9.132,8.301,8.228,8,7.298,8h0C4.924,8,3,9.924,3,12.298z"></path><path fill="#fbc02d" d="M45,12.298V16.2l-10,7.5V11.2l3.124-2.341C38.868,8.301,39.772,8,40.702,8h0 C43.076,8,45,9.924,45,12.298z"></path>
     </svg>
 );
@@ -109,8 +109,8 @@ export default function AnnouncementsTab() {
     };
 
     const renderSortIcon = (column) => {
-        if (sort.column !== column) return <ChevronsUpDown className="h-4 w-4 ml-1 text-gray-400" />;
-        return sort.direction === 'asc' ? <ArrowUp className="h-4 w-4 ml-1 text-indigo-600" /> : <ArrowDown className="h-4 w-4 ml-1 text-indigo-600" />;
+        if (sort.column !== column) return <ChevronsUpDown className="h-4 w-4 ml-1 text-gray-400" aria-hidden="true" />;
+        return sort.direction === 'asc' ? <ArrowUp className="h-4 w-4 ml-1 text-indigo-600" aria-hidden="true" /> : <ArrowDown className="h-4 w-4 ml-1 text-indigo-600" aria-hidden="true" />;
     };
 
     const handleEditClick = async (partialAnn) => {
@@ -188,14 +188,16 @@ export default function AnnouncementsTab() {
         <div className="space-y-6 select-none">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="relative w-full flex-grow">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
                     <input type="text" placeholder="搜尋標題、分類、內部辨識名..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        aria-label="搜尋公告"
+                        title="搜尋公告標題、分類或內部辨識名"
                         className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300
                             focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
                     />
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className={`${buttonStyles.add} w-full sm:w-auto whitespace-nowrap`}>
-                    <Plus size={16} /> 新增公告
+                <button onClick={() => setIsModalOpen(true)} aria-label="新增一筆獎助學金公告" className={`${buttonStyles.add} w-full sm:w-auto whitespace-nowrap`}>
+                    <Plus size={16} aria-hidden="true" /> 新增公告
                 </button>
             </div>
 
@@ -222,7 +224,7 @@ export default function AnnouncementsTab() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <tr><td colSpan="7" className="text-center p-12 text-gray-500"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />載入中...</td></tr>
+                                <tr><td colSpan="7" className="text-center p-12 text-gray-500"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" aria-label="載入中" />載入中...</td></tr>
                             ) : announcements.length === 0 ? (
                                 <tr><td colSpan="7" className="text-center p-12 text-gray-500">找不到符合條件的公告。</td></tr>
                             ) : (
@@ -250,15 +252,15 @@ export default function AnnouncementsTab() {
                                         <td className="p-4 px-6">
                                             <div className="grid grid-cols-3 gap-1.5">
                                                 {/* 常駐按鈕 */}
-                                                <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
-                                                <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
-                                                <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
+                                                <button onClick={() => handleEditClick(ann)} aria-label={`編輯公告: ${ann.title}`} title={`編輯公告: ${ann.title}`} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
+                                                <button onClick={() => setDeletingId(ann.id)} aria-label={`刪除公告: ${ann.title}`} title={`刪除公告: ${ann.title}`} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
+                                                <button onClick={() => handleCopyLink(ann.id)} aria-label={`複製公告連結: ${ann.title}`} title="複製公告連結" className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
                                                 
                                                 {/* 懸浮顯示按鈕 - 第二行 */}
                                                 <div className="col-span-3 grid grid-cols-3 gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                                                     <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
-                                                    <button onClick={() => openPreview('line', ann)} className={`${buttonStyles.line} w-full`}><LineIcon /></button>
-                                                    <button onClick={() => openPreview('email', ann)} className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
+                                                    <button onClick={() => openPreview('line', ann)} aria-label="透過 LINE 寄送公告" title="透過 LINE 寄送公告" className={`${buttonStyles.line} w-full`}><LineIcon /></button>
+                                                    <button onClick={() => openPreview('email', ann)} aria-label="透過電子信箱寄送公告" title="透過電子信箱寄送公告" className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
                                                 </div>
                                             </div>
                                         </td>
@@ -271,7 +273,7 @@ export default function AnnouncementsTab() {
                 {/* --- MOBILE VIEW --- */}
                 <div className="md:hidden px-2 py-4 flex flex-col gap-3">
                     {loading ? (
-                        <div className="text-center p-8 text-gray-500"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />載入中...</div>
+                        <div className="text-center p-8 text-gray-500"><Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" aria-label="載入中" />載入中...</div>
                     ) : announcements.length === 0 ? (
                         <div className="text-center p-8 text-gray-500">找不到符合條件的公告。</div>
                     ) : (
@@ -285,6 +287,7 @@ export default function AnnouncementsTab() {
                                 >
                                     <button
                                         onClick={() => setExpandedId(isExpanded ? null : ann.id)}
+                                        aria-label={isExpanded ? `收合公告: ${ann.title}` : `展開公告: ${ann.title}`}
                                         className="w-full flex flex-col text-left p-4"
                                     >
                                         <div className="w-full mb-3">
@@ -305,7 +308,7 @@ export default function AnnouncementsTab() {
                                             <div className="flex items-center gap-1.5">
                                                 <span className="font-medium text-gray-400 text-[10px]">瀏覽數：</span>
                                                 <span className="flex items-center gap-1 bg-gray-50 px-2 py-0.5 rounded-md text-gray-600">
-                                                    <Eye className="w-3 h-3" />
+                                                    <Eye className="w-3 h-3" aria-hidden="true" />
                                                     {ann.view_count || 0}
                                                 </span>
                                             </div>
@@ -319,7 +322,7 @@ export default function AnnouncementsTab() {
                                                     <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${ann.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-600'}`}>
                                                         {ann.is_active ? '上架' : '下架'}
                                                     </span>
-                                                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                    <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
                                                 </div>
                                             </div>
                                         </div>
@@ -348,12 +351,12 @@ export default function AnnouncementsTab() {
 
                                                     {/* Action Buttons */}
                                                     <div className="grid grid-cols-3 gap-2 pt-3 border-t border-gray-200">
-                                                        <button onClick={() => handleEditClick(ann)} className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
-                                                        <button onClick={() => setDeletingId(ann.id)} className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
-                                                        <button onClick={() => handleCopyLink(ann.id)} className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
+                                                        <button onClick={() => handleEditClick(ann)} aria-label="編輯公告" title="編輯公告" className={`${buttonStyles.edit} whitespace-nowrap`}>編輯</button>
+                                                        <button onClick={() => setDeletingId(ann.id)} aria-label="刪除公告" title="刪除公告" className={`${buttonStyles.delete} whitespace-nowrap`}>刪除</button>
+                                                        <button onClick={() => handleCopyLink(ann.id)} aria-label="複製連結" title="複製公告連結" className={`${buttonStyles.link} whitespace-nowrap`}>連結</button>
                                                         <DownloadPDFButton announcement={ann} className={buttonStyles.download} />
-                                                        <button onClick={() => openPreview('line', ann)} className={`${buttonStyles.line} w-full`}><LineIcon /></button>
-                                                        <button onClick={() => openPreview('email', ann)} className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
+                                                        <button onClick={() => openPreview('line', ann)} aria-label="LINE 預覽並發送" title="LINE 預覽並發送" className={`${buttonStyles.line} w-full`}><LineIcon /></button>
+                                                        <button onClick={() => openPreview('email', ann)} aria-label="電子郵件預覽並發送" title="電子郵件預覽並發送" className={`${buttonStyles.send} w-full`}><GmailIcon /></button>
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -374,6 +377,7 @@ export default function AnnouncementsTab() {
                             value={rowsPerPage}
                             onChange={e => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                             aria-label="每頁顯示筆數"
+                            title="選擇每頁顯示的公告筆數"
                             className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 text-sm shadow-sm
                                 transition-all duration-300
                                 focus:outline-none focus:border-indigo-500
@@ -388,10 +392,10 @@ export default function AnnouncementsTab() {
                         </div>
                     </div>
                     <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="分頁導覽">
-                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" /></button>
-                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" /></button>
+                        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="第一頁" className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsLeft className="h-5 w-5" aria-hidden="true" /></button>
+                        <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} aria-label="上一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronLeft className="h-5 w-5" aria-hidden="true" /></button>
+                        <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages || totalPages === 0} aria-label="下一頁" className="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || totalPages === 0} aria-label="最後一頁" className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 disabled:opacity-50"><ChevronsRight className="h-5 w-5" aria-hidden="true" /></button>
                     </nav>
                 </div>
             </div>

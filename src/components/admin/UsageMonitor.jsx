@@ -108,26 +108,26 @@ export default function UsageMonitor() {
                 />
             </div>
 
-            <div className="bg-white rounded-2xl border-2 border-gray-100 p-6 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between mb-8">
-                    <h4 className="text-sm font-black text-gray-800 flex items-center gap-2">
-                        <TrendingUp size={16} className="text-indigo-500" />
-                        {selectedMonth} 流量與支出折線圖
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm overflow-hidden">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-3">
+                    <h4 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <TrendingUp size={18} className="text-indigo-500" />
+                        {selectedMonth} 流量與支出趨勢
                     </h4>
-                    <div className="px-3 py-1 bg-slate-50 text-[10px] text-slate-500 rounded-full border border-slate-100 font-bold flex items-center gap-1.5">
+                    <div className="px-3 py-1 bg-slate-50 text-[10px] text-slate-500 rounded-full border border-slate-100 font-bold flex items-center gap-1.5 w-full sm:w-auto">
                         <Info size={12} className="text-indigo-400" /> 指標存在數小時延遲
                     </div>
                 </div>
 
-                <div className="bg-slate-50/50 rounded-2xl p-4 min-h-[300px] flex items-center justify-center border border-dashed border-gray-200 relative">
+                <div className="bg-slate-50/30 rounded-xl p-2 sm:p-4 min-h-[220px] flex items-center justify-center border border-slate-100 relative">
                     {loading ? (
-                        <div className="flex flex-col items-center gap-3">
+                        <div className="flex flex-col items-center gap-3 py-12">
                             <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                            <span className="text-xs text-indigo-500 font-black tracking-widest uppercase">Fetching Records...</span>
+                            <span className="text-xs text-indigo-500 font-bold tracking-widest uppercase">Fetching Records...</span>
                         </div>
                     ) : (
-                        <div className="w-full">
-                            <SimpleLineChart data={chartData} color="indigo" height={250} />
+                        <div className="w-full overflow-hidden">
+                            <SimpleLineChart data={chartData} color="indigo" height={220} />
                         </div>
                     )}
                 </div>

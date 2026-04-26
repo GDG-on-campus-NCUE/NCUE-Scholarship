@@ -34,7 +34,7 @@ const TabComponent = ({ activeTab, onTabClick, isOverDark = false, isFloating = 
         `}>
             <motion.span
                 className="absolute top-1 bottom-1 rounded-full bg-purple-300/20"
-                layoutId="bubble"
+                layoutId={`bubble-${isFloating ? 'floating' : 'normal'}`}
                 initial={false}
                 animate={{ x: activeTabRef?.offsetLeft, width: activeTabRef?.offsetWidth }}
                 transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}

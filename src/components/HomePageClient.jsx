@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 export default function HomePageClient() {
     return (
-        <div className="w-full bg-slate-50 font-sans min-h-screen">
+        <div className="w-full bg-slate-50 font-sans min-h-screen select-none">
             
             <div className="relative w-full overflow-hidden aspect-[4000/862]">
                 <Image

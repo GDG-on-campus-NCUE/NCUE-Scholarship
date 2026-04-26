@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ClientProviders from "@/components/ClientProviders";
 import ScrollToTop from "@/components/ScrollToTop";
 import AndroidInstallPrompt from "@/components/AndroidInstallPrompt";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import Head from 'next/head';
 
 const notoSans = Noto_Sans_TC({
@@ -60,9 +61,13 @@ export default function RootLayout({ children }) {
 		<html lang="zh-TW" className={notoSans.variable} suppressHydrationWarning>
 			<body className={notoSans.className}>
 				<ClientProviders>
+                    <a href="#main-content" className="skip-link">跳至主要內容區</a>
 					<div className="layout-container">
 						<Header />
-						<main className="main-content">
+                        <div className="pt-[var(--header-height)]">
+                            <Breadcrumbs />
+                        </div>
+						<main id="main-content" className="main-content !pt-0" tabIndex="-1">
 							{children}
 						</main>
 						<Footer />

@@ -314,37 +314,39 @@ export default function ExportAndStatisticsTab() {
             </div>
 
             {/* Chart Section */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200/80 shadow-sm">
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <div className="flex items-center gap-2 select-none">
-                        <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+            <div className="bg-white rounded-2xl p-4 sm:p-8 border border-slate-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
+                    <div className="flex items-center gap-3 select-none w-full sm:w-auto">
+                        <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
                             <TrendingUp className="w-5 h-5" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-800">瀏覽數趨勢</h3>
+                        <h3 className="text-lg font-bold text-slate-800">瀏覽數趨勢</h3>
                     </div>
 
-                    <div className="flex bg-gray-100 p-1 rounded-lg select-none">
+                    <div className="flex bg-slate-100 p-1 rounded-xl select-none w-full sm:w-auto">
                         <button
                             onClick={() => setChartGranularity('day')}
-                            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${chartGranularity === 'day' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-1.5 text-xs font-bold rounded-lg transition-all ${chartGranularity === 'day' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             日
                         </button>
                         <button
                             onClick={() => setChartGranularity('week')}
-                            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${chartGranularity === 'week' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-1.5 text-xs font-bold rounded-lg transition-all ${chartGranularity === 'week' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             週
                         </button>
                         <button
                             onClick={() => setChartGranularity('month')}
-                            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${chartGranularity === 'month' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-1.5 text-xs font-bold rounded-lg transition-all ${chartGranularity === 'month' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             月
                         </button>
                     </div>
                 </div>
-                <SimpleLineChart data={aggregatedChartData} granularity={chartGranularity} />
+                <div className="w-full overflow-hidden">
+                    <SimpleLineChart data={aggregatedChartData} height={250} />
+                </div>
             </div>
 
             {/* Toolbar */}

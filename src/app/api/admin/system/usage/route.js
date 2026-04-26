@@ -89,7 +89,12 @@ export async function GET(request) {
                     SUM((SELECT SUM(c.amount) FROM UNNEST(credits) c)) as total_credits
                 FROM \`${billingTableId}\`
                 WHERE FORMAT_TIMESTAMP('%Y-%m', usage_start_time) = @targetMonth
-                AND service.description = 'Generative Language API'
+                AND (
+                    service.description LIKE '%Gemini%' 
+                    OR service.description LIKE '%Generative Language%' 
+                    OR service.description LIKE '%Vertex AI%'
+                    OR sku.description LIKE '%Gemini%'
+                )
                 GROUP BY usage_date
                 ORDER BY usage_date ASC
             `;
@@ -105,8 +110,10 @@ export async function GET(request) {
                 rows.forEach(row => {
                     const dateStr = row.usage_date.value;
                     const netCost = row.raw_cost + (row.total_credits || 0);
-                    if (dailyData[dateStr]) dailyData[dateStr].cost = parseFloat(netCost.toFixed(4));
-                    totalEstimatedCost += netCost;
+                    // 確保 netCost 是數字且處理精度
+                    const parsedCost = parseFloat(netCost) || 0;
+                    if (dailyData[dateStr]) dailyData[dateStr].cost = parseFloat(parsedCost.toFixed(4));
+                    totalEstimatedCost += parsedCost;
                 });
             }
         } catch (bqError) {
@@ -119,10 +126,17 @@ export async function GET(request) {
     }
 
     if (!isRealBillingData) {
+        // 2026 更新：更精確的預估 (考慮 TWD 匯率)
+        // 假設平均請求包含較長 context 或使用 Pro 模型
+        // $0.005 USD (約 0.16 TWD) per request 是一個更安全的預估值
+        const USD_TO_TWD = 32.5;
+        const ESTIMATION_FACTOR_USD = 0.0056; // 根據使用者回饋之 $657/3594 換算約 $0.18 TWD
+        const ESTIMATION_FACTOR_TWD = ESTIMATION_FACTOR_USD * USD_TO_TWD;
+        
         Object.keys(dailyData).forEach(date => {
-            dailyData[date].cost = parseFloat((dailyData[date].count * 0.005).toFixed(4));
+            dailyData[date].cost = parseFloat((dailyData[date].count * ESTIMATION_FACTOR_TWD).toFixed(4));
         });
-        totalEstimatedCost = totalRequests * 0.005;
+        totalEstimatedCost = totalRequests * ESTIMATION_FACTOR_TWD;
     }
 
     return NextResponse.json({

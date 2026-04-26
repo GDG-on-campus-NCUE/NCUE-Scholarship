@@ -55,7 +55,7 @@ export function AlertMessage({ type, message }) {
   };
 
   return (
-    <div className="p-4 rounded-lg" style={styles[type] || styles.info}>
+    <div className="p-4 rounded-lg" style={styles[type] || styles.info} role="alert" aria-live="assertive">
       {message}
     </div>
   );

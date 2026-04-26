@@ -15,12 +15,13 @@ export const HeaderContext = createContext({ isHeaderVisible: true });
 const LogoTitle = ({ isMenuOpen, isOverDark, closeMenu }) => (
 	<Link href="/" className="flex items-center space-x-3 focus:outline-none p-1" aria-label="回到首頁" onClick={closeMenu}>
 		<Image src={logo} alt="NCUE Logo" width={52} height={52} className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" priority />
-		<h1
+		<div
 			className="font-bold text-base sm:text-lg whitespace-nowrap transition-colors duration-300"
 			style={{ color: isMenuOpen && isOverDark ? 'var(--primary-light)' : 'var(--primary)' }}
+            role="presentation"
 		>
 			生輔組校外獎助學金資訊平台
-		</h1>
+		</div>
 	</Link>
 );
 
@@ -253,9 +254,14 @@ const Header = forwardRef((props, ref) => {
 			>
 				<div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-full flex items-center justify-between relative z-10">
 					<LogoTitle isMenuOpen={isMenuOpen} isOverDark={isOverDark} closeMenu={closeMenu} />
-					<nav className="hidden lg:flex items-center space-x-1 lg:space-x-2" role="navigation">
+					<nav className="hidden lg:flex items-center space-x-1 lg:space-x-2" role="navigation" aria-label="主要導覽">
 						{filteredNavLinks.map(link => (
-							<Link key={link.href} href={link.href} className={`nav-link underline-extend navbar-link ${pathname === link.href ? 'active' : ''}`}>
+							<Link 
+								key={link.href} 
+								href={link.href} 
+								className={`nav-link underline-extend navbar-link ${pathname === link.href ? 'active' : ''}`}
+								aria-current={pathname === link.href ? 'page' : undefined}
+							>
 								{link.label}
 							</Link>
 						))}
@@ -270,9 +276,10 @@ const Header = forwardRef((props, ref) => {
                                         ${!canExtend ? 'cursor-default opacity-80' : 'cursor-pointer'}
                                     `} 
                                     title={canExtend ? "點擊可將自動登出時間延長至 60 分鐘 (僅限一次)。" : "基於安全性考量，如長時間未操作系統將於倒數結束後自動登出。"}
+                                    aria-label={`登出倒數：${formatTime(timeLeft)}${canExtend ? '，點擊可延長時間' : ''}`}
                                 >
-                                    {canExtend ? <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-500" /> : <Clock size={14} />}
-                                    <span className="text-xs font-mono font-bold">{formatTime(timeLeft)}</span>
+                                    {canExtend ? <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-500" aria-hidden="true" /> : <Clock size={14} aria-hidden="true" />}
+                                    <span className="text-xs font-mono font-bold" aria-hidden="true">{formatTime(timeLeft)}</span>
                                 </button>
 
                                 <div 
@@ -284,15 +291,17 @@ const Header = forwardRef((props, ref) => {
                                     <button 
                                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                                         className="flex flex-row items-center space-x-2 nav-link navbar-link focus:outline-none"
+                                        aria-haspopup="true"
+                                        aria-expanded={isUserMenuOpen}
                                     >
                                         {user?.profile?.avatar_url || user?.user_metadata?.avatar_url ? (
                                             <img 
                                                 src={user?.profile?.avatar_url || user?.user_metadata?.avatar_url} 
-                                                alt="Avatar" 
+                                                alt={`${user?.profile?.username || user?.user_metadata?.name || 'User'} 的頭像`} 
                                                 className="h-8 w-8 rounded-full border border-gray-200"
                                             />
                                         ) : (
-                                            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center border border-indigo-200">
+                                            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center border border-indigo-200" aria-hidden="true">
                                                 <span className="text-indigo-700 text-xs font-bold">
                                                     {(user?.profile?.username || user?.user_metadata?.name || 'U').charAt(0).toUpperCase()}
                                                 </span>
@@ -300,23 +309,23 @@ const Header = forwardRef((props, ref) => {
                                         )}
                                         <span className="truncate max-w-[120px] xl:max-w-xs text-left">
                                             Hi, {user?.profile?.username || user?.user_metadata?.name || 'User'}
-                                            {userIp && <span className="hidden xl:inline ml-1 text-xs opacity-75 font-normal">({formatIp(userIp)})</span>}
                                         </span>
                                         <svg 
                                             className={`w-4 h-4 transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`} 
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            aria-hidden="true"
                                         >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
                                     {/* Dropdown 容器 */}
-                                    <div className={`absolute right-0 top-full pt-2 w-48 z-50 transition-all duration-300 ${isUserMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+                                    <div className={`absolute right-0 top-full pt-2 w-48 z-50 transition-all duration-300 ${isUserMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`} role="menu">
                                         <div className="bg-white rounded-lg shadow-xl p-2 border border-gray-100">
-                                            <Link href="/profile" className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors">
+                                            <Link href="/profile" className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-md transition-colors" role="menuitem">
                                                 個資管理
                                             </Link>
                                             <hr className="my-1 border-gray-100" />
-                                            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                                            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors" role="menuitem">
                                                 登出
                                             </button>
                                         </div>
@@ -326,7 +335,13 @@ const Header = forwardRef((props, ref) => {
 						)}
 					</nav>
 					<div className="lg:hidden">
-						<IconButton variant="ghost" className="text-muted z-20" aria-label="選單" onClick={toggleMenu}>
+						<IconButton 
+							variant="ghost" 
+							className="text-muted z-20" 
+							aria-label="主要選單" 
+							aria-expanded={isMenuOpen}
+							onClick={toggleMenu}
+						>
 							<div className="relative w-6 h-6">
 								<span className={`absolute left-0 w-6 h-0.5 bg-current transform transition-all duration-300 ease-in-out ${isMenuOpen ? 'rotate-45 top-1/2 -translate-y-1/2' : 'top-1'}`} />
 								<span className={`absolute left-0 w-6 h-0.5 bg-current transition-all duration-300 ease-in-out top-1/2 -translate-y-1/2 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`} />

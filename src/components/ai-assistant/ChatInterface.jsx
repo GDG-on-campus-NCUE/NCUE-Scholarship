@@ -14,10 +14,10 @@ const WelcomeMessage = () => (
         <div className="mb-4 md:mb-8 relative scale-75 md:scale-100">
             <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 rounded-full"></div>
             <div className="w-20 h-20 bg-white border border-indigo-100 shadow-xl rounded-2xl flex items-center justify-center relative z-10">
-                <Sparkles size={40} className="text-indigo-600" />
+                <Sparkles size={40} className="text-indigo-600" aria-hidden="true" />
             </div>
         </div>
-        
+
         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2 md:mb-3 tracking-tight">彰師 AI 獎學金助理</h2>
         <p className="text-gray-500 text-sm md:text-lg mb-6 md:mb-10 max-w-xl mx-auto leading-relaxed px-2">
             我是您的專屬智慧助手，結合校內知識庫與網路搜尋，為您提供精準的獎學金諮詢服務。
@@ -26,18 +26,18 @@ const WelcomeMessage = () => (
         {/* 桌面版功能卡片 */}
         <div className="hidden md:grid grid-cols-3 gap-6 w-full text-left mb-12">
             <div className="p-5 bg-white border border-indigo-50/50 rounded-xl shadow-sm">
-                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-3"><Database size={20} className="text-indigo-600" /></div>
-                <h4 className="font-bold text-gray-800 mb-1">精準檢索</h4>
+                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-3"><Database size={20} className="text-indigo-600" aria-hidden="true" /></div>
+                <h3 className="font-bold text-gray-800 mb-1">精準檢索</h3>
                 <p className="text-sm text-gray-600 leading-snug">優先搜尋校內獎學金資料庫，提供最相關的公告資訊。</p>
             </div>
             <div className="p-5 bg-white border border-green-50/50 rounded-xl shadow-sm">
-                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3"><Globe size={20} className="text-green-700" /></div>
-                <h4 className="font-bold text-gray-800 mb-1">廣泛搜尋</h4>
+                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3"><Globe size={20} className="text-green-700" aria-hidden="true" /></div>
+                <h3 className="font-bold text-gray-800 mb-1">廣泛搜尋</h3>
                 <p className="text-sm text-gray-600 leading-snug">若內部資訊不足，自動擴大搜尋網路公開資訊。</p>
             </div>
             <div className="p-5 bg-white border border-amber-50/50 rounded-xl shadow-sm">
-                <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center mb-3"><MessageSquare size={20} className="text-amber-600" /></div>
-                <h4 className="font-bold text-gray-800 mb-1">智慧摘要</h4>
+                <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center mb-3"><MessageSquare size={20} className="text-amber-600" aria-hidden="true" /></div>
+                <h3 className="font-bold text-gray-800 mb-1">智慧摘要</h3>
                 <p className="text-sm text-gray-600 leading-snug">彙整多方資訊，生成條理分明的客觀答覆與建議。</p>
             </div>
         </div>
@@ -45,21 +45,21 @@ const WelcomeMessage = () => (
         {/* 手機版精簡卡片 */}
         <div className="grid md:hidden grid-cols-3 gap-2 w-full text-center mb-6">
             <div className="p-2 bg-white border border-indigo-50/50 rounded-lg shadow-sm flex flex-col items-center">
-                <Database size={18} className="text-indigo-600 mb-1" />
+                <Database size={18} className="text-indigo-600 mb-1" aria-hidden="true" />
                 <span className="text-[10px] font-bold text-gray-700">精準檢索</span>
             </div>
             <div className="p-2 bg-white border border-green-50/50 rounded-lg shadow-sm flex flex-col items-center">
-                <Globe size={18} className="text-green-700 mb-1" />
+                <Globe size={18} className="text-green-700 mb-1" aria-hidden="true" />
                 <span className="text-[10px] font-bold text-gray-700">廣泛搜尋</span>
             </div>
             <div className="p-2 bg-white border border-amber-50/50 rounded-lg shadow-sm flex flex-col items-center">
-                <MessageSquare size={18} className="text-amber-600 mb-1" />
+                <MessageSquare size={18} className="text-amber-600 mb-1" aria-hidden="true" />
                 <span className="text-[10px] font-bold text-gray-700">智慧摘要</span>
             </div>
         </div>
 
         <div className="bg-gray-50/80 rounded-lg p-3 md:p-4 w-full text-[10px] md:text-xs text-gray-500 border border-gray-100">
-            <p className="font-semibold text-gray-700 flex items-center justify-center mb-0.5 md:mb-1"><ShieldCheck size={14} className="mr-1.5 text-indigo-600" />使用前請詳閱</p>
+            <p className="font-semibold text-gray-700 flex items-center justify-center mb-0.5 md:mb-1"><ShieldCheck size={14} className="mr-1.5 text-indigo-600" aria-hidden="true" />使用前請詳閱</p>
             <p>AI 回覆僅供參考，詳細規定請務必以<span className="font-medium text-gray-700">原始公告</span>為準。</p>
         </div>
     </div>
@@ -71,7 +71,7 @@ const ChatInterface = () => {
     const [toast, setToast] = useState(null);
     const scrollAreaRef = useRef(null);
     const messagesEndRef = useRef(null);
-    
+
     // 完全手動原生狀態管理
     const [sessionId, setSessionId] = useState(null);
     const [input, setInput] = useState('');
@@ -87,11 +87,11 @@ const ChatInterface = () => {
         e?.preventDefault();
         const contentToSend = input.trim();
         if (!contentToSend || isLoading) return;
-        
+
         // 1. 清空輸入框並設定狀態
         setInput('');
         setIsLoading(true);
-        
+
         const currentSessionId = sessionId || crypto.randomUUID();
         if (!sessionId) setSessionId(currentSessionId);
 
@@ -104,7 +104,7 @@ const ChatInterface = () => {
             // 抓取最新 Token
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
-            
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
@@ -140,15 +140,15 @@ const ChatInterface = () => {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                
+
                 lineBuffer += decoder.decode(value, { stream: true });
                 const lines = lineBuffer.split('\n');
                 lineBuffer = lines.pop() || ''; // 留下最後一行（可能不完整）
-                
+
                 for (const line of lines) {
                     const trimmedLine = line.trim();
                     if (!trimmedLine) continue;
-                    
+
                     const firstColonIndex = trimmedLine.indexOf(':');
                     if (firstColonIndex === -1) continue;
 
@@ -165,7 +165,7 @@ const ChatInterface = () => {
                         } else {
                             continue; // 忽略其他類型
                         }
-                        
+
                         // 即時更新畫面上的 AI 訊息
                         setMessages(prev => prev.map(msg => 
                             msg.id === aiMessageId ? { ...msg, content: aiFullResponse, reasoning: aiFullReasoning } : msg
@@ -217,7 +217,7 @@ const ChatInterface = () => {
                     content: msg.message_content,
                     createdAt: new Date(msg.timestamp)
                 })));
-                
+
                 // 載入完畢後瞬間捲到底部，不使用動畫
                 setTimeout(() => scrollToBottom('instant'), 100);
             }
@@ -253,7 +253,7 @@ const ChatInterface = () => {
     const handleRequestHumanSupport = async () => {
         if (isLoading) return;
         if (messages.length === 0) return setToast({ message: "請先開始對話，才能尋求支援喔！", type: 'warning' });
-        
+
         if (window.confirm('您確定要將目前的對話紀錄傳送給獎學金承辦人員嗎？')) {
             try {
                 const response = await authFetch('/api/send-support-email', {
@@ -276,42 +276,46 @@ const ChatInterface = () => {
             <div 
                 ref={scrollAreaRef} 
                 className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth"
+                role="log"
+                aria-live="polite"
+                aria-label="對話歷史紀錄"
             >
                 <div className="min-h-full flex flex-col p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
                     {isHistoryLoading ? (
-                        <div className="flex-1 flex flex-col justify-center items-center gap-3">
-                            <Loader2 className="animate-spin text-indigo-500" size={36} />
+                        <div className="flex-1 flex flex-col justify-center items-center gap-3" aria-busy="true">
+                            <Loader2 className="animate-spin text-indigo-500" size={36} aria-hidden="true" />
                             <p className="text-sm text-gray-400 font-medium">載入對話紀錄中...</p>
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="flex-1 flex items-center justify-center py-2"><WelcomeMessage /></div>
                     ) : (
-                        <div className="space-y-6 md:space-y-8 pb-12"> {/* 增加底部間距 */}
+                        <ul className="space-y-6 md:space-y-8 pb-12 list-none p-0"> {/* 增加底部間距 */}
                             {messages.map((msg, index) => (
-                                <MessageBubble 
-                                    key={msg.id || index} 
-                                    message={{
-                                        ...msg,
-                                        role: msg.role === 'assistant' ? 'model' : msg.role, 
-                                        timestamp: msg.createdAt || new Date()
-                                    }} 
-                                    user={user} 
-                                />
+                                <li key={msg.id || index}>
+                                    <MessageBubble 
+                                        message={{
+                                            ...msg,
+                                            role: msg.role === 'assistant' ? 'model' : msg.role, 
+                                            timestamp: msg.createdAt || new Date()
+                                        }} 
+                                        user={user} 
+                                    />
+                                </li>
                             ))}
                             {isLoading && messages[messages.length - 1]?.role !== 'model' && (
-                                <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <li className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     <MessageBubble isLoading={true} />
-                                </div>
+                                </li>
                             )}
                             {/* 錨點 */}
-                            <div className="h-4" />
-                        </div>
+                            <div className="h-4" aria-hidden="true" />
+                        </ul>
                     )}
                 </div>
             </div>
 
             {/* 輸入區域 - 固定在容器底部 */}
-            <div className="flex-shrink-0 bg-gradient-to-t from-white via-white to-transparent pt-2 sm:pt-4 pb-1 sm:pb-2 z-10">
+            <div className="flex-shrink-0 bg-gradient-to-t from-white via-white to-transparent pt-2 sm:pt-4 pb-1 sm:pb-2 z-10" role="form" aria-label="發送訊息區域">
                 <div className="max-w-5xl mx-auto w-full">
                     <ChatInput
                         input={input}
