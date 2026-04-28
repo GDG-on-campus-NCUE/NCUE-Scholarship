@@ -193,32 +193,96 @@ ${formData.target_audience}
         setIsSaving(true);
         try {
             const urlsFiltered = formData.external_urls.filter(u => u.url?.trim());
-            const { error: updErr } = await supabase.from('announcements').update({ ...formData, external_urls: JSON.stringify(urlsFiltered), application_start_date: formData.application_start_date || null, application_end_date: formData.application_end_date || null, updated_at: new Date().toISOString() }).eq('id', announcement.id);
+            const { error: updErr } = await supabase.from('announcements').update({ 
+                ...formData, 
+                external_urls: JSON.stringify(urlsFiltered), 
+                application_start_date: formData.application_start_date || null, 
+                application_end_date: formData.application_end_date || null, 
+                updated_at: new Date().toISOString() 
+            }).eq('id', announcement.id);
             if (updErr) throw updErr;
 
+            // 處理刪除
             if (filesToRemove.length > 0) {
-                await authFetch('/api/delete-files', { method: 'POST', body: JSON.stringify({ filePaths: filesToRemove.map(f => f.path) }) });
-                await supabase.from('attachments').delete().in('id', filesToRemove.map(f => f.id));
+                try {
+                    await authFetch('/api/delete-files', { method: 'POST', body: JSON.stringify({ filePaths: filesToRemove.map(f => f.path) }) });
+                    const { error: delErr } = await supabase.from('attachments').delete().in('id', filesToRemove.map(f => f.id));
+                    if (delErr) console.error('DB 刪除附件記錄失敗:', delErr);
+                } catch (err) {
+                    console.error('刪除實體檔案失敗:', err);
+                }
             }
 
+            // 處理新檔案上傳
             const newFiles = selectedFiles.filter(f => !f.isExisting);
             let uploaded = [];
             if (newFiles.length > 0) {
-                const fd = new FormData(); newFiles.forEach(f => fd.append('files', f));
+                const fd = new FormData(); 
+                newFiles.forEach(f => fd.append('files', f));
                 const res = await authFetch('/api/upload-files', { method: 'POST', body: fd });
-                const d = await res.json(); uploaded = d.data.uploaded || [];
+                if (!res.ok) throw new Error('檔案伺服器回應錯誤');
+                const d = await res.json();
+                
+                if (d.data?.errors && d.data.errors.length > 0) {
+                    throw new Error(`檔案上傳失敗: ${d.data.errors[0].error}`);
+                }
+                uploaded = d.data?.uploaded || [];
             }
 
+            // 準備資料庫更新 - 分為更新與新增
             const finalFiles = selectedFiles.filter(f => !filesToRemove.some(r => r.id === f.id));
-            const upserts = finalFiles.map((f, i) => {
-                if (f.isExisting) return { id: f.id, announcement_id: announcement.id, file_name: f.name, stored_file_path: f.path, file_size: f.size, mime_type: f.type, display_order: i };
-                const up = uploaded.find(u => u.originalName === f.name && u.size === f.size);
-                return up ? { announcement_id: announcement.id, file_name: up.originalName, stored_file_path: up.path, file_size: up.size, mime_type: up.mimeType, display_order: i } : null;
-            }).filter(Boolean);
-            if (upserts.length > 0) await supabase.from('attachments').upsert(upserts);
+            
+            const toUpdate = [];
+            const toInsert = [];
 
-            showToast('更新成功', 'success'); if (refreshAnnouncements) refreshAnnouncements(); onClose();
-        } catch (e) { showToast(e.message, 'error'); } finally { setIsSaving(false); }
+            finalFiles.forEach((f, i) => {
+                if (f.isExisting) {
+                    toUpdate.push({ 
+                        id: f.id, 
+                        announcement_id: announcement.id, 
+                        file_name: f.name, 
+                        stored_file_path: f.path, 
+                        file_size: f.size, 
+                        mime_type: f.type, 
+                        display_order: i 
+                    });
+                } else {
+                    const up = uploaded.find(u => u.originalName === f.name && u.size === f.size);
+                    if (up) {
+                        toInsert.push({ 
+                            announcement_id: announcement.id, 
+                            file_name: up.originalName, 
+                            stored_file_path: up.path, 
+                            file_size: up.size, 
+                            mime_type: up.mimeType, 
+                            display_order: i 
+                        });
+                    }
+                }
+            });
+
+            // 分開執行，避免欄位不一致導致的 NULL 錯誤
+            if (toUpdate.length > 0) {
+                const { error: updErr } = await supabase.from('attachments').upsert(toUpdate);
+                if (updErr) throw updErr;
+            }
+            
+            if (toInsert.length > 0) {
+                const { error: insErr } = await supabase.from('attachments').insert(toInsert);
+                if (insErr) throw insErr;
+            } else if (newFiles.length > 0 && toInsert.length === 0) {
+                throw new Error('附件處理匹配失敗，請重試');
+            }
+
+            showToast('更新成功', 'success'); 
+            if (refreshAnnouncements) refreshAnnouncements(); 
+            onClose();
+        } catch (e) { 
+            console.error('儲存公告失敗:', e);
+            showToast(e.message || '更新失敗', 'error'); 
+        } finally { 
+            setIsSaving(false); 
+        }
     };
 
     return (

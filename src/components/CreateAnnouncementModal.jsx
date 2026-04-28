@@ -294,7 +294,16 @@ export default function CreateAnnouncementModal({ isOpen, onClose, refreshAnnoun
                     const up = uploadedFilesData.find(u => u.originalName === f.name && u.size === f.size);
                     return up ? { announcement_id: ann.id, file_name: up.originalName, stored_file_path: up.path, file_size: up.size, mime_type: up.mimeType, display_order: i } : null;
                 }).filter(Boolean);
-                if (atts.length) await supabase.from('attachments').insert(atts);
+                
+                if (atts.length) {
+                    const { error: attError } = await supabase.from('attachments').insert(atts);
+                    if (attError) {
+                        console.error('附件記錄儲存失敗:', attError);
+                        throw new Error(`附件記錄儲存失敗: ${attError.message}`);
+                    }
+                } else if (filesToUpload.length > 0) {
+                    throw new Error('附件上傳匹配失敗，請重試');
+                }
             }
             return ann;
         } finally {
